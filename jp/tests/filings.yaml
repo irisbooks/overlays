@@ -1,0 +1,155 @@
+# Golden cases for the 消費税 return recipes and the 税抜経理 derivation.
+book: &general
+  region: JP
+  fiscal_start_month: 1
+  consumption_tax: {status: taxable, accounting: tax_included, method: general}
+
+# A small 税込 ledger: ¥110,000 of 10% sales, ¥21,600 of 軽減 sales, ¥55,000
+# of 10% purchases with an invoice, ¥11,000 without, ¥10,800 of 8r purchases
+# with an invoice, one export, one 非課税, one draft (ignored), one out of period.
+ledger: &ledger
+  - date: 2026-02-01
+    status: posted
+    lines:
+      - {account: 資産:現金, debit: 110000}
+      - {account: 収益:売上, credit: 110000, tax: {category: taxable_sale, rate: "10"}}
+  - date: 2026-03-01
+    status: posted
+    lines:
+      - {account: 資産:現金, debit: 21600}
+      - {account: 収益:売上, credit: 21600, tax: {category: taxable_sale, rate: "8r"}}
+  - date: 2026-04-01
+    status: posted
+    lines:
+      - {account: 費用:消耗品費, debit: 55000, tax: {category: taxable_purchase, rate: "10", invoice: true}}
+      - {account: 資産:現金, credit: 55000}
+  - date: 2026-05-01
+    status: posted
+    lines:
+      - {account: 費用:会議費, debit: 11000, tax: {category: taxable_purchase, rate: "10"}}
+      - {account: 資産:現金, credit: 11000}
+  - date: 2026-06-01
+    status: posted
+    lines:
+      - {account: 費用:会議費, debit: 10800, tax: {category: taxable_purchase, rate: "8r", invoice: true}}
+      - {account: 資産:現金, credit: 10800}
+  - date: 2026-07-01
+    status: posted
+    lines:
+      - {account: 資産:現金, debit: 30000}
+      - {account: 収益:売上, credit: 30000, tax: {category: export_sale, rate: "0"}}
+  - date: 2026-08-01
+    status: posted
+    lines:
+      - {account: 資産:現金, debit: 5000}
+      - {account: 収益:受取利息, credit: 5000, tax: {category: exempt_sale}}
+  - date: 2026-09-01
+    status: draft
+    lines:
+      - {account: 資産:現金, debit: 99000}
+      - {account: 収益:売上, credit: 99000, tax: {category: taxable_sale, rate: "10"}}
+  - date: 2027-01-15
+    status: posted
+    lines:
+      - {account: 資産:現金, debit: 22000}
+      - {account: 収益:売上, credit: 22000, tax: {category: taxable_sale, rate: "10"}}
+
+cases:
+  - name: 本則課税 figures over the calendar year (税込, 経過措置 80%)
+    recipe:
+      id: jp.shouhizei-general
+      params: {from: 2026-01-01, to: 2026-12-31, non_invoice_pct: 80}
+    journals: *ledger
+    figures:
+      # sales: 110,000 → tax 10,000; 21,600 → 1,600; export 30,000; exempt 5,000
+      sales_10: 110000
+      sales_tax_10: 10000
+      sales_8: 21600
+      sales_tax_8: 1600
+      export_sales: 30000
+      exempt_sales: 5000
+      securities_sales: 0
+      # purchases: invoice 55,000 → 5,000 and 10,800 → 800; non-invoice 11,000 → 1,000 × 80% = 800
+      purchases_10_invoice: 55000
+      purchases_10_non_invoice: 11000
+      purchases_8_invoice: 10800
+      purchases_8_non_invoice: 0
+      purchase_tax_invoice: 5800
+      purchase_tax_non_invoice: 800
+      non_invoice_pct: 80
+      deductible_tax: 6600
+      sales_tax: 11600
+      net_tax: 5000
+      payable: 5000
+      # (110,000 + 21,600 + 30,000) / (… + 5,000) = 161,600 / 166,600 → 97.00%
+      taxable_sales_ratio_bp: 9699
+      accounting: tax_included
+      period_from: "2026-01-01"
+      period_to: "2026-12-31"
+
+  - name: 本則課税 — payable is floored to ¥100 and a refund is not
+    recipe:
+      id: jp.shouhizei-general
+      params: {from: 2026-01-01, to: 2026-12-31, non_invoice_pct: 50}
+    journals:
+      - date: 2026-02-01
+        status: posted
+        lines:
+          - {account: 資産:現金, debit: 12345}
+          - {account: 収益:売上, credit: 12345, tax: {category: taxable_sale, rate: "10"}}
+      - date: 2026-03-01
+        status: posted
+        lines:
+          - {account: 費用:会議費, debit: 990, tax: {category: taxable_purchase, rate: "10"}}
+          - {account: 資産:現金, credit: 990}
+    figures: {sales_tax: 1122, purchase_tax_non_invoice: 45, deductible_tax: 45, net_tax: 1077, payable: 1000}
+
+  - name: 簡易課税 — per-line 事業区分 overrides the book default
+    book: {region: JP, fiscal_start_month: 1, consumption_tax: {status: taxable, accounting: tax_included, method: simplified, business_class: 5}}
+    recipe:
+      id: jp.shouhizei-simplified
+      params:
+        from: 2026-01-01
+        to: 2026-12-31
+        deemed_pct: {"1": 90, "2": 80, "3": 70, "4": 60, "5": 50, "6": 40}
+    journals:
+      - date: 2026-02-01
+        status: posted
+        lines:
+          - {account: 資産:現金, debit: 110000}
+          - {account: 収益:売上, credit: 110000, tax: {category: taxable_sale, rate: "10"}}             # class 5 (default) → tax 10,000 × 50%
+      - date: 2026-03-01
+        status: posted
+        lines:
+          - {account: 資産:現金, debit: 55000}
+          - {account: 収益:売上, credit: 55000, tax: {category: taxable_sale, rate: "10", business_class: 2}}   # class 2 → tax 5,000 × 80%
+    figures:
+      sales_10: 165000
+      sales_tax_10: 15000
+      sales_tax: 15000
+      sales_tax_class_2: 5000
+      sales_tax_class_5: 10000
+      sales_tax_class_1: 0
+      deductible_tax: 9000
+      net_tax: 6000
+      payable: 6000
+
+  - name: 税抜経理 — the tax inside a rated line is proposed, once
+    book: {region: JP, consumption_tax: {status: taxable, accounting: tax_excluded, method: general}}
+    journal:
+      lines:
+        - {account: 費用:会議費, debit: 11000, tax: {category: taxable_purchase, rate: "10", invoice: true}}
+        - {account: 費用:消耗品費, debit: 5400, tax: {category: taxable_purchase, rate: "8r", amount: 400}}
+        - {account: 資産:現金, credit: 16400}
+    expect: []
+    propose:
+      - {id: tax.amount, line: 0, field: tax.amount, value: "1000"}
+
+  - name: 税込経理 — nothing is proposed
+    book: *general
+    journal:
+      lines:
+        - {account: 費用:会議費, debit: 11000, tax: {category: taxable_purchase, rate: "10", invoice: true}}
+        - {account: 資産:現金, credit: 11000}
+    expect: []
+    propose: []

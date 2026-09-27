@@ -1,0 +1,67 @@
+# 一括償却資産 (toku_rei: ikkatsu_3yr) — ¥100k–¥200k items depreciated over
+# 36 months in equal amounts: straight_line, 36 months, no salvage.
+# Thresholds are stable statutory limits (not per-asset lookups), so they
+# live here; a change by 国税庁 is a new overlay version.
+rules:
+  - id: asset.toku-rei-unknown
+    target: asset
+    when: regime(asset) != ''
+    assert: regime(asset) in ['ikkatsu_3yr', 'shoutoku_300k']
+    args:
+      got: quote(regime(asset))
+      a: "'ikkatsu_3yr'"
+      b: "'shoutoku_300k'"
+    message:
+      en: "toku_rei: unknown regime {{.got}} (expected {{.a}} or {{.b}})"
+      ja: "toku_rei: 不明な特例区分 {{.got}} です(有効な値: {{.a}} または {{.b}})"
+
+  - id: asset.regime-method
+    target: asset
+    when: regime(asset) in ['ikkatsu_3yr', 'shoutoku_300k']
+    let:
+      want: "regime(asset) == 'ikkatsu_3yr' ? 'straight_line' : 'expensed'"
+    assert: asset.method == want
+    args:
+      regime: regime(asset)
+      want: want
+      got: quote(asset.method)
+    message:
+      en: "toku_rei={{.regime}} requires method={{.want}}, got {{.got}}"
+      ja: "toku_rei={{.regime}} では method={{.want}} が必要です(現在 {{.got}})"
+
+  - id: asset.ikkatsu-useful-life
+    target: asset
+    when: regime(asset) == 'ikkatsu_3yr'
+    assert: asset.useful_life_months == 36
+    args:
+      regime: regime(asset)
+      want: "36"
+      got: asset.useful_life_months
+    message:
+      en: "toku_rei={{.regime}} requires useful_life_months={{.want}}, got {{.got}}"
+      ja: "toku_rei={{.regime}} では useful_life_months={{.want}} が必要です(現在 {{.got}})"
+
+  - id: asset.ikkatsu-salvage
+    target: asset
+    when: regime(asset) == 'ikkatsu_3yr'
+    assert: asset.salvage_value == 0
+    args:
+      regime: regime(asset)
+      got: asset.salvage_value
+    message:
+      en: "toku_rei={{.regime}} requires salvage_value=0, got {{.got}}"
+      ja: "toku_rei={{.regime}} では salvage_value=0 が必要です(現在 {{.got}})"
+
+  - id: asset.ikkatsu-cost-range
+    target: asset
+    when: regime(asset) == 'ikkatsu_3yr'
+    assert: asset.acquisition_cost >= 100000 && asset.acquisition_cost < 200000
+    args:
+      regime: regime(asset)
+      min: "100000"
+      max: "200000"
+      got: asset.acquisition_cost
+      above: "'shoutoku_300k'"
+    message:
+      en: "toku_rei={{.regime}} requires acquisition_cost of at least ¥{{.min}} and under ¥{{.max}}, got ¥{{.got}} (below ¥{{.min}}: expensed in full without a toku_rei; ¥{{.max}} or more: {{.above}} if eligible, otherwise normal depreciation)"
+      ja: "toku_rei={{.regime}} では acquisition_cost が ¥{{.min}} 以上 ¥{{.max}} 未満である必要があります(現在 ¥{{.got}})。¥{{.min}} 未満は toku_rei なしで全額を費用に、¥{{.max}} 以上は要件を満たせば {{.above}}、そうでなければ通常の減価償却になります"

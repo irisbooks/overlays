@@ -1,0 +1,19 @@
+# 税抜経理: the consumption tax inside a classified line.
+#
+# On a tax-excluded book (consumption_tax.accounting: tax_excluded) the
+# LLM books the tax portion of each taxable line on 仮払消費税 /
+# 仮受消費税. The arithmetic is the engine's: when a rated line has no
+# tax.amount, propose the tax inside its amount, floor(amount × rate /
+# (100 + rate)). `iris validate` shows it as a hint; `iris validate --fix`
+# records it on the line.
+derivations:
+  - id: tax.amount
+    target: line
+    when: >-
+      classified(book, line) && tax_accounting(book) == 'tax_excluded'
+      && rated(category(line)) && rate_pct(rate(line)) > 0 && !has(line.tax.amount)
+    field: tax.amount
+    expr: tax_of(gross(line), rate_pct(rate(line)), true)
+    message:
+      en: "lines[{{.line}}].tax: amount {{.value}} is the consumption tax inside this line at its rate — record it (iris validate --fix) and book it on 仮払/仮受消費税"
+      ja: "lines[{{.line}}].tax: この明細に含まれる消費税額は {{.value}} です — 記録して(iris validate --fix)仮払/仮受消費税に計上してください"

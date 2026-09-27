@@ -1,0 +1,42 @@
+# Golden cases for the recipes. A recipe case names the recipe and its
+# params and pins the rows (or figures) it must produce.
+book:
+  region: JP
+  fiscal_start_month: 4
+
+cases:
+  - name: 定率法 8 years ¥1,000,000 — the manual's worked example (200% table)
+    recipe:
+      id: jp.teiritsu
+      params: {cost: 1000000, life: 8, rate: 0.250, guarantee: 0.07909, revised: 0.334, start: 2027-03}
+    rows:
+      - {period: 2027-03, amount: 250000}
+      - {period: 2028-03, amount: 187500}
+      - {period: 2029-03, amount: 140625}
+      - {period: 2030-03, amount: 105468}
+      - {period: 2031-03, amount: 79101}
+      - {period: 2032-03, amount: 79260}
+      - {period: 2033-03, amount: 79260}
+      - {period: 2034-03, amount: 78785}
+
+  - name: 定率法 4 years ¥480,000 (rate 0.500, guarantee 0.12499, revised 1.000)
+    recipe:
+      id: jp.teiritsu
+      params: {cost: 480000, life: 4, rate: "0.500", guarantee: "0.12499", revised: "1.000", start: "2027-03"}
+    rows:
+      - {period: 2027-03, amount: 240000}
+      - {period: 2028-03, amount: 120000}
+      - {period: 2029-03, amount: 60000}
+      - {period: 2030-03, amount: 59999}
+
+  - name: missing param is refused
+    recipe:
+      id: jp.teiritsu
+      params: {cost: 1000000, life: 8}
+    error: "param rate is required"
+
+  - name: unknown param is refused
+    recipe:
+      id: jp.teiritsu
+      params: {cost: 1000000, life: 8, rate: 0.25, guarantee: 0.07909, revised: 0.334, start: 2027-03, bogus: 1}
+    error: "unknown param"

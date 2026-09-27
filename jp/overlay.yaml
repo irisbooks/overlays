@@ -1,0 +1,8 @@
+# The JP region overlay: the rules, recipes and derivations for a book with
+# `region: JP`.
+id: jp
+version: 2026.09.1
+requires_bindings: 1
+description: >-
+  Japan — 少額減価償却特例 / 一括償却資産 regime checks on assets and
+  消費税 per-line 税区分・税率 checks on journals.

@@ -1,0 +1,170 @@
+# Golden cases for the asset regime rules. Each case runs one target —
+# `asset` (per-asset rules) or `assets` (cross-asset rules) — and pins the
+# issues it must produce, in order. `en` / `ja` / `args` are exact when
+# given.
+book:
+  region: JP
+  fiscal_start_month: 1
+
+cases:
+  - name: no regime declared → nothing to say
+    asset: &ikkatsu
+      name: x
+      acquisition_date: 2026-04-15
+      acquisition_cost: 150000
+      salvage_value: 0
+      useful_life_months: 36
+      method: straight_line
+      asset_account: 資産:工具器具備品
+      depreciation_expense_account: 費用:減価償却費
+      accumulated_depreciation_account: 資産:減価償却累計額
+    expect: []
+
+  - name: ikkatsu_3yr valid
+    asset: {<<: *ikkatsu, toku_rei: ikkatsu_3yr}
+    expect: []
+
+  - name: ikkatsu_3yr wrong method
+    asset: {<<: *ikkatsu, toku_rei: ikkatsu_3yr, method: declining_balance}
+    expect:
+      - rule: asset.regime-method
+        en: 'toku_rei=ikkatsu_3yr requires method=straight_line, got "declining_balance"'
+        ja: 'toku_rei=ikkatsu_3yr では method=straight_line が必要です(現在 "declining_balance")'
+
+  - name: ikkatsu_3yr wrong life
+    asset: {<<: *ikkatsu, toku_rei: ikkatsu_3yr, useful_life_months: 48}
+    expect:
+      - rule: asset.ikkatsu-useful-life
+        en: "toku_rei=ikkatsu_3yr requires useful_life_months=36, got 48"
+        ja: "toku_rei=ikkatsu_3yr では useful_life_months=36 が必要です(現在 48)"
+
+  - name: ikkatsu_3yr non-zero salvage
+    asset: {<<: *ikkatsu, toku_rei: ikkatsu_3yr, salvage_value: 1}
+    expect:
+      - rule: asset.ikkatsu-salvage
+        en: "toku_rei=ikkatsu_3yr requires salvage_value=0, got 1"
+
+  - name: ikkatsu_3yr cost below ¥100k
+    asset: {<<: *ikkatsu, toku_rei: ikkatsu_3yr, acquisition_cost: 80000}
+    expect:
+      - rule: asset.ikkatsu-cost-range
+        en: "toku_rei=ikkatsu_3yr requires acquisition_cost of at least ¥100000 and under ¥200000, got ¥80000 (below ¥100000: expensed in full without a toku_rei; ¥200000 or more: shoutoku_300k if eligible, otherwise normal depreciation)"
+        ja: "toku_rei=ikkatsu_3yr では acquisition_cost が ¥100000 以上 ¥200000 未満である必要があります(現在 ¥80000)。¥100000 未満は toku_rei なしで全額を費用に、¥200000 以上は要件を満たせば shoutoku_300k、そうでなければ通常の減価償却になります"
+
+  - name: ikkatsu_3yr cost above ¥200k
+    asset: {<<: *ikkatsu, toku_rei: ikkatsu_3yr, acquisition_cost: 250000}
+    expect:
+      - rule: asset.ikkatsu-cost-range
+
+  - name: shoutoku_300k valid
+    asset: &shoutoku {<<: *ikkatsu, toku_rei: shoutoku_300k, method: expensed, useful_life_months: 0, acquisition_cost: 250000}
+    expect: []
+
+  - name: shoutoku_300k wrong method
+    asset: {<<: *shoutoku, method: straight_line}
+    expect:
+      - rule: asset.regime-method
+        en: 'toku_rei=shoutoku_300k requires method=expensed, got "straight_line"'
+
+  - name: shoutoku_300k cost above ¥300k
+    asset: {<<: *shoutoku, acquisition_cost: 350000}
+    expect:
+      - rule: asset.shoutoku-cost-max
+        en: "toku_rei=shoutoku_300k requires acquisition_cost under ¥300000, got ¥350000"
+        ja: "toku_rei=shoutoku_300k では acquisition_cost が ¥300000 未満である必要があります(現在 ¥350000)"
+
+  # The statutory limits are 未満 (strictly under): exactly ¥200,000 is not
+  # 一括償却, exactly ¥300,000 is not the 少額 special.
+  - name: ikkatsu_3yr at exactly ¥200k is out of range
+    asset: {<<: *ikkatsu, toku_rei: ikkatsu_3yr, acquisition_cost: 200000}
+    expect:
+      - rule: asset.ikkatsu-cost-range
+
+  - name: ikkatsu_3yr at ¥199,999 is in range
+    asset: {<<: *ikkatsu, toku_rei: ikkatsu_3yr, acquisition_cost: 199999}
+    expect: []
+
+  - name: shoutoku_300k at exactly ¥300k is refused
+    asset: {<<: *shoutoku, acquisition_cost: 300000}
+    expect:
+      - rule: asset.shoutoku-cost-max
+
+  - name: shoutoku_300k below ¥100k is refused — it would count toward the cap
+    asset: {<<: *shoutoku, acquisition_cost: 99999}
+    expect:
+      - rule: asset.shoutoku-cost-min
+        en: "toku_rei=shoutoku_300k requires acquisition_cost of at least ¥100000, got ¥99999 (below ¥100000 the item is expensed in full without a toku_rei and does not count toward the ¥3M cap)"
+        ja: "toku_rei=shoutoku_300k では acquisition_cost が ¥100000 以上である必要があります(現在 ¥99999)。¥100000 未満は toku_rei なしで全額を費用にでき、¥3M の上限にも数えません"
+
+  - name: unknown regime
+    asset: {<<: *ikkatsu, toku_rei: ikkatsu_5yr}
+    expect:
+      - rule: asset.toku-rei-unknown
+        en: 'toku_rei: unknown regime "ikkatsu_5yr" (expected ikkatsu_3yr or shoutoku_300k)'
+        ja: 'toku_rei: 不明な特例区分 "ikkatsu_5yr" です(有効な値: ikkatsu_3yr または shoutoku_300k)'
+
+  - name: toku_rei that is not a string reads as no regime
+    asset: {<<: *ikkatsu, toku_rei: 3}
+    expect: []
+
+  # ---- cross-asset ¥3M/yr cap ------------------------------------------
+
+  - name: 3 × ¥300k = ¥900k stays under the cap
+    assets:
+      - &s300 {<<: *shoutoku, acquisition_cost: 300000}
+      - *s300
+      - *s300
+    expect: []
+
+  - name: 11 × ¥300k = ¥3.3M breaches the cap — one issue per asset
+    assets: [*s300, *s300, *s300, *s300, *s300, *s300, *s300, *s300, *s300, *s300, *s300]
+    expect:
+      - rule: asset.shoutoku-cap-exceeded
+        file: assets/0.md
+        en: "toku_rei=shoutoku_300k: FY2026 total ¥3300000 exceeds the 青色 SMB ¥3000000/yr cap (sum across 11 asset(s))"
+        ja: "toku_rei=shoutoku_300k: FY2026 の合計 ¥3300000 が青色申告の特例上限 ¥3000000/年 を超えています(11 件の合計)"
+        args: {fy: "2026", total: "3300000", cap: "3000000", count: "11"}
+      - {rule: asset.shoutoku-cap-exceeded, file: assets/1.md}
+      - {rule: asset.shoutoku-cap-exceeded, file: assets/2.md}
+      - {rule: asset.shoutoku-cap-exceeded, file: assets/3.md}
+      - {rule: asset.shoutoku-cap-exceeded, file: assets/4.md}
+      - {rule: asset.shoutoku-cap-exceeded, file: assets/5.md}
+      - {rule: asset.shoutoku-cap-exceeded, file: assets/6.md}
+      - {rule: asset.shoutoku-cap-exceeded, file: assets/7.md}
+      - {rule: asset.shoutoku-cap-exceeded, file: assets/8.md}
+      - {rule: asset.shoutoku-cap-exceeded, file: assets/9.md}
+      - {rule: asset.shoutoku-cap-exceeded, file: assets/10.md}
+
+  - name: cap is per fiscal year — two years each over cap, calendar FY
+    assets:
+      - {<<: *shoutoku, acquisition_cost: 1600000, acquisition_date: 2026-05-01}
+      - {<<: *shoutoku, acquisition_cost: 1600000, acquisition_date: 2026-12-31}
+      - {<<: *shoutoku, acquisition_cost: 1600000, acquisition_date: 2027-02-01}
+      - {<<: *shoutoku, acquisition_cost: 1600000, acquisition_date: 2027-08-01}
+    expect:
+      - {rule: asset.shoutoku-cap-exceeded, args: {fy: "2026", total: "3200000", count: "2"}}
+      - {rule: asset.shoutoku-cap-exceeded, args: {fy: "2026"}}
+      - {rule: asset.shoutoku-cap-exceeded, args: {fy: "2027", total: "3200000", count: "2"}}
+      - {rule: asset.shoutoku-cap-exceeded, args: {fy: "2027"}}
+
+  - name: April FY start — March belongs to the previous FY, so neither year breaches
+    book: {region: JP, fiscal_start_month: 4}
+    assets:
+      - {<<: *shoutoku, acquisition_cost: 1600000, acquisition_date: 2026-05-10}   # FY2026
+      - {<<: *shoutoku, acquisition_cost: 1600000, acquisition_date: 2026-03-15}   # FY2025
+    expect: []
+
+  - name: April FY start — May and next March are one FY and breach together
+    book: {region: JP, fiscal_start_month: 4}
+    assets:
+      - {<<: *shoutoku, acquisition_cost: 1600000, acquisition_date: 2026-05-10}
+      - {<<: *shoutoku, acquisition_cost: 1600000, acquisition_date: 2027-03-15}
+    expect:
+      - {rule: asset.shoutoku-cap-exceeded, args: {fy: "2026", total: "3200000"}}
+      - {rule: asset.shoutoku-cap-exceeded, args: {fy: "2026"}}
+
+  - name: ikkatsu assets do not count toward the shoutoku cap
+    assets:
+      - {<<: *ikkatsu, toku_rei: ikkatsu_3yr, acquisition_cost: 200000}
+      - {<<: *shoutoku, acquisition_cost: 300000}
+    expect: []

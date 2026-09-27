@@ -1,0 +1,53 @@
+# 消費税 return figures — 簡易課税 (simplified method).
+#
+# Sales tax by rate as under 本則, then the deemed purchase tax: each
+# 課税売上 line's tax × the みなし仕入率 of its 事業区分 (per line, else
+# the book default). The rates per class are law-volatile and come in as
+# a param the LLM looks up: {"1": 90, "2": 80, "3": 70, "4": 60, "5": 50, "6": 40}.
+id: shouhizei-simplified
+output: figures
+description:
+  en: >-
+    JP 消費税 return figures under 簡易課税 for a period: taxable sales by rate
+    (gross and tax), sales tax per 事業区分, the deemed purchase tax at the
+    みなし仕入率 you pass per class, net tax and the amount payable rounded
+    down to ¥100. Records a filing under filings/ with provenance.
+  ja: >-
+    簡易課税の消費税申告の集計値: 税率別の課税売上(税込・税額)、事業区分別の売上税額、
+    渡されたみなし仕入率による仕入税額控除、差引税額と百円未満切捨ての納付税額。
+    filings/ に根拠付きで記録します。
+params:
+  - {name: from, type: string, doc: "Period start, YYYY-MM-DD"}
+  - {name: to, type: string, doc: "Period end, YYYY-MM-DD"}
+  - {name: deemed_pct, type: map, doc: "みなし仕入率 per 事業区分 as percentages, e.g. {\"1\": 90, \"2\": 80, \"3\": 70, \"4\": 60, \"5\": 50, \"6\": 40}"}
+let:
+  incl: tax_accounting(book) != 'tax_excluded'
+  by_class: sums(journals, ['tax.category', 'tax.rate', 'tax.business_class'], date(from), date(to))
+  default_class: string(business_class(book, {}))
+  classes: "['1', '2', '3', '4', '5', '6']"
+  sale_rows: by_class.rows.filter(r, r.keys[0] == 'taxable_sale')
+  sales_10: sum(sale_rows.filter(r, r.keys[1] == '10').map(r, r.credit - r.debit))
+  sales_8: sum(sale_rows.filter(r, r.keys[1] == '8r' || r.keys[1] == '8o').map(r, r.credit - r.debit))
+  sales_tax_10: tax_of(sales_10, 10, incl)
+  sales_tax_8: tax_of(sales_8, 8, incl)
+  sales_tax: sales_tax_10 + sales_tax_8
+  tax_by_class: >-
+    classes.map(c, sum(sale_rows.filter(r, (r.keys[2] == '' ? default_class : r.keys[2]) == c)
+                                .map(r, tax_of(r.credit - r.debit, rate_pct(r.keys[1]), incl))))
+  deemed_by_class: >-
+    classes.map(c, tax_by_class[int(c) - 1] * (c in deemed_pct ? int(deemed_pct[c]) : 0) / 100)
+  deductible_tax: sum(deemed_by_class)
+  net_tax: sales_tax - deductible_tax
+result: >-
+  {
+    'period_from': from, 'period_to': to,
+    'accounting': incl ? 'tax_included' : 'tax_excluded',
+    'sales_10': sales_10, 'sales_tax_10': sales_tax_10,
+    'sales_8': sales_8, 'sales_tax_8': sales_tax_8,
+    'sales_tax': sales_tax,
+    'sales_tax_class_1': tax_by_class[0], 'sales_tax_class_2': tax_by_class[1], 'sales_tax_class_3': tax_by_class[2],
+    'sales_tax_class_4': tax_by_class[3], 'sales_tax_class_5': tax_by_class[4], 'sales_tax_class_6': tax_by_class[5],
+    'deductible_tax': deductible_tax,
+    'net_tax': net_tax,
+    'payable': net_tax >= 0 ? floor_to(net_tax, 100) : net_tax
+  }

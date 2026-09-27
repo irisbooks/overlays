@@ -1,0 +1,130 @@
+# Golden cases for the 消費税 per-line rules. Each case runs one journal
+# against the suite book (a 課税事業者 on 本則課税) unless it overrides
+# `book`.
+book: &general
+  region: JP
+  fiscal_start_month: 1
+  consumption_tax: {status: taxable, method: general}
+
+cases:
+  - name: 免税事業者 — even a malformed tax block is ignored
+    book: {region: JP, consumption_tax: {status: exempt}}
+    journal: &j1 {lines: [{account: 費用:会議費, debit: 11000, tax: {category: bogus}}]}
+    expect: []
+
+  - name: no consumption_tax block — unmanaged, ignored
+    book: {region: JP}
+    journal: *j1
+    expect: []
+
+  - name: line without a tax block is ignored
+    journal: {lines: [{account: 資産:現金, debit: 100}]}
+    expect: []
+
+  - name: taxable_purchase with rate and invoice passes
+    journal: {lines: [{account: 費用:会議費, debit: 11000, tax: {category: taxable_purchase, rate: "10", invoice: true}}]}
+    expect: []
+
+  - name: rate written as a YAML integer is accepted
+    journal: {lines: [{account: 収益:売上, credit: 11000, tax: {category: taxable_sale, rate: 10}}]}
+    expect: []
+
+  - name: category is required when a tax block is present
+    journal: {lines: [{account: 費用:会議費, debit: 11000, tax: {invoice: true}}]}
+    expect:
+      - rule: tax.category-required
+        en: "lines[0].tax: category is required when a tax block is present"
+        ja: "lines[0].tax: tax ブロックがある場合 category は必須です"
+
+  - name: unknown category — and nothing else fires for that line
+    journal: {lines: [{account: 費用:会議費, debit: 11000, tax: {category: vat20, rate: "20"}}]}
+    expect:
+      - rule: tax.category-unknown
+        en: 'lines[0].tax: unknown category "vat20"'
+        ja: 'lines[0].tax: 不明な category "vat20" です'
+
+  - name: taxable_sale missing rate
+    journal: {lines: [{account: 収益:売上, credit: 11000, tax: {category: taxable_sale}}]}
+    expect:
+      - rule: tax.rate-required
+        en: "lines[0].tax: taxable_sale requires a rate (10 | 8r | 8o | 5 | 3)"
+        ja: "lines[0].tax: taxable_sale には税率が必要です(10 | 8r | 8o | 5 | 3)"
+
+  - name: unknown rate token
+    journal: {lines: [{account: 費用:会議費, debit: 11000, tax: {category: taxable_purchase, rate: "9"}}]}
+    expect:
+      - rule: tax.rate-unknown
+        en: 'lines[0].tax: unknown rate "9" (expected 10 | 8r | 8o | 5 | 3)'
+
+  - name: rated category with rate 0
+    journal: {lines: [{account: 費用:会議費, debit: 11000, tax: {category: taxable_purchase, rate: "0"}}]}
+    expect:
+      - rule: tax.rate-positive
+        en: "lines[0].tax: taxable_purchase requires a positive rate, not 0"
+        ja: "lines[0].tax: taxable_purchase には正の税率が必要です(0 は不可)"
+
+  - name: 非課税 with a rate
+    journal: {lines: [{account: 収益:売上, credit: 11000, tax: {category: exempt_sale, rate: "10"}}]}
+    expect:
+      - rule: tax.rate-not-allowed
+        en: 'lines[0].tax: exempt_sale must not carry a tax rate (got "10")'
+        ja: 'lines[0].tax: exempt_sale に税率は指定できません(現在 "10")'
+
+  - name: 非課税 without a rate passes
+    journal: {lines: [{account: 収益:売上, credit: 11000, tax: {category: exempt_sale}}]}
+    expect: []
+
+  - name: export_sale rate 0 passes
+    journal: {lines: [{account: 収益:売上, credit: 11000, tax: {category: export_sale, rate: "0"}}]}
+    expect: []
+
+  - name: export_sale with a non-zero rate
+    journal: {lines: [{account: 収益:売上, credit: 11000, tax: {category: export_sale, rate: "10"}}]}
+    expect:
+      - rule: tax.export-rate-zero
+        en: "lines[0].tax: export_sale is 0% — set rate: 0 or omit it"
+
+  - name: 不課税 passes
+    journal: {lines: [{account: 費用:租税公課, debit: 5000, tax: {category: out_of_scope}}]}
+    expect: []
+
+  - name: line index survives into the message
+    journal:
+      lines:
+        - {account: 資産:現金, debit: 11000}
+        - {account: 収益:売上, credit: 11000, tax: {category: taxable_sale}}
+    expect:
+      - rule: tax.rate-required
+        en: "lines[1].tax: taxable_sale requires a rate (10 | 8r | 8o | 5 | 3)"
+        args: {line: "1"}
+
+  # ---- 簡易課税 事業区分 -----------------------------------------------
+
+  - name: 簡易課税 課税売上 without 事業区分 anywhere
+    book: &simplified {region: JP, consumption_tax: {status: taxable, method: simplified}}
+    journal: &sale {lines: [{account: 収益:売上, credit: 11000, tax: {category: taxable_sale, rate: "10"}}]}
+    expect:
+      - rule: tax.business-class-required
+        en: "lines[0].tax: 簡易課税: taxable_sale needs business_class 1..6 (per line or a book-level default)"
+        ja: "lines[0].tax: 簡易課税: taxable_sale には business_class 1〜6 が必要です(行ごと、または帳簿の既定値)"
+
+  - name: 簡易課税 with a book-level default passes
+    book: {region: JP, consumption_tax: {status: taxable, method: simplified, business_class: 5}}
+    journal: *sale
+    expect: []
+
+  - name: 簡易課税 with a per-line 事業区分 passes
+    book: *simplified
+    journal: {lines: [{account: 収益:売上, credit: 11000, tax: {category: taxable_sale, rate: "10", business_class: 2}}]}
+    expect: []
+
+  - name: 簡易課税 per-line 事業区分 out of range
+    book: *simplified
+    journal: {lines: [{account: 収益:売上, credit: 11000, tax: {category: taxable_sale, rate: "10", business_class: 7}}]}
+    expect:
+      - rule: tax.business-class-required
+
+  - name: 本則課税 taxable_sale needs no 事業区分
+    book: *general
+    journal: *sale
+    expect: []

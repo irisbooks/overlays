@@ -1,0 +1,52 @@
+# 少額減価償却特例 (toku_rei: shoutoku_300k) — items of 10万円以上 30万円未満
+# written off in full in the year of acquisition, subject to the 青色 SMB
+# cap of ¥3M per fiscal year across all such items (措法28条の2 / 67条の5).
+# Items under ¥100k are deducted in full under the general rule (令133 /
+# 所令138) without the special, so they never count toward the cap.
+rules:
+  - id: asset.shoutoku-cost-max
+    target: asset
+    when: regime(asset) == 'shoutoku_300k'
+    assert: asset.acquisition_cost < 300000
+    args:
+      regime: regime(asset)
+      max: "300000"
+      got: asset.acquisition_cost
+    message:
+      en: "toku_rei={{.regime}} requires acquisition_cost under ¥{{.max}}, got ¥{{.got}}"
+      ja: "toku_rei={{.regime}} では acquisition_cost が ¥{{.max}} 未満である必要があります(現在 ¥{{.got}})"
+
+  - id: asset.shoutoku-cost-min
+    target: asset
+    when: regime(asset) == 'shoutoku_300k'
+    assert: asset.acquisition_cost >= 100000
+    args:
+      regime: regime(asset)
+      min: "100000"
+      got: asset.acquisition_cost
+    message:
+      en: "toku_rei={{.regime}} requires acquisition_cost of at least ¥{{.min}}, got ¥{{.got}} (below ¥{{.min}} the item is expensed in full without a toku_rei and does not count toward the ¥3M cap)"
+      ja: "toku_rei={{.regime}} では acquisition_cost が ¥{{.min}} 以上である必要があります(現在 ¥{{.got}})。¥{{.min}} 未満は toku_rei なしで全額を費用にでき、¥3M の上限にも数えません"
+
+  # Cross-asset: the per-FY cap. Evaluated once per asset with the whole
+  # book's assets in scope, so every asset in an over-cap year gets its own
+  # issue.
+  - id: asset.shoutoku-cap-exceeded
+    target: assets
+    when: regime(asset) == 'shoutoku_300k' && has(asset.acquisition_date)
+    let:
+      fy: fy(asset.acquisition_date, book.fiscal_start_month)
+      peers: >-
+        assets.filter(b, regime(b) == 'shoutoku_300k' && has(b.acquisition_date)
+                         && fy(b.acquisition_date, book.fiscal_start_month) == fy)
+      total: sum(peers.map(b, b.acquisition_cost))
+    assert: total <= 3000000
+    args:
+      regime: regime(asset)
+      fy: fy
+      total: total
+      cap: "3000000"
+      count: size(peers)
+    message:
+      en: "toku_rei={{.regime}}: FY{{.fy}} total ¥{{.total}} exceeds the 青色 SMB ¥{{.cap}}/yr cap (sum across {{.count}} asset(s))"
+      ja: "toku_rei={{.regime}}: FY{{.fy}} の合計 ¥{{.total}} が青色申告の特例上限 ¥{{.cap}}/年 を超えています({{.count}} 件の合計)"

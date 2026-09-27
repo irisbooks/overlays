@@ -1,0 +1,131 @@
+# Named expressions shared by the rules. Each is bound as a CEL function
+# over its declared params; a function may call only the ones declared
+# above it, so nothing here can recurse. Types: dyn | string | int | bool |
+# double | timestamp | list | map.
+functions:
+  - name: regime
+    doc: The asset's toku_rei label, or '' when absent or not a string.
+    params: [{name: a, type: map}]
+    returns: string
+    expr: >-
+      has(a.toku_rei) && type(a.toku_rei) == string ? a.toku_rei : ''
+
+  - name: fy
+    doc: >-
+      Fiscal year of a date under the begins-in convention — an FY starting
+      in month `start` is named by the calendar year it starts in.
+    params: [{name: d, type: timestamp}, {name: start, type: int}]
+    returns: int
+    expr: >-
+      d.getMonth() + 1 >= start ? d.getFullYear() : d.getFullYear() - 1
+
+  - name: manages_tax
+    doc: Whether the book is a 課税事業者 (consumption_tax.status == taxable).
+    params: [{name: b, type: map}]
+    returns: bool
+    expr: >-
+      has(b.consumption_tax) && type(b.consumption_tax) == map
+      && has(b.consumption_tax.status) && b.consumption_tax.status == 'taxable'
+
+  - name: tax_method
+    doc: The book's consumption-tax method (general | simplified), or ''.
+    params: [{name: b, type: map}]
+    returns: string
+    expr: >-
+      has(b.consumption_tax) && type(b.consumption_tax) == map
+      && has(b.consumption_tax.method) && type(b.consumption_tax.method) == string
+      ? b.consumption_tax.method : ''
+
+  - name: classified
+    doc: >-
+      Whether a journal line is subject to the per-line tax checks: the book
+      manages consumption tax and the line carries a tax block.
+    params: [{name: b, type: map}, {name: l, type: map}]
+    returns: bool
+    expr: manages_tax(b) && has(l.tax) && type(l.tax) == map
+
+  - name: category
+    doc: The line's tax.category, or '' when absent.
+    params: [{name: l, type: map}]
+    returns: string
+    expr: >-
+      has(l.tax.category) && type(l.tax.category) == string ? l.tax.category : ''
+
+  - name: rate
+    doc: >-
+      The line's tax.rate as a token ('10', '8r', …). A YAML integer
+      (`rate: 10`) is accepted and normalised; absent → ''.
+    params: [{name: l, type: map}]
+    returns: string
+    expr: >-
+      !has(l.tax.rate) ? '' :
+      type(l.tax.rate) == string ? l.tax.rate :
+      type(l.tax.rate) == int ? string(l.tax.rate) :
+      type(l.tax.rate) == double ? string(int(l.tax.rate)) : ''
+
+  - name: rated
+    doc: Whether a category carries an explicit positive rate (課税売上 / 課税仕入).
+    params: [{name: c, type: string}]
+    returns: bool
+    expr: c == 'taxable_sale' || c == 'taxable_purchase'
+
+  - name: business_class
+    doc: >-
+      簡易課税 事業区分 for a 課税売上 line — the per-line override, else the
+      book default, else 0.
+    params: [{name: b, type: map}, {name: l, type: map}]
+    returns: int
+    expr: >-
+      (has(l.tax) && type(l.tax) == map && has(l.tax.business_class) && type(l.tax.business_class) == int)
+      ? l.tax.business_class :
+      (has(b.consumption_tax) && type(b.consumption_tax) == map && has(b.consumption_tax.business_class)
+       && type(b.consumption_tax.business_class) == int)
+      ? b.consumption_tax.business_class : 0
+
+  - name: tax_accounting
+    doc: The book's consumption-tax accounting posture (tax_included | tax_excluded), or ''.
+    params: [{name: b, type: map}]
+    returns: string
+    expr: >-
+      has(b.consumption_tax) && type(b.consumption_tax) == map
+      && has(b.consumption_tax.accounting) && type(b.consumption_tax.accounting) == string
+      ? b.consumption_tax.accounting : ''
+
+  - name: rate_pct
+    doc: >-
+      The percentage a rate token stands for: 10 → 10, 8r and 8o → 8, 5 → 5,
+      3 → 3, everything else 0. A token IS its rate — this is vocabulary,
+      not a lookup.
+    params: [{name: r, type: string}]
+    returns: int
+    expr: >-
+      r == '10' ? 10 : (r == '8r' || r == '8o') ? 8 : r == '5' ? 5 : r == '3' ? 3 : 0
+
+  - name: gross
+    doc: The line's amount on whichever side it carries.
+    params: [{name: l, type: map}]
+    returns: int
+    expr: l.debit + l.credit
+
+  - name: bucket_credit
+    doc: Total credit of the sums rows whose keys equal ks (0 when none).
+    params: [{name: s, type: map}, {name: ks, type: list}]
+    returns: int
+    expr: sum(s.rows.filter(r, r.keys == ks).map(r, r.credit))
+
+  - name: bucket_debit
+    doc: Total debit of the sums rows whose keys equal ks (0 when none).
+    params: [{name: s, type: map}, {name: ks, type: list}]
+    returns: int
+    expr: sum(s.rows.filter(r, r.keys == ks).map(r, r.debit))
+
+  - name: tax_of
+    doc: >-
+      The consumption tax inside an amount at rate pct: for a tax-inclusive
+      amount amount × pct / (100 + pct); for a tax-exclusive amount
+      amount × pct / 100. Fractions of a yen are dropped (割戻し計算 on the
+      aggregate).
+    params: [{name: amount, type: int}, {name: pct, type: int}, {name: inclusive, type: bool}]
+    returns: int
+    expr: >-
+      inclusive ? amount * pct / (100 + pct) : amount * pct / 100

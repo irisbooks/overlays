@@ -1,0 +1,108 @@
+# 消費税 per-line classification (税区分 first, 税率 second). Only a
+# 課税事業者 book (consumption_tax.status: taxable) is checked; a 免税事業者
+# or a book with no consumption_tax block records tax-inclusive amounts
+# with no classification. Lines without a tax block are ignored.
+#
+# Rate tokens: 10 = 標準10%, 8r = 軽減税率8%, 8o = 旧/経過措置8%, 5 / 3 =
+# legacy rates, 0 = 免税(輸出). Opaque tokens — no rate math here.
+rules:
+  - id: tax.category-required
+    target: line
+    when: classified(book, line)
+    assert: category(line) != ''
+    args:
+      line: line_index
+    message:
+      en: "lines[{{.line}}].tax: category is required when a tax block is present"
+      ja: "lines[{{.line}}].tax: tax ブロックがある場合 category は必須です"
+
+  - id: tax.category-unknown
+    target: line
+    when: classified(book, line) && category(line) != ''
+    assert: >-
+      category(line) in ['taxable_sale', 'taxable_purchase', 'exempt_sale',
+                         'exempt_purchase', 'export_sale', 'out_of_scope',
+                         'securities_sale']
+    args:
+      line: line_index
+      got: quote(category(line))
+    message:
+      en: "lines[{{.line}}].tax: unknown category {{.got}}"
+      ja: "lines[{{.line}}].tax: 不明な category {{.got}} です"
+
+  - id: tax.export-rate-zero
+    target: line
+    when: classified(book, line) && category(line) == 'export_sale'
+    assert: rate(line) in ['', '0']
+    args:
+      line: line_index
+    message:
+      en: "lines[{{.line}}].tax: export_sale is 0% — set rate: 0 or omit it"
+      ja: "lines[{{.line}}].tax: export_sale は 0% です(rate: 0 を指定するか省略してください)"
+
+  - id: tax.rate-required
+    target: line
+    when: classified(book, line) && rated(category(line))
+    assert: rate(line) != ''
+    args:
+      line: line_index
+      category: category(line)
+    message:
+      en: "lines[{{.line}}].tax: {{.category}} requires a rate (10 | 8r | 8o | 5 | 3)"
+      ja: "lines[{{.line}}].tax: {{.category}} には税率が必要です(10 | 8r | 8o | 5 | 3)"
+
+  - id: tax.rate-unknown
+    target: line
+    when: classified(book, line) && rated(category(line)) && rate(line) != ''
+    assert: rate(line) in ['10', '8r', '8o', '5', '3', '0']
+    args:
+      line: line_index
+      got: quote(rate(line))
+    message:
+      en: "lines[{{.line}}].tax: unknown rate {{.got}} (expected 10 | 8r | 8o | 5 | 3)"
+      ja: "lines[{{.line}}].tax: 不明な税率 {{.got}} です(有効な値: 10 | 8r | 8o | 5 | 3)"
+
+  - id: tax.rate-positive
+    target: line
+    when: >-
+      classified(book, line) && rated(category(line))
+      && rate(line) in ['10', '8r', '8o', '5', '3', '0']
+    assert: rate(line) != '0'
+    args:
+      line: line_index
+      category: category(line)
+    message:
+      en: "lines[{{.line}}].tax: {{.category}} requires a positive rate, not 0"
+      ja: "lines[{{.line}}].tax: {{.category}} には正の税率が必要です(0 は不可)"
+
+  # 非課税 / 不課税 / 有価証券譲渡 carry no rate.
+  - id: tax.rate-not-allowed
+    target: line
+    when: >-
+      classified(book, line)
+      && category(line) in ['exempt_sale', 'exempt_purchase', 'out_of_scope', 'securities_sale']
+    assert: rate(line) in ['', '0']
+    args:
+      line: line_index
+      category: category(line)
+      got: quote(rate(line))
+    message:
+      en: "lines[{{.line}}].tax: {{.category}} must not carry a tax rate (got {{.got}})"
+      ja: "lines[{{.line}}].tax: {{.category}} に税率は指定できません(現在 {{.got}})"
+
+  # 簡易課税: each 課税売上 line needs a みなし仕入率 事業区分 (第1〜6種),
+  # per line or as the book default — the engine cannot derive it at
+  # filing time.
+  - id: tax.business-class-required
+    target: line
+    when: >-
+      classified(book, line) && tax_method(book) == 'simplified'
+      && category(line) == 'taxable_sale'
+    let:
+      bc: business_class(book, line)
+    assert: bc >= 1 && bc <= 6
+    args:
+      line: line_index
+    message:
+      en: "lines[{{.line}}].tax: 簡易課税: taxable_sale needs business_class 1..6 (per line or a book-level default)"
+      ja: "lines[{{.line}}].tax: 簡易課税: taxable_sale には business_class 1〜6 が必要です(行ごと、または帳簿の既定値)"
