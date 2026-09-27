@@ -19,19 +19,26 @@ figures are assembled from the ledger — lives here, one directory per region.
 
 ## How a book uses an overlay
 
-Each `iris` release embeds the overlays released when it was built. A book pins
-the one it validates against in `config/book.yaml`, and a tag in this repository
-is exactly that pin:
+Each `iris` release embeds every overlay version released before it was built. A
+book pins the one it validates against in `config/book.yaml`, and a tag in this
+repository is exactly that pin:
 
 ```yaml
 region: JP
 overlay: jp@2026.09.1   # = the tag jp@2026.09.1 here
 ```
 
-A pin never moves on its own; upgrading is an explicit edit. A released version
-never changes either: a depreciation schedule or a return computed by a recipe
-records `overlay: jp@<version>` as its source, and `iris validate` re-runs the
-recipe under that version to prove the recorded figures came from their inputs.
+A pin never moves on its own, and it is not edited by hand: `iris overlay upgrade`
+moves it (to the newest version, or `--to <id>@<version>`) after verifying the
+version and running its tests. A version released after your `iris` was built
+arrives as a signed release of this repository: `iris overlay fetch` downloads
+and verifies the version a book pins, and the IrisBooks cloud evaluates that same
+version. Both commands need `iris` v0.2.0 or later.
+
+A released version never changes either: a depreciation schedule or a return
+computed by a recipe records `overlay: jp@<version>` as its source, and
+`iris validate` re-runs the recipe under that version to prove the recorded
+figures came from their inputs.
 
 Overlays carry **method**, not **rates**. Anything that changes under a tax
 reform without changing the method — a depreciation rate, a deemed purchase
