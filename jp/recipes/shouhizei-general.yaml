@@ -22,10 +22,9 @@ description:
     the 課税売上割合, deductible purchase tax (invoice vs non-invoice at the
     経過措置 percentage), net tax and the amount payable rounded down to ¥100.
     Records a filing under filings/ with provenance; fill the 申告書 from it.
-  ja: >-
-    本則課税の消費税申告の集計値: 期間内の課税売上・課税仕入の税率別(税込・税額)、
-    免税・非課税・不課税の合計、課税売上割合、仕入税額控除(インボイスあり/なしを
-    経過措置割合で)、差引税額と百円未満切捨ての納付税額。filings/ に根拠付きで記録します。
+  # One line: folding (>-) turns each line break into a space, which Japanese
+  # text must not have.
+  ja: "本則課税の消費税申告の集計値: 期間内の課税売上・課税仕入の税率別(税込・税額)、免税・非課税・不課税の合計、課税売上割合、仕入税額控除(インボイスあり/なしを経過措置割合で)、差引税額と百円未満切捨ての納付税額。filings/ に根拠付きで記録します。"
 params:
   - {name: from, type: string, doc: "Period start, YYYY-MM-DD (課税期間: calendar year for individuals, the fiscal year for a 法人)"}
   - {name: to, type: string, doc: "Period end, YYYY-MM-DD"}

@@ -14,10 +14,9 @@ description:
     改定取得価額 × 改定償却率 for the remaining years, ending on the 備忘価額.
     Pass the three rates exactly as 別表第十 prints them for the asset's
     useful life. Writes annual rows, one per fiscal year.
-  ja: >-
-    定率法の償却表: 償却額が償却保証額(取得価額 × 保証率)を下回るまで償却率で償却し、
-    以降は改定取得価額 × 改定償却率の定額で備忘価額まで償却します。
-    3つの率は別表第十の値をそのまま渡してください。年度ごとに1行を書き出します。
+  # One line: folding (>-) turns each line break into a space, which Japanese
+  # text must not have.
+  ja: "定率法の償却表: 償却額が償却保証額(取得価額 × 保証率)を下回るまで償却率で償却し、以降は改定取得価額 × 改定償却率の定額で備忘価額まで償却します。3つの率は別表第十の値をそのまま渡してください。年度ごとに1行を書き出します。"
 params:
   - {name: cost, type: int, doc: "取得価額 in integer minor units (yen)"}
   - {name: life, type: int, doc: "耐用年数 in years"}

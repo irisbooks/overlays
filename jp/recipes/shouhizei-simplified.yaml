@@ -12,10 +12,9 @@ description:
     (gross and tax), sales tax per 事業区分, the deemed purchase tax at the
     みなし仕入率 you pass per class, net tax and the amount payable rounded
     down to ¥100. Records a filing under filings/ with provenance.
-  ja: >-
-    簡易課税の消費税申告の集計値: 税率別の課税売上(税込・税額)、事業区分別の売上税額、
-    渡されたみなし仕入率による仕入税額控除、差引税額と百円未満切捨ての納付税額。
-    filings/ に根拠付きで記録します。
+  # One line: folding (>-) turns each line break into a space, which Japanese
+  # text must not have.
+  ja: "簡易課税の消費税申告の集計値: 税率別の課税売上(税込・税額)、事業区分別の売上税額、渡されたみなし仕入率による仕入税額控除、差引税額と百円未満切捨ての納付税額。filings/ に根拠付きで記録します。"
 params:
   - {name: from, type: string, doc: "Period start, YYYY-MM-DD"}
   - {name: to, type: string, doc: "Period end, YYYY-MM-DD"}
