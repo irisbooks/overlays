@@ -1,34 +1,36 @@
 # 消費税 return figures — 本則課税 (general method).
 #
 # The engine's exact sums over every posted line with a tax block,
-# combined the way the 申告書 needs them. Structure lives here (割戻し
-# computation on the aggregate per rate, the invoice / non-invoice split,
-# the 百円未満切捨て on the amount payable); law-volatile rates are
-# params the LLM looks up for the period: the 経過措置 deduction
-# percentage for purchases without a qualifying invoice (80% to
-# 2026-09-30, 50% to 2029-09-30 — verify on the NTA site).
+# combined the way the 申告書 needs them: 割戻し computation on the
+# aggregate per rate, the invoice / non-invoice split, the 百円未満切捨て
+# on the amount payable. The 経過措置 percentage for purchases without a
+# qualifying invoice follows the date of each purchase
+# (non_invoice_periods in functions.yaml), so a period that straddles a
+# change — a calendar-2026 return, say — is split at the change.
 #
 # Assumes full deduction of purchase tax (課税売上割合 ≥ 95% and
 # taxable sales ≤ ¥500M); the figures include the 課税売上割合 so the LLM
-# can tell when 個別対応 / 一括比例配分 applies instead. The 国税 / 地方税
-# split and the 千円未満切捨て of the 課税標準額 are form arithmetic the
-# LLM applies on the figures.
+# can tell when 個別対応 / 一括比例配分 applies instead. Also assumes no
+# single non-invoice seller passes the 経過措置's annual cap (¥100M per
+# seller from periods starting 2026-10-01, ¥1bn before). The 国税 /
+# 地方税 split and the 千円未満切捨て of the 課税標準額 are form arithmetic
+# the LLM applies on the figures.
 id: shouhizei-general
 output: figures
 description:
   en: >-
     JP 消費税 return figures under 本則課税 for a period: taxable sales and
     purchases by rate (gross and tax), export / exempt / out-of-scope totals,
-    the 課税売上割合, deductible purchase tax (invoice vs non-invoice at the
-    経過措置 percentage), net tax and the amount payable rounded down to ¥100.
+    the 課税売上割合, deductible purchase tax (invoice, and non-invoice at the
+    経過措置 percentage for each purchase's date), net tax and the amount
+    payable rounded down to ¥100.
     Records a filing under filings/ with provenance; fill the 申告書 from it.
   # One line: folding (>-) turns each line break into a space, which Japanese
   # text must not have.
-  ja: "本則課税の消費税申告の集計値: 期間内の課税売上・課税仕入の税率別(税込・税額)、免税・非課税・不課税の合計、課税売上割合、仕入税額控除(インボイスあり/なしを経過措置割合で)、差引税額と百円未満切捨ての納付税額。filings/ に根拠付きで記録します。"
+  ja: "本則課税の消費税申告の集計値: 期間内の課税売上・課税仕入の税率別(税込・税額)、免税・非課税・不課税の合計、課税売上割合、仕入税額控除(インボイスなしは仕入日に応じた経過措置割合で)、差引税額と百円未満切捨ての納付税額。filings/ に根拠付きで記録します。"
 params:
   - {name: from, type: string, doc: "Period start, YYYY-MM-DD (課税期間: calendar year for individuals, the fiscal year for a 法人)"}
   - {name: to, type: string, doc: "Period end, YYYY-MM-DD"}
-  - {name: non_invoice_pct, type: int, doc: "経過措置: percentage of purchase tax deductible without a qualifying invoice for this period (80 until 2026-09-30, 50 until 2029-09-30)"}
 let:
   incl: tax_accounting(book) != 'tax_excluded'
   by_rate: sums(journals, ['tax.category', 'tax.rate'], date(from), date(to))
@@ -54,7 +56,23 @@ let:
   sales_tax_8: tax_of(sales_8, 8, incl)
   sales_tax: sales_tax_10 + sales_tax_8
   purchase_tax_invoice: tax_of(purch_10_inv, 10, incl) + tax_of(purch_8_inv, 8, incl)
-  purchase_tax_non_invoice: (tax_of(purch_10_noinv, 10, incl) + tax_of(purch_8_noinv, 8, incl)) * non_invoice_pct / 100
+  # One entry per 経過措置 period the return covers, clipped to [from, to].
+  non_invoice_spans: >-
+    non_invoice_periods()
+      .filter(p, p.from <= to && p.to >= from)
+      .map(p, {'from': p.from > from ? p.from : from, 'to': p.to < to ? p.to : to, 'pct': p.pct})
+  non_invoice_sums: >-
+    non_invoice_spans.map(p, {'from': p.from, 'to': p.to, 'pct': p.pct,
+      's': sums(journals, ['tax.category', 'tax.rate', 'tax.invoice'], date(p.from), date(p.to))})
+  non_invoice_purchases_by_period: >-
+    non_invoice_sums.map(p, {'from': p.from, 'to': p.to, 'pct': p.pct,
+      'purchases_10': non_invoice_purchases(p.s, '10'),
+      'purchases_8': non_invoice_purchases(p.s, '8r') + non_invoice_purchases(p.s, '8o')})
+  non_invoice_by_period: >-
+    non_invoice_purchases_by_period.map(p, {'from': p.from, 'to': p.to, 'pct': p.pct,
+      'purchases_10': p.purchases_10, 'purchases_8': p.purchases_8,
+      'deductible_tax': (tax_of(p.purchases_10, 10, incl) + tax_of(p.purchases_8, 8, incl)) * p.pct / 100})
+  purchase_tax_non_invoice: sum(non_invoice_by_period.map(p, p.deductible_tax))
   deductible_tax: purchase_tax_invoice + purchase_tax_non_invoice
   net_tax: sales_tax - deductible_tax
   taxable_sales_total: sales_10 + sales_8 + export_sales
@@ -72,7 +90,7 @@ result: >-
     'sales_tax': sales_tax,
     'purchase_tax_invoice': purchase_tax_invoice,
     'purchase_tax_non_invoice': purchase_tax_non_invoice,
-    'non_invoice_pct': non_invoice_pct,
+    'non_invoice_by_period': non_invoice_by_period,
     'deductible_tax': deductible_tax,
     'net_tax': net_tax,
     'payable': net_tax >= 0 ? floor_to(net_tax, 100) : net_tax

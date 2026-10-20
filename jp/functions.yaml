@@ -19,6 +19,21 @@ functions:
     expr: >-
       d.getMonth() + 1 >= start ? d.getFullYear() : d.getFullYear() - 1
 
+  # Statutory figures below are dated by the date the law keys them on and
+  # cited to their source. A reform is a new overlay version; past dates
+  # keep the figures they had.
+  - name: shoutoku_max
+    doc: >-
+      The 少額減価償却特例's acquisition-cost limit (未満) for an asset
+      acquired on d: ¥300,000 to 2026-03-31, ¥400,000 from 2026-04-01, and 0
+      after 2029-03-31 — the special's 適用期限 as the law now stands.
+      措法28条の2 (個人) / 67条の5 (法人), as amended by 令和8年度改正; see
+      https://www.nta.go.jp/taxes/shiraberu/taxanswer/hojin/5408.htm
+    params: [{name: d, type: timestamp}]
+    returns: int
+    expr: >-
+      d > date('2029-03-31') ? 0 : d >= date('2026-04-01') ? 400000 : 300000
+
   - name: manages_tax
     doc: Whether the book is a 課税事業者 (consumption_tax.status == taxable).
     params: [{name: b, type: map}]
@@ -118,6 +133,37 @@ functions:
     params: [{name: s, type: map}, {name: ks, type: list}]
     returns: int
     expr: sum(s.rows.filter(r, r.keys == ks).map(r, r.debit))
+
+  - name: non_invoice_purchases
+    doc: >-
+      Net 課税仕入 at rate token r without a qualifying invoice (tax.invoice
+      false or absent), from sums grouped by tax.category, tax.rate and
+      tax.invoice.
+    params: [{name: s, type: map}, {name: r, type: string}]
+    returns: int
+    expr: >-
+      bucket_debit(s, ['taxable_purchase', r, '']) - bucket_credit(s, ['taxable_purchase', r, ''])
+      + bucket_debit(s, ['taxable_purchase', r, 'false']) - bucket_credit(s, ['taxable_purchase', r, 'false'])
+
+  - name: non_invoice_periods
+    doc: >-
+      経過措置 for 課税仕入 from a seller who is not a 適格請求書発行事業者:
+      the percentage of the purchase tax still deductible, by the date of
+      the 課税仕入. Closed YYYY-MM-DD ranges; before 2023-10-01 there was no
+      invoice requirement (100%), and from 2031-10-01 nothing is deductible
+      (no entry). 平成28年改正法附則52条・53条, as amended by 令和8年度改正
+      (70% from 2026-10-01, extended to 2031-09-30); see
+      https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/invoice-review/index.htm
+    params: []
+    returns: list
+    expr: >-
+      [
+        {'from': '1989-04-01', 'to': '2023-09-30', 'pct': 100},
+        {'from': '2023-10-01', 'to': '2026-09-30', 'pct': 80},
+        {'from': '2026-10-01', 'to': '2028-09-30', 'pct': 70},
+        {'from': '2028-10-01', 'to': '2030-09-30', 'pct': 50},
+        {'from': '2030-10-01', 'to': '2031-09-30', 'pct': 30}
+      ]
 
   - name: tax_of
     doc: >-

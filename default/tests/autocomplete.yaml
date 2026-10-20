@@ -1,0 +1,74 @@
+book:
+  schema_version: 1
+  fiscal_year: 2026
+  fiscal_start_month: 1
+  currency: JPY
+  scale: 0
+  units: [{symbol: FUND, scale: 0}]
+  inventory:
+    params: {gain_account: Income:Gain}
+cases:
+  - name: money-only balance needs no extra journal fields
+    autocomplete:
+      chart:
+        accounts:
+          - {path: Assets:Bank, type: asset}
+          - {path: Income:Gain, type: income}
+      journal:
+        schema_version: 1
+        date: 2026-03-01
+        status: draft
+        lines:
+          - {account: Assets:Bank, debit: 300}
+          - {account: Income:Gain, credit: null}
+    lines:
+      - {account: Assets:Bank, debit: 300}
+      - {account: Income:Gain, credit: 300}
+
+  - name: omitted method allocates FIFO across acquisitions
+    autocomplete:
+      chart:
+        accounts:
+          - {path: Assets:Bank, type: asset}
+          - {path: Assets:Fund, type: asset}
+          - {path: Income:Gain, type: income}
+      journal:
+        schema_version: 1
+        date: 2026-03-01
+        status: draft
+        lines:
+          - {account: Assets:Bank, debit: 120000}
+          - {account: Assets:Fund, credit: null, quantity: 5, unit: FUND}
+      history:
+        - schema_version: 1
+          date: 2026-01-01
+          status: posted
+          lines:
+            - {account: Assets:Fund, debit: 100000, quantity: 10, unit: FUND}
+            - {account: Assets:Bank, credit: 100000}
+        - schema_version: 1
+          date: 2026-02-01
+          status: posted
+          lines:
+            - {account: Assets:Fund, debit: 200000, quantity: 10, unit: FUND}
+            - {account: Assets:Bank, credit: 200000}
+    lines:
+      - {account: Assets:Bank, debit: 120000}
+      - {account: Assets:Fund, credit: 50000, quantity: 5, unit: FUND}
+      - {account: Income:Gain, credit: 70000}
+
+  - name: missing settlement is not inferred from cost
+    autocomplete:
+      chart:
+        accounts:
+          - {path: Assets:Bank, type: asset}
+          - {path: Assets:Fund, type: asset}
+          - {path: Income:Gain, type: income}
+      journal:
+        schema_version: 1
+        date: 2026-03-01
+        status: draft
+        lines:
+          - {account: Assets:Bank, debit: null}
+          - {account: Assets:Fund, credit: null, quantity: 5, unit: FUND}
+    error: settlement

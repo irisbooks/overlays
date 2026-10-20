@@ -66,15 +66,39 @@ cases:
       - rule: asset.regime-method
         en: 'toku_rei=shoutoku_300k requires method=expensed, got "straight_line"'
 
-  - name: shoutoku_300k cost above ¥300k
-    asset: {<<: *shoutoku, acquisition_cost: 350000}
+  # The limit follows the acquisition date: ¥300k to 2026-03-31, ¥400k from
+  # 2026-04-01 (令和8年度改正), and the special ends after 2029-03-31.
+  - name: shoutoku_300k ¥350k acquired before 2026-04 is over the ¥300k limit
+    asset: {<<: *shoutoku, acquisition_cost: 350000, acquisition_date: 2026-03-31}
     expect:
       - rule: asset.shoutoku-cost-max
-        en: "toku_rei=shoutoku_300k requires acquisition_cost under ¥300000, got ¥350000"
-        ja: "toku_rei=shoutoku_300k では acquisition_cost が ¥300000 未満である必要があります(現在 ¥350000)"
+        en: "toku_rei=shoutoku_300k requires acquisition_cost under ¥300000 for its acquisition date, got ¥350000"
+        ja: "toku_rei=shoutoku_300k では、取得日に応じて acquisition_cost が ¥300000 未満である必要があります(現在 ¥350000)"
+
+  - name: shoutoku_300k ¥350k acquired from 2026-04-01 is within the ¥400k limit
+    asset: {<<: *shoutoku, acquisition_cost: 350000, acquisition_date: 2026-04-01}
+    expect: []
+
+  - name: shoutoku_300k cost above ¥400k from 2026-04
+    asset: {<<: *shoutoku, acquisition_cost: 450000}
+    expect:
+      - rule: asset.shoutoku-cost-max
+        en: "toku_rei=shoutoku_300k requires acquisition_cost under ¥400000 for its acquisition date, got ¥450000"
+        args: {max: "400000"}
+
+  - name: shoutoku_300k on the last day of the 適用期限 still qualifies
+    asset: {<<: *shoutoku, acquisition_date: 2029-03-31}
+    expect: []
+
+  - name: shoutoku_300k after the 適用期限 is refused, whatever the cost
+    asset: {<<: *shoutoku, acquisition_cost: 900000, acquisition_date: 2029-04-01}
+    expect:
+      - rule: asset.shoutoku-expired
+        en: "toku_rei=shoutoku_300k: the 少額減価償却特例 covers assets acquired through 2029-03-31 — this asset was acquired later"
+        ja: "toku_rei=shoutoku_300k: 少額減価償却特例の対象は 2029-03-31 までに取得した資産です(この資産の取得日はその後です)"
 
   # The statutory limits are 未満 (strictly under): exactly ¥200,000 is not
-  # 一括償却, exactly ¥300,000 is not the 少額 special.
+  # 一括償却, exactly the date's limit is not the 少額 special.
   - name: ikkatsu_3yr at exactly ¥200k is out of range
     asset: {<<: *ikkatsu, toku_rei: ikkatsu_3yr, acquisition_cost: 200000}
     expect:
@@ -84,10 +108,19 @@ cases:
     asset: {<<: *ikkatsu, toku_rei: ikkatsu_3yr, acquisition_cost: 199999}
     expect: []
 
-  - name: shoutoku_300k at exactly ¥300k is refused
-    asset: {<<: *shoutoku, acquisition_cost: 300000}
+  - name: shoutoku_300k at exactly ¥300k before 2026-04 is refused
+    asset: {<<: *shoutoku, acquisition_cost: 300000, acquisition_date: 2026-03-31}
     expect:
       - rule: asset.shoutoku-cost-max
+
+  - name: shoutoku_300k at exactly ¥400k from 2026-04 is refused
+    asset: {<<: *shoutoku, acquisition_cost: 400000, acquisition_date: 2026-04-01}
+    expect:
+      - rule: asset.shoutoku-cost-max
+
+  - name: shoutoku_300k at ¥399,999 from 2026-04 is in range
+    asset: {<<: *shoutoku, acquisition_cost: 399999, acquisition_date: 2026-04-01}
+    expect: []
 
   - name: shoutoku_300k below ¥100k is refused — it would count toward the cap
     asset: {<<: *shoutoku, acquisition_cost: 99999}
