@@ -1,0 +1,4 @@
+fields:
+  book.inventory:
+    type: map
+    description: {en: Inventory completion settings. Configure params.gain_account and an optional supported allocation method; quantities and settlement remain explicit.}

@@ -1,0 +1,11 @@
+fields:
+  asset.toku_rei:
+    type: string
+    description: {en: Optional explicit regime. The historical shoutoku_300k token uses dated acquisition limits. Pooled depreciation is unsupported.}
+    enum: [{value: shoutoku_300k}]
+  asset.jp_deduction_confirmed:
+    type: bool
+    when: regime(asset) == 'shoutoku_300k'
+    required: true
+    enum: [{value: true}]
+    description: {en: Confirm documented taxpayer and asset eligibility, in-service year matching acquisition year, full twelve-month FY, amount basis and all-book cap coverage. Short FY and deferred service are unsupported.}

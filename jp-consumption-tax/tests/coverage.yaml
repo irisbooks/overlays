@@ -1,0 +1,7 @@
+cases:
+  - name: scope confirmation required
+    recipe: {id: jp-consumption-tax.shouhizei-general, params: {from: '2026-01-01', to: '2026-12-31'}}
+    error: scope_confirmed is required
+  - name: unconfirmed scope refused
+    recipe: {id: jp-consumption-tax.shouhizei-general, params: {scope_confirmed: false, from: '2026-01-01', to: '2026-12-31'}}
+    error: scope_confirmed

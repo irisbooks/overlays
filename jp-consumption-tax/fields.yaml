@@ -1,0 +1,23 @@
+fields:
+  book.consumption_tax:
+    type: map
+    description: {en: Explicit tax facts; missing settings leave status undetermined.}
+  book.consumption_tax.status:
+    type: string
+    when: has(book.consumption_tax) && type(book.consumption_tax) == map
+    required: true
+    enum: [{value: taxable}, {value: exempt}]
+  book.consumption_tax.method:
+    type: string
+    when: manages_tax(book)
+    required: true
+    enum: [{value: general}, {value: simplified}]
+  book.consumption_tax.accounting:
+    type: string
+    when: manages_tax(book)
+    required: true
+    enum: [{value: tax_included}, {value: tax_excluded}]
+  book.consumption_tax.business_class:
+    type: int
+    when: manages_tax(book) && tax_method(book) == 'simplified'
+    enum: [{value: 1}, {value: 2}, {value: 3}, {value: 4}, {value: 5}, {value: 6}]

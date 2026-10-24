@@ -1,24 +1,7 @@
-# Default overlay
+# Common completion
 
-Universal journal autocomplete, included automatically by compatible IrisBooks
-engines. It requires binding version 3; the engine release that provides that
-binding must ship before this package is merged/tagged for release.
+`default@2026.10.2` requires bindings 5. It adds discoverable journal and inventory tasks to the existing checked completion behavior.
 
-- `journal.balance` completes one missing balancing money amount.
-- `inventory.complete` fills disposal cost and proposes a gain/loss posting.
-  FIFO is implicit; `inventory.params.method` can override it. Configure
-  `inventory.params.gain_account` once in the book. Quantities, proceeds and
-  fees stay explicit. Acquisition history and annual opening basis fund sales.
+Creation presets explicitly copy and select this package. Existing Books retain their selection; there is no implicit runtime default. Install an exact embedded or signed release version into the Book before selecting it. All execution reads the Book copy.
 
-No additional journal policy fields or default pin are required. The engine's
-bundled version supplies the implicit default. A book may explicitly pin a
-`default@<version>` package to select a different available version; do not mix
-its definitions with a newer implicit package. Selected specialist or trusted
-book-local completions override matching default IDs. Different active proposals
-must agree. Native checked arithmetic stays in the engine.
-
-Run `iris overlay test --dir default` with a binding-v3 engine. Autocomplete
-golden cases supply `autocomplete.chart`, `autocomplete.journal` and optional
-`autocomplete.history`; `lines` pins the complete result in journal syntax.
-An `error` substring instead requires rejection. Synthetic source paths are
-stable, and history is ordered by each journal's date.
+Run `iris overlay test --dir default` with the candidate engine. This source version is a release candidate until its signed release is published.

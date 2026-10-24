@@ -29,11 +29,11 @@ jobs:
         run: .github/scripts/fetch-iris.sh
       - name: Run every overlay's golden tests
         run: |
-          # `overlay test --dir` first ships in iris v0.2.0; until that is the
-          # latest release this step can only say so.
+          # Candidate packages must be checked by a compatible signed engine.
+          # Missing support is a release blocker, never a skipped success.
           if ! iris overlay test -h 2>&1 | grep -q 'overlay-dir'; then
-            echo "::warning::iris $(cat "$RUNNER_TEMP/iris/version.txt") predates 'iris overlay test --dir' (v0.2.0) — golden tests not run"
-            exit 0
+            echo "::error::iris $(cat "$RUNNER_TEMP/iris/version.txt") lacks overlay test --dir; publish a compatible signed engine before accepting this catalog"
+            exit 1
           fi
           status=0
           for manifest in */overlay.yaml; do

@@ -1,6 +1,6 @@
 id: default
-version: 2026.10.1
-requires_bindings: 3
+version: 2026.10.2
+requires_bindings: 5
 description: >-
   Universal journal autocomplete: balanced monetary postings and inventory
   disposal cost/gain proposals. FIFO is the implicit allocation method.

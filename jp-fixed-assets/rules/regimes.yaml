@@ -1,0 +1,29 @@
+rules:
+  - id: asset.toku-rei-unknown
+    target: asset
+    when: regime(asset) != ''
+    assert: regime(asset) in ['shoutoku_300k', 'ikkatsu_3yr']
+    message:
+      en: "Unknown JP asset regime; select a documented regime or omit it."
+      ja: "不明な資産の特例区分です。対応する区分を指定するか省略してください。"
+  - id: asset.ikkatsu-unsupported
+    target: asset
+    when: regime(asset) == 'ikkatsu_3yr'
+    assert: 'false'
+    message:
+      en: "Three-year pooled depreciation is unsupported. Ordinary monthly straight-line depreciation is not the pooled annual deduction."
+      ja: "一括償却資産には未対応です。通常の月次定額償却を年間の一括償却額として扱うことはできません。"
+  - id: asset.regime-method
+    target: asset
+    when: regime(asset) == 'shoutoku_300k'
+    assert: asset.method == 'expensed'
+    message:
+      en: "Small-business immediate deduction requires method expensed."
+      ja: "少額減価償却資産の特例には method: expensed が必要です。"
+  - id: asset.regime-scope
+    target: asset
+    when: regime(asset) == 'shoutoku_300k'
+    assert: book.region == 'JP' && book.currency == 'JPY' && book.scale == 0 && has(asset.jp_deduction_confirmed) && asset.jp_deduction_confirmed == true
+    message:
+      en: "Confirm eligibility, service year, accounting basis, a full twelve-month fiscal year and all-book deduction scope in jp_deduction_confirmed; requires JP and JPY scale 0."
+      ja: "適用要件、供用年、経理方式、12か月の事業年度、帳簿全体の限度額対象を確認し jp_deduction_confirmed に記録してください。JP・JPY・scale: 0 が必要です。"

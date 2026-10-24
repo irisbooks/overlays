@@ -1,0 +1,63 @@
+book: {region: JP, currency: JPY, scale: 0, fiscal_start_month: 1}
+cases:
+  - name: expensed-valid
+    asset: &equipment
+      schema_version: 1
+      name: Business laptop
+      acquisition_date: 2026-04-01
+      acquisition_cost: 350000
+      method: expensed
+      useful_life_months: 0
+      salvage_value: 0
+      asset_account: Assets:Equipment
+      depreciation_expense_account: Expenses:Depreciation
+      accumulated_depreciation_account: Assets:AccumulatedDepreciation
+      toku_rei: shoutoku_300k
+      jp_deduction_confirmed: true
+    expect: []
+  - name: deduction boundary
+    asset: {<<: *equipment, acquisition_cost: 400000}
+    expect: [{rule: asset.shoutoku-cost-max}]
+  - name: before reform boundary
+    asset: {<<: *equipment, acquisition_date: 2026-03-31, acquisition_cost: 300000}
+    expect: [{rule: asset.shoutoku-cost-max}]
+  - name: after expiry refused
+    asset: {<<: *equipment, acquisition_date: 2029-04-01}
+    expect: [{rule: asset.shoutoku-expired}]
+  - name: expiry date accepted
+    asset: {<<: *equipment, acquisition_date: 2029-03-31}
+    expect: []
+  - name: missing confirmation refused
+    asset: {<<: *equipment, jp_deduction_confirmed: false}
+    expect: [{rule: overlay.field-invalid}, {rule: asset.regime-scope}]
+  - name: pooled schedule refused
+    asset: {<<: *equipment, toku_rei: ikkatsu_3yr, acquisition_cost: 150000, method: straight_line, useful_life_months: 36}
+    expect: [{rule: overlay.field-invalid}, {rule: asset.ikkatsu-unsupported}]
+  - name: all-book cap exceeded
+    assets:
+      - {<<: *equipment, name: item0}
+      - {<<: *equipment, name: item1}
+      - {<<: *equipment, name: item2}
+      - {<<: *equipment, name: item3}
+      - {<<: *equipment, name: item4}
+      - {<<: *equipment, name: item5}
+      - {<<: *equipment, name: item6}
+      - {<<: *equipment, name: item7}
+      - {<<: *equipment, name: item8}
+    expect:
+      - {rule: asset.shoutoku-cap-exceeded}
+      - {rule: asset.shoutoku-cap-exceeded}
+      - {rule: asset.shoutoku-cap-exceeded}
+      - {rule: asset.shoutoku-cap-exceeded}
+      - {rule: asset.shoutoku-cap-exceeded}
+      - {rule: asset.shoutoku-cap-exceeded}
+      - {rule: asset.shoutoku-cap-exceeded}
+      - {rule: asset.shoutoku-cap-exceeded}
+      - {rule: asset.shoutoku-cap-exceeded}
+  - name: native expensed companion error
+    asset: {<<: *equipment, useful_life_months: 48}
+    # Native checks are exercised by the catalog integration test, not overlay-only goldens.
+    expect: []
+  - name: full year confirmation required
+    recipe: {id: jp-fixed-assets.teiritsu, params: {cost: 480000, life: 4, rate: 0.5, guarantee: 0.12499, revised: 1.0, start: '2027-03'}}
+    error: full_year_confirmed is required

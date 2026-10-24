@@ -1,0 +1,23 @@
+tasks:
+  - id: default.journal
+    title: Complete a journal
+    summary: Preview one missing balancing amount from recorded postings, then review the complete proposal before applying it.
+    target: journal
+    fields: [journal.date, journal.payee, journal.lines]
+    operations: [{kind: completion, id: journal.balance}]
+    guide: default.journal
+    examples: ["tests/autocomplete.yaml#money-only balance needs no extra journal fields"]
+    coverage: [One missing monetary amount; checked native balancing arithmetic.]
+    judgment: [Confirm date, accounts, amount basis and supporting evidence. A balanced journal does not establish that the transaction is correct.]
+  - id: default.inventory
+    title: Complete an inventory disposal
+    summary: Preview disposal cost and gain or loss using recorded quantities, settlement and acquisition history.
+    target: journal
+    fields: [journal.date, journal.lines, book.inventory]
+    operations: [{kind: completion, id: inventory.complete}]
+    guide: default.inventory
+    examples:
+      - tests/autocomplete.yaml#omitted method allocates FIFO across acquisitions
+      - tests/autocomplete.yaml#missing settlement is not inferred from cost
+    coverage: [Existing native inventory completion; FIFO unless an explicit supported method is configured.]
+    judgment: [Confirm units, quantities, fees, settlement, opening basis and gain account. The package does not infer missing settlement or fund an uncovered sale.]

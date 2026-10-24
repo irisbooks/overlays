@@ -1,0 +1,5 @@
+id: jp-fixed-assets
+version: 2026.10.1
+requires_bindings: 5
+region: JP
+description: Japanese equipment tasks, dated small-business immediate deduction checks and a recorded full-year declining-balance calculation aid. Pooled depreciation is explicitly unsupported.

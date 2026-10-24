@@ -1,0 +1,5 @@
+id: jp-consumption-tax
+version: 2026.10.1
+requires_bindings: 5
+region: JP
+description: Japanese consumption-tax classifications, explicit tax amount proposals and bounded general/simplified calculation aids. No tax status is inferred.

@@ -1,0 +1,12 @@
+tasks:
+  - id: jp-fixed-assets.equipment
+    title: Record equipment
+    summary: Inspect the recorded method, companion fields and dated JP deduction checks, then preview a supported schedule.
+    target: asset
+    fields: [asset.name, asset.acquisition_date, asset.acquisition_cost, asset.method, asset.useful_life_months, asset.salvage_value, asset.asset_account, asset.depreciation_expense_account, asset.accumulated_depreciation_account, asset.acquisition_journal, asset.toku_rei, asset.jp_deduction_confirmed]
+    rules: [asset.toku-rei-unknown, asset.ikkatsu-unsupported, asset.regime-method, asset.regime-scope, asset.shoutoku-expired, asset.shoutoku-cost-max, asset.shoutoku-cost-min, asset.shoutoku-cap-exceeded]
+    operations: [{kind: core, id: asset.schedule}, {kind: recipe, id: jp-fixed-assets.teiritsu}]
+    guide: jp-fixed-assets.equipment
+    examples: ["tests/equipment.yaml#expensed-valid", "tests/equipment.yaml#deduction boundary", "tests/equipment.yaml#pooled schedule refused"]
+    coverage: [Native expensed and straight-line calculations, recorded full-year declining-balance aid, dated small-business thresholds and all-book annual cap checks.]
+    judgment: [Confirm service date, evidence, taxpayer eligibility, amount basis and method. Short fiscal years, deferred service, pooled depreciation and partial-year declining-balance schedules are unsupported. Core allocation is a separate explicit operation.]

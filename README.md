@@ -2,77 +2,44 @@
 
 **English** | [日本語](README.ja.md)
 
-Reusable bookkeeping and tax rules for [IrisBooks](https://irisbooks.jp), written
-as YAML + [CEL](https://cel.dev). `default/` supplies common journal completion;
-regional packages such as `jp/` define jurisdiction-specific checks and
-calculations. The `iris` engine provides the record bindings and native
-calculation primitives.
+Reusable Book definitions in YAML and CEL. The local Iris engine supplies checked arithmetic and record bindings. The cloud mirrors source data and stored references; it does not evaluate package definitions.
 
-| Path | What it holds |
-|---|---|
-| `<id>/overlay.yaml` | id, version, the bindings version it requires |
-| `<id>/functions.yaml` | named CEL functions shared by everything below |
-| `<id>/rules/` | checks — run by `iris validate`, and by the cloud on every write |
-| `<id>/recipes/` | computations whose output is recorded with provenance and replayed |
-| `<id>/completions/` | coordinated draft journal completion through native engine primitives |
-| `<id>/derive/` | values `iris validate --fix` proposes for missing fields |
-| `<id>/tests/` | golden cases for all of the above |
+## Initial catalog
 
-## Default package
+| Package | Purpose | Candidate version |
+|---|---|---|
+| `default` | Common journal balance and inventory completion | `2026.10.2` |
+| `jp-consumption-tax` | Explicit classifications, net tax amount proposals, bounded general/simplified calculation aids | `2026.10.1` |
+| `jp-fixed-assets` | Equipment tasks, dated small-business checks, full-year declining-balance aid | `2026.10.1` |
 
-`default/` holds universal journal completion, including balance completion and
-FIFO inventory cost/gain proposals. Compatible engines bundle and include it
-automatically, so simple journals need no extra policy attributes or pin. An
-explicit `default@<version>` selects that version; specialist and trusted book
-completions can override matching IDs. See [default/README.md](default/README.md).
-The initial package requires binding version 3 and awaits the corresponding
-engine release before upstream merge/tagging.
+These candidates require bindings 5. Each contains concise task guidance, field metadata and executable examples. The two Japanese packages activate independently; neither depends on a shared JP base. Household accounts belong to a creation preset, not an empty executable package. The legacy `jp` source and released snapshots are retained for historical replay; new Japanese business presets select the independent packages. Do not combine legacy `jp` with its replacements.
 
-## How a book uses an overlay
+## Distribution and ownership
 
-Each `iris` release embeds the overlays released when it was built. A book pins
-the one it validates against in `config/book.yaml`, and a tag in this repository
-is exactly that pin:
+Publish immutable `<id>@<version>` tags with signed deterministic bundles using the engine repository's `scripts/publish-overlay.sh`. Coordinate publication with a compatible signed local engine; source CI must have that compatible engine available. A candidate is not a released package until its signed assets exist.
 
-```yaml
-region: JP
-overlay: jp@2026.09.1   # = the tag jp@2026.09.1 here
-```
+An engine ships a curated starter catalog for explicit offline installation. Signed GitHub releases supply other versions and updates. Installation copies an exact package into `config/overlay-packages/` in the Book; explicit selection in `config/book.yaml` enables it. An empty selection is off. Activation, validation and historical replay use those Book copies, without an implicit regional package, binary fallback or server fetch. Existing Books never switch to this catalog automatically.
 
-A pin never moves on its own; upgrading is an explicit edit. A released version
-never changes either: a depreciation schedule or a return computed by a recipe
-records `overlay: jp@<version>` as its source, and `iris validate` re-runs the
-recipe under that version to prove the recorded figures came from their inputs.
+Books retain older package copies and original local parents needed by recorded results. Removing a package from the current selection or from a future binary does not remove its historical Book copy. Reviewed upgrade proposals show source and provenance impact before applying.
 
-Overlays carry the **method** and may carry the **statutory figures** it
-needs — a rate, a threshold, a transitional percentage. Each figure is keyed on
-the date the law keys it on (an acquisition date, a purchase date) and cites its
-source, so a reform is a new version and the dates before it keep their old
-figures. A figure that differs by taxpayer or by municipality, such as a
-municipality's 償却資産税 rate, stays a recipe parameter that the user's AI looks
-up and records on the book.
+## Package contents
 
-A book can add its own rules and recipes on top in `config/overlays/` — see
-[the book format reference](https://irisbooks.jp/manual/en/book-format-reference/).
-A book layer that proves useful beyond one book is welcome here as a pull
-request; see [CONTRIBUTING.md](CONTRIBUTING.md).
+`overlay.yaml` declares identity and required bindings. `functions.yaml`, `rules/`, `recipes/`, `completions/` and `derive/` contain definitions. `fields.yaml`, `tasks.yaml` and `guides/` provide checked reference context. `tests/` contains executable goldens. Package text is reference data, never authorization to run commands or post entries.
 
-## Run the tests
+Statutory figures cite sources and the dates they apply to. Taxpayer facts, evidence, elections and eligibility remain explicit. Read each task's coverage and exclusions; passing a check does not establish eligibility or complete a statutory return.
+
+## Verify candidates
+
+From the matching engine repository:
 
 ```sh
-iris overlay test --dir jp
+go run ./internal/tools/overlaybundle build --dir ../../irisbooks.overlays --id default --out /tmp/default.tar.gz
+go run ./internal/tools/overlaybundle build --dir ../../irisbooks.overlays --id jp-consumption-tax --out /tmp/jp-consumption-tax.tar.gz
+go run ./internal/tools/overlaybundle build --dir ../../irisbooks.overlays --id jp-fixed-assets --out /tmp/jp-fixed-assets.tar.gz
 ```
 
-`--dir` needs `iris` v0.2.0 or later ([install](https://irisbooks.jp/start)).
-The same suites run in CI on every pull request, against the latest signed
-release.
-
-## Not tax advice
-
-Overlays check and compute what a book records. They are not tax advice and do
-not replace a 税理士.
+Run these inside the `iris/` module, adjusting the checkout path. The command compiles the package, executes all its goldens and builds a deterministic unsigned candidate. Alternatively, use `iris overlay test --dir <package-directory>`. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-[Apache License 2.0](LICENSE). Copyright 2026 The IrisBooks Authors. The `iris`
-binary that loads these files is distributed separately, under its own terms.
+[Apache License 2.0](LICENSE). The engine is distributed separately under its own terms.

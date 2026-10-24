@@ -1,0 +1,12 @@
+# Net postings are the basis on a tax_excluded Book; gross postings use tax_included.
+derivations:
+  - id: tax.amount
+    target: line
+    when: >-
+      classified(book, line) && tax_accounting(book) == 'tax_excluded'
+      && rated(category(line)) && rate_pct(rate(line)) > 0 && !has(line.tax.amount)
+    field: tax.amount
+    expr: tax_of(gross(line), rate_pct(rate(line)), false)
+    message:
+      en: "lines[{{.line}}].tax: amount {{.value}} is the consumption tax on this net line at its rate — record it (iris validate --fix) and book it on 仮払/仮受消費税"
+      ja: "lines[{{.line}}].tax: この税抜明細の消費税額は {{.value}} です — 記録して(iris validate --fix)仮払/仮受消費税に計上してください"
