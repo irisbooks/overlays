@@ -1,0 +1,5 @@
+id: jp-tax-classification
+version: 2026.10.1
+requires_bindings: 5
+region: JP
+description: Validate explicitly recorded Japanese consumption-tax settings and line classifications. No calculation or tax amount proposal.

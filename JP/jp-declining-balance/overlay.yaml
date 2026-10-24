@@ -1,0 +1,5 @@
+id: jp-declining-balance
+version: 2026.10.1
+requires_bindings: 5
+region: JP
+description: Calculate a recorded full-year declining-balance schedule from explicit published rates. Partial-year schedules are unsupported.

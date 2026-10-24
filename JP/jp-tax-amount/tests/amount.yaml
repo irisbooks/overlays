@@ -1,0 +1,75 @@
+# Golden cases for the 消費税 return recipes and the 税抜経理 derivation.
+book: &general
+    region: JP
+    currency: JPY
+    scale: 0
+    fiscal_start_month: 1
+    consumption_tax: {status: taxable, accounting: tax_included, method: general}
+# A small 税込 ledger: ¥110,000 of 10% sales, ¥21,600 of 軽減 sales, ¥55,000
+# of 10% purchases with an invoice, ¥11,000 without, ¥10,800 of 8r purchases
+# with an invoice, one export, one 非課税, one draft (ignored), one out of period.
+ledger: &ledger
+    - date: 2026-02-01
+      status: posted
+      lines:
+        - {account: '資産:現金', debit: 110000}
+        - {account: '収益:売上', credit: 110000, tax: {category: taxable_sale, rate: "10"}}
+    - date: 2026-03-01
+      status: posted
+      lines:
+        - {account: '資産:現金', debit: 21600}
+        - {account: '収益:売上', credit: 21600, tax: {category: taxable_sale, rate: "8r"}}
+    - date: 2026-04-01
+      status: posted
+      lines:
+        - {account: '費用:消耗品費', debit: 55000, tax: {category: taxable_purchase, rate: "10", invoice: true}}
+        - {account: '資産:現金', credit: 55000}
+    - date: 2026-05-01
+      status: posted
+      lines:
+        - {account: '費用:会議費', debit: 11000, tax: {category: taxable_purchase, rate: "10"}}
+        - {account: '資産:現金', credit: 11000}
+    - date: 2026-06-01
+      status: posted
+      lines:
+        - {account: '費用:会議費', debit: 10800, tax: {category: taxable_purchase, rate: "8r", invoice: true}}
+        - {account: '資産:現金', credit: 10800}
+    - date: 2026-07-01
+      status: posted
+      lines:
+        - {account: '資産:現金', debit: 30000}
+        - {account: '収益:売上', credit: 30000, tax: {category: export_sale, rate: "0"}}
+    - date: 2026-08-01
+      status: posted
+      lines:
+        - {account: '資産:現金', debit: 5000}
+        - {account: '収益:受取利息', credit: 5000, tax: {category: exempt_sale}}
+    - date: 2026-09-01
+      status: draft
+      lines:
+        - {account: '資産:現金', debit: 99000}
+        - {account: '収益:売上', credit: 99000, tax: {category: taxable_sale, rate: "10"}}
+    - date: 2027-01-15
+      status: posted
+      lines:
+        - {account: '資産:現金', debit: 22000}
+        - {account: '収益:売上', credit: 22000, tax: {category: taxable_sale, rate: "10"}}
+cases:
+    - name: tax on a net posting is proposed once
+      book: {region: JP, currency: JPY, scale: 0, consumption_tax: {status: taxable, accounting: tax_excluded, method: general}}
+      journal:
+        lines:
+            - {account: '費用:会議費', debit: 10000, tax: {category: taxable_purchase, rate: "10", invoice: true}}
+            - {account: '費用:消耗品費', debit: 5000, tax: {category: taxable_purchase, rate: "8r", amount: 400}}
+            - {account: '資産:現金', credit: 15000}
+      expect: []
+      propose:
+        - {id: tax.amount, line: 0, field: tax.amount, value: "1000"}
+    - name: tax-included postings produce no proposal
+      book: *general
+      journal:
+        lines:
+            - {account: '費用:会議費', debit: 11000, tax: {category: taxable_purchase, rate: "10", invoice: true}}
+            - {account: '資産:現金', credit: 11000}
+      expect: []
+      propose: []

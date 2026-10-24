@@ -1,0 +1,15 @@
+fields:
+  asset.toku_rei:
+    type: string
+    description:
+      en: Optional explicit regime. The historical shoutoku_300k token uses acquisition-date limits. Pooled depreciation is unsupported.
+      ja: 適用する特例を明示する任意項目です。shoutoku_300k は取得日に応じた金額基準を使います。一括償却資産には未対応です。
+    enum: [{value: shoutoku_300k}]
+  asset.jp_deduction_confirmed:
+    type: bool
+    when: regime(asset) == 'shoutoku_300k'
+    required: true
+    enum: [{value: true}]
+    description:
+      en: Confirm documented taxpayer and asset eligibility, service in the acquisition year, a full twelve-month fiscal year, accounting basis and complete annual-cap coverage. Short fiscal years and deferred service are unsupported.
+      ja: 納税者と資産の適用要件、取得年内の供用開始、12か月の年度、経理方式、年間限度額の対象資産をすべて記録したことを確認してください。短い年度と取得年より後の供用開始には未対応です。

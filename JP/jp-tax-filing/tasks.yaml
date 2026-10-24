@@ -1,0 +1,11 @@
+tasks:
+    - id: jp-tax-filing.filing
+      title: Prepare consumption-tax calculation figures
+      summary: Inspect jp-tax-classification.classify for Book tax settings, then preview the selected method with explicit scope confirmation.
+      target: book
+      fields: [book.currency, book.scale]
+      operations: [{kind: recipe, id: jp-tax-filing.shouhizei-general}, {kind: recipe, id: jp-tax-filing.shouhizei-simplified}]
+      guide: jp-tax-filing.filing
+      examples: ["tests/filings.yaml#本則課税 — 経過措置 splits at 2026-10-01", "tests/coverage.yaml#scope confirmation required"]
+      coverage: [Posted classified lines at 10% and 8%; dated non-invoice transition; general full-deduction and simplified arithmetic aids.]
+      judgment: [Confirm the guide's coverage and inputs before invocation. Returns, filing submission, special schemes, partial deduction and named financial-view approval remain outside these recipes.]

@@ -1,0 +1,62 @@
+functions:
+    - name: business_class
+      doc: >-
+        簡易課税 事業区分 for a 課税売上 line — the per-line override, else the book default, else 0.
+      params: [{name: b, type: map}, {name: l, type: map}]
+      returns: int
+      expr: >-
+        (has(l.tax) && type(l.tax) == map && has(l.tax.business_class) && type(l.tax.business_class) == int) ? l.tax.business_class : (has(b.consumption_tax) && type(b.consumption_tax) == map && has(b.consumption_tax.business_class)
+
+         && type(b.consumption_tax.business_class) == int)
+        ? b.consumption_tax.business_class : 0
+    - name: tax_accounting
+      doc: The book's consumption-tax accounting posture (tax_included | tax_excluded), or ''.
+      params: [{name: b, type: map}]
+      returns: string
+      expr: >-
+        has(b.consumption_tax) && type(b.consumption_tax) == map && has(b.consumption_tax.accounting) && type(b.consumption_tax.accounting) == string ? b.consumption_tax.accounting : ''
+    - name: rate_pct
+      doc: >-
+        The percentage a rate token stands for: 10 → 10, 8r and 8o → 8, 5 → 5, 3 → 3, everything else 0. A token IS its rate — this is vocabulary, not a lookup.
+      params: [{name: r, type: string}]
+      returns: int
+      expr: >-
+        r == '10' ? 10 : (r == '8r' || r == '8o') ? 8 : r == '5' ? 5 : r == '3' ? 3 : 0
+    - name: bucket_credit
+      doc: Total credit of the sums rows whose keys equal ks (0 when none).
+      params: [{name: s, type: map}, {name: ks, type: list}]
+      returns: int
+      expr: sum(s.rows.filter(r, r.keys == ks).map(r, r.credit))
+    - name: bucket_debit
+      doc: Total debit of the sums rows whose keys equal ks (0 when none).
+      params: [{name: s, type: map}, {name: ks, type: list}]
+      returns: int
+      expr: sum(s.rows.filter(r, r.keys == ks).map(r, r.debit))
+    - name: non_invoice_purchases
+      doc: >-
+        Net 課税仕入 at rate token r without a qualifying invoice (tax.invoice false or absent), from sums grouped by tax.category, tax.rate and tax.invoice.
+      params: [{name: s, type: map}, {name: r, type: string}]
+      returns: int
+      expr: >-
+        bucket_debit(s, ['taxable_purchase', r, '']) - bucket_credit(s, ['taxable_purchase', r, '']) + bucket_debit(s, ['taxable_purchase', r, 'false']) - bucket_credit(s, ['taxable_purchase', r, 'false'])
+    - name: non_invoice_periods
+      doc: >-
+        経過措置 for 課税仕入 from a seller who is not a 適格請求書発行事業者: the percentage of the purchase tax still deductible, by the date of the 課税仕入. Closed YYYY-MM-DD ranges; before 2023-10-01 there was no invoice requirement (100%), and from 2031-10-01 nothing is deductible (no entry). 平成28年改正法附則52条・53条, as amended by 令和8年度改正 (70% from 2026-10-01, extended to 2031-09-30); see https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/invoice-review/index.htm
+      params: []
+      returns: list
+      expr: >-
+        [
+
+          {'from': '1989-04-01', 'to': '2023-09-30', 'pct': 100},
+          {'from': '2023-10-01', 'to': '2026-09-30', 'pct': 80},
+          {'from': '2026-10-01', 'to': '2028-09-30', 'pct': 70},
+          {'from': '2028-10-01', 'to': '2030-09-30', 'pct': 50},
+          {'from': '2030-10-01', 'to': '2031-09-30', 'pct': 30}
+        ]
+    - name: tax_of
+      doc: >-
+        The consumption tax inside an amount at rate pct: for a tax-inclusive amount amount × pct / (100 + pct); for a tax-exclusive amount amount × pct / 100. Fractions of a yen are dropped (割戻し計算 on the aggregate).
+      params: [{name: amount, type: int}, {name: pct, type: int}, {name: inclusive, type: bool}]
+      returns: int
+      expr: >-
+        inclusive ? amount * pct / (100 + pct) : amount * pct / 100

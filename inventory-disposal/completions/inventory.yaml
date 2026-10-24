@@ -1,0 +1,9 @@
+id: inventory.complete
+call: inventory
+when: journal.lines.exists(l, l.unit != '' && l.side == 'credit')
+with: >-
+  has(book.inventory) && book.inventory != null && has(book.inventory.params)
+  && book.inventory.params != null ? book.inventory.params : {}
+description:
+  en: Complete disposal costs and gain/loss from recorded quantities and settlement amounts. FIFO is the default.
+  ja: 記録済みの数量と決済額から売却原価と損益を補完します。既定の配分方法は先入先出法です。

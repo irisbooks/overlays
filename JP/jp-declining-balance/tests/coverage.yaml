@@ -1,0 +1,5 @@
+book: {region: JP, currency: JPY, scale: 0, fiscal_start_month: 1}
+cases:
+    - name: full year confirmation required
+      recipe: {id: jp-declining-balance.teiritsu, params: {cost: 480000, life: 4, rate: 0.5, guarantee: 0.12499, revised: 1.0, start: '2027-03'}}
+      error: full_year_confirmed is required

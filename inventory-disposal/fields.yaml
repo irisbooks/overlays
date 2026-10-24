@@ -1,0 +1,6 @@
+fields:
+  book.inventory:
+    type: map
+    description:
+      en: Inventory completion settings. Configure params.gain_account and an optional supported allocation method; quantities and settlement remain explicit.
+      ja: 売却原価の補完設定です。params.gain_account に損益科目を指定し、必要なら対応する原価配分方法を設定します。数量と決済額は明示的に記録してください。

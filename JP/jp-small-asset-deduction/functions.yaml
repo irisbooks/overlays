@@ -1,0 +1,32 @@
+functions:
+  - name: regime
+    doc: The asset's toku_rei label, or '' when absent or not a string.
+    params: [{name: a, type: map}]
+    returns: string
+    expr: >-
+      has(a.toku_rei) && type(a.toku_rei) == string ? a.toku_rei : ''
+
+  - name: fy
+    doc: >-
+      Fiscal year of a date under the begins-in convention — an FY starting
+      in month `start` is named by the calendar year it starts in.
+    params: [{name: d, type: timestamp}, {name: start, type: int}]
+    returns: int
+    expr: >-
+      d.getMonth() + 1 >= start ? d.getFullYear() : d.getFullYear() - 1
+
+  # Statutory figures below are dated by the date the law keys them on and
+  # cited to their source. A reform is a new overlay version; past dates
+  # keep the figures they had.
+  - name: shoutoku_max
+    doc: >-
+      The 少額減価償却特例's acquisition-cost limit (未満) for an asset
+      acquired on d: ¥300,000 to 2026-03-31, ¥400,000 from 2026-04-01, and 0
+      after 2029-03-31 — the special's 適用期限 as the law now stands.
+      措法28条の2 (個人) / 67条の5 (法人), as amended by 令和8年度改正; see
+      https://www.nta.go.jp/taxes/shiraberu/taxanswer/hojin/5408.htm
+    params: [{name: d, type: timestamp}]
+    returns: int
+    expr: >-
+      d > date('2029-03-31') ? 0 : d >= date('2026-04-01') ? 400000 : 300000
+

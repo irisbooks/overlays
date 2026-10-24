@@ -1,0 +1,6 @@
+id: jp-tax-filing
+version: 2026.10.1
+requires_bindings: 5
+region: JP
+requires_overlays: {jp-tax-classification: ['2026.10.1']}
+description: Prepare bounded general and simplified consumption-tax calculation figures with explicit scope confirmation.

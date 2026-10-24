@@ -1,0 +1,60 @@
+book: {region: JP, currency: JPY, scale: 0, fiscal_start_month: 1}
+cases:
+    - name: expensed-valid
+      asset: &equipment
+        schema_version: 1
+        name: Business laptop
+        acquisition_date: 2026-04-01
+        acquisition_cost: 350000
+        method: expensed
+        useful_life_months: 0
+        salvage_value: 0
+        asset_account: Assets:Equipment
+        depreciation_expense_account: Expenses:Depreciation
+        accumulated_depreciation_account: Assets:AccumulatedDepreciation
+        toku_rei: shoutoku_300k
+        jp_deduction_confirmed: true
+      expect: []
+    - name: deduction boundary
+      asset: {!!merge <<: *equipment, acquisition_cost: 400000}
+      expect: [{rule: asset.shoutoku-cost-max}]
+    - name: before reform boundary
+      asset: {!!merge <<: *equipment, acquisition_date: 2026-03-31, acquisition_cost: 300000}
+      expect: [{rule: asset.shoutoku-cost-max}]
+    - name: after expiry refused
+      asset: {!!merge <<: *equipment, acquisition_date: 2029-04-01}
+      expect: [{rule: asset.shoutoku-expired}]
+    - name: expiry date accepted
+      asset: {!!merge <<: *equipment, acquisition_date: 2029-03-31}
+      expect: []
+    - name: missing confirmation refused
+      asset: {!!merge <<: *equipment, jp_deduction_confirmed: false}
+      expect: [{rule: overlay.field-invalid}, {rule: asset.regime-scope}]
+    - name: pooled schedule refused
+      asset: {!!merge <<: *equipment, toku_rei: ikkatsu_3yr, acquisition_cost: 150000, method: straight_line, useful_life_months: 36}
+      expect: [{rule: overlay.field-invalid}, {rule: asset.ikkatsu-unsupported}]
+    - name: all-book cap exceeded
+      assets:
+        - {!!merge <<: *equipment, name: item0}
+        - {!!merge <<: *equipment, name: item1}
+        - {!!merge <<: *equipment, name: item2}
+        - {!!merge <<: *equipment, name: item3}
+        - {!!merge <<: *equipment, name: item4}
+        - {!!merge <<: *equipment, name: item5}
+        - {!!merge <<: *equipment, name: item6}
+        - {!!merge <<: *equipment, name: item7}
+        - {!!merge <<: *equipment, name: item8}
+      expect:
+        - {rule: asset.shoutoku-cap-exceeded}
+        - {rule: asset.shoutoku-cap-exceeded}
+        - {rule: asset.shoutoku-cap-exceeded}
+        - {rule: asset.shoutoku-cap-exceeded}
+        - {rule: asset.shoutoku-cap-exceeded}
+        - {rule: asset.shoutoku-cap-exceeded}
+        - {rule: asset.shoutoku-cap-exceeded}
+        - {rule: asset.shoutoku-cap-exceeded}
+        - {rule: asset.shoutoku-cap-exceeded}
+    - name: native expensed companion error
+      asset: {!!merge <<: *equipment, useful_life_months: 48}
+      # Native checks are exercised by the catalog integration test, not overlay-only goldens.
+      expect: []

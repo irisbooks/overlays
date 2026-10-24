@@ -1,0 +1,29 @@
+rules:
+  - id: tax.settings
+    target: journal
+    when: manages_tax(book)
+    assert: book.region == 'JP' && book.currency == 'JPY' && book.scale == 0 && tax_method(book) in ['general', 'simplified'] && tax_accounting(book) in ['tax_included', 'tax_excluded']
+    message:
+      en: "Consumption-tax calculations require JP, JPY scale 0, and explicit method and accounting settings."
+      ja: "消費税計算には region: JP、JPY・scale: 0、および課税方式と経理方式の明示が必要です。"
+  - id: tax.status-required
+    target: line
+    when: has(line.tax)
+    assert: manages_tax(book)
+    message:
+      en: "A tax classification requires an explicitly taxable Book; missing settings do not establish exemption."
+      ja: "税区分の記録には課税事業者であることの明示が必要です。設定の省略は免税を意味しません。"
+  - id: tax.block-type
+    target: line
+    when: has(line.tax)
+    assert: type(line.tax) == map
+    message:
+      en: "line.tax must be a mapping."
+      ja: "line.tax はマッピングで指定してください。"
+  - id: tax.invoice-type
+    target: line
+    when: classified(book, line) && has(line.tax.invoice)
+    assert: type(line.tax.invoice) == bool
+    message:
+      en: "line.tax.invoice must be an explicit boolean when recorded."
+      ja: "line.tax.invoice を記録する場合は真偽値で指定してください。"

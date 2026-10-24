@@ -1,0 +1,12 @@
+# Net postings are the basis on a tax_excluded Book; gross postings use tax_included.
+derivations:
+  - id: tax.amount
+    target: line
+    when: >-
+      classified(book, line) && tax_accounting(book) == 'tax_excluded'
+      && rated(category(line)) && rate_pct(rate(line)) > 0 && !has(line.tax.amount)
+    field: tax.amount
+    expr: tax_of(gross(line), rate_pct(rate(line)), false)
+    message:
+      en: "lines[{{.line}}].tax: proposed tax amount {{.value}} on this net line. Review invoice rounding and any separate tax posting before applying with iris validate --apply."
+      ja: "lines[{{.line}}].tax: 税額の候補は {{.value}} 円です。請求書の端数処理と、別途必要な仮払・仮受消費税の明細を確認してから iris validate --apply で適用してください。"

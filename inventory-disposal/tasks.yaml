@@ -1,0 +1,13 @@
+tasks:
+    - id: inventory-disposal.inventory
+      title: Complete an inventory disposal
+      summary: Preview disposal cost and gain or loss using recorded quantities, settlement and acquisition history.
+      target: journal
+      fields: [journal.date, journal.lines, book.inventory]
+      operations: [{kind: completion, id: inventory.complete}]
+      guide: inventory-disposal.inventory
+      examples:
+        - tests/autocomplete.yaml#omitted method allocates FIFO across acquisitions
+        - tests/autocomplete.yaml#missing settlement is not inferred from cost
+      coverage: [Disposal cost and gain/loss completion; FIFO unless a supported alternative method is configured.]
+      judgment: [Confirm units, quantities, fees, settlement, opening basis and gain account. The package does not infer missing settlement or fund an uncovered sale.]

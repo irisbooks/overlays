@@ -1,0 +1,51 @@
+# 定率法 — the two-phase declining-balance schedule.
+#
+# Structure lives here; the rates are params the LLM reads from 別表第十
+# for the asset's useful life and records verbatim (the 200% table for
+# acquisitions from 2012-04, the 250% table for 2007-04〜2012-03 — an
+# asset keeps the table it was acquired under). Annual rows: one per
+# fiscal year, dated the fiscal year's last month.
+id: teiritsu
+output: schedule
+description:
+  en: >-
+    Generate a full-year Japanese declining-balance depreciation schedule.
+    Apply the declining rate until the annual charge falls below cost times
+    the guarantee rate, then use the revised acquisition value times the revised
+    rate until the salvage value is reached. Supply the three published rates
+    for the asset's useful life and acquisition date. Preview returns annual rows;
+    save to an existing asset only with CLI --apply --out PATH or MCP run_recipe with apply=true and out=PATH.
+  ja: "12か月分の定率法による償却表を計算します。年間償却額が償却保証額（取得価額×保証率）を下回るまでは償却率を使い、その後は改定取得価額×改定償却率の定額で備忘価額まで償却します。耐用年数と取得日に対応する所定の3つの率を指定してください。結果は表示のみで、CLI で --apply --out PATH を指定するか、MCP の run_recipe に apply=true と out=既存資産のパスを指定した場合に保存します。"
+params:
+  - {name: full_year_confirmed, type: bool, enum: [true], doc: "Confirm full twelve-month service years, method eligibility and the published rates; partial first years are unsupported."}
+  - {name: cost, type: int, doc: "取得価額 in integer minor units (yen)"}
+  - {name: life, type: int, doc: "耐用年数 in years"}
+  - {name: rate, type: double, doc: "償却率 as published, e.g. 0.250"}
+  - {name: guarantee, type: double, doc: "保証率 as published, e.g. 0.07909"}
+  - {name: revised, type: double, doc: "改定償却率 as published, e.g. 0.334"}
+  - {name: start, type: month, doc: "Month of the first row (YYYY-MM): the first fiscal year-end after acquisition"}
+  - {name: salvage, type: int, default: 1, doc: "備忘価額 the table ends on"}
+steps:
+  # 償却率 years: keep rows while the year's charge is at or above the
+  # 償却保証額. The comparison is against the exact guarantee amount.
+  - id: head
+    call: declining_table
+    with:
+      basis: cost
+      rate_bp: int(rate * 10000.0 + 0.5)
+      periods: life
+      salvage: 0
+      start: start
+      step_months: 12
+    while: double(row.amount) >= double(cost) * guarantee
+  # 改定償却率 years: a fixed charge of 改定取得価額 × 改定償却率 (fractions
+  # of a yen dropped) until the 備忘価額.
+  - id: tail
+    call: flat_table
+    with:
+      basis: cost - sum(head.map(r, r.amount))
+      amount_per_row: (cost - sum(head.map(r, r.amount))) * int(revised * 10000.0 + 0.5) / 10000
+      salvage: salvage
+      start: month_add(head[size(head) - 1].period, 12)
+      step_months: 12
+result: head + tail

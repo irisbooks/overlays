@@ -1,0 +1,4 @@
+id: inventory-disposal
+version: 2026.10.1
+requires_bindings: 5
+description: Complete disposal cost and gain or loss from quantities, settlement and recorded acquisition history.

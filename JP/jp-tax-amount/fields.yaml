@@ -1,0 +1,7 @@
+fields:
+  line.tax.amount:
+    type: int
+    when: classified(book, line) && tax_accounting(book) == 'tax_excluded'
+    description:
+      en: Recorded tax amount in integer yen. A missing value may be proposed from the net posting; confirm invoice rounding before applying.
+      ja: 円単位の整数で記録する税額です。未入力の場合は税抜明細から候補を計算します。請求書の端数処理を確認してから適用してください。

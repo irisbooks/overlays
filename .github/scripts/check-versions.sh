@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 # Every overlay whose content outside tests/ changed since its last released
-# tag (<id>@<version>) must declare a new, higher version in <id>/overlay.yaml.
+# tag (<id>@<version>) must declare a new, higher version in the package manifest.
 # A released version never changes: books record it as the source of the
 # figures a recipe computed, and iris re-runs the recipe under it.
 # Needs the tags: in CI, check out with fetch-depth: 0.
 set -euo pipefail
 
+shopt -s nullglob
+manifests=(*/overlay.yaml */*/overlay.yaml)
+[ "${#manifests[@]}" -gt 0 ] || { echo "::error::no overlay packages found"; exit 1; }
+
 fail=0
-for manifest in */overlay.yaml; do
-  id="${manifest%/overlay.yaml}"
+for manifest in "${manifests[@]}"; do
+  package_dir="${manifest%/overlay.yaml}"
+  id="${package_dir##*/}"
   declared="$(sed -n 's/^id: *//p' "$manifest")"
   version="$(sed -n 's/^version: *//p' "$manifest")"
   if [ "$declared" != "$id" ]; then
@@ -24,11 +29,11 @@ for manifest in */overlay.yaml; do
   if [ -z "$last" ]; then
     echo "$id@$version: not released yet"
   elif [ "$version" = "$last" ]; then
-    if git diff --quiet "$id@$last" -- "$id" ":(exclude)$id/tests"; then
+    if git diff --quiet "$id@$last" -- "$package_dir" ":(exclude)$package_dir/tests"; then
       echo "$id@$version: unchanged since its tag"
     else
       echo "::error file=$manifest::$id changed outside tests/ since $id@$last — bump version"
-      git diff --stat "$id@$last" -- "$id" ":(exclude)$id/tests"
+      git diff --stat "$id@$last" -- "$package_dir" ":(exclude)$package_dir/tests"
       fail=1
     fi
   elif [ "$(printf '%s\n%s\n' "$last" "$version" | sort -V | tail -1)" != "$version" ]; then

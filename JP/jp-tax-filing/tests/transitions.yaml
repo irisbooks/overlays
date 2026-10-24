@@ -1,0 +1,90 @@
+book: {region: JP, currency: JPY, scale: 0, consumption_tax: {status: taxable, accounting: tax_included, method: general}}
+cases:
+  - name: non-invoice transition 2026-09-30
+    recipe:
+      id: jp-tax-filing.shouhizei-general
+      params: {scope_confirmed: true, from: '2026-09-30', to: '2026-09-30'}
+    journals:
+      - date: 2026-09-30
+        status: posted
+        lines:
+          - {account: Expenses:Supplies, debit: 11000, tax: {category: taxable_purchase, rate: '10', invoice: false}}
+          - {account: Assets:Bank, credit: 11000}
+    figures: {purchases_10_non_invoice: 11000, purchase_tax_non_invoice: 800}
+  - name: non-invoice transition 2026-10-01
+    recipe:
+      id: jp-tax-filing.shouhizei-general
+      params: {scope_confirmed: true, from: '2026-10-01', to: '2026-10-01'}
+    journals:
+      - date: 2026-10-01
+        status: posted
+        lines:
+          - {account: Expenses:Supplies, debit: 11000, tax: {category: taxable_purchase, rate: '10', invoice: false}}
+          - {account: Assets:Bank, credit: 11000}
+    figures: {purchases_10_non_invoice: 11000, purchase_tax_non_invoice: 700}
+  - name: non-invoice transition 2028-09-30
+    recipe:
+      id: jp-tax-filing.shouhizei-general
+      params: {scope_confirmed: true, from: '2028-09-30', to: '2028-09-30'}
+    journals:
+      - date: 2028-09-30
+        status: posted
+        lines:
+          - {account: Expenses:Supplies, debit: 11000, tax: {category: taxable_purchase, rate: '10', invoice: false}}
+          - {account: Assets:Bank, credit: 11000}
+    figures: {purchases_10_non_invoice: 11000, purchase_tax_non_invoice: 700}
+  - name: non-invoice transition 2028-10-01
+    recipe:
+      id: jp-tax-filing.shouhizei-general
+      params: {scope_confirmed: true, from: '2028-10-01', to: '2028-10-01'}
+    journals:
+      - date: 2028-10-01
+        status: posted
+        lines:
+          - {account: Expenses:Supplies, debit: 11000, tax: {category: taxable_purchase, rate: '10', invoice: false}}
+          - {account: Assets:Bank, credit: 11000}
+    figures: {purchases_10_non_invoice: 11000, purchase_tax_non_invoice: 500}
+  - name: non-invoice transition 2030-09-30
+    recipe:
+      id: jp-tax-filing.shouhizei-general
+      params: {scope_confirmed: true, from: '2030-09-30', to: '2030-09-30'}
+    journals:
+      - date: 2030-09-30
+        status: posted
+        lines:
+          - {account: Expenses:Supplies, debit: 11000, tax: {category: taxable_purchase, rate: '10', invoice: false}}
+          - {account: Assets:Bank, credit: 11000}
+    figures: {purchases_10_non_invoice: 11000, purchase_tax_non_invoice: 500}
+  - name: non-invoice transition 2030-10-01
+    recipe:
+      id: jp-tax-filing.shouhizei-general
+      params: {scope_confirmed: true, from: '2030-10-01', to: '2030-10-01'}
+    journals:
+      - date: 2030-10-01
+        status: posted
+        lines:
+          - {account: Expenses:Supplies, debit: 11000, tax: {category: taxable_purchase, rate: '10', invoice: false}}
+          - {account: Assets:Bank, credit: 11000}
+    figures: {purchases_10_non_invoice: 11000, purchase_tax_non_invoice: 300}
+  - name: non-invoice transition 2031-09-30
+    recipe:
+      id: jp-tax-filing.shouhizei-general
+      params: {scope_confirmed: true, from: '2031-09-30', to: '2031-09-30'}
+    journals:
+      - date: 2031-09-30
+        status: posted
+        lines:
+          - {account: Expenses:Supplies, debit: 11000, tax: {category: taxable_purchase, rate: '10', invoice: false}}
+          - {account: Assets:Bank, credit: 11000}
+    figures: {purchases_10_non_invoice: 11000, purchase_tax_non_invoice: 300}
+  - name: non-invoice transition 2031-10-01
+    recipe:
+      id: jp-tax-filing.shouhizei-general
+      params: {scope_confirmed: true, from: '2031-10-01', to: '2031-10-01'}
+    journals:
+      - date: 2031-10-01
+        status: posted
+        lines:
+          - {account: Expenses:Supplies, debit: 11000, tax: {category: taxable_purchase, rate: '10', invoice: false}}
+          - {account: Assets:Bank, credit: 11000}
+    figures: {purchases_10_non_invoice: 11000, purchase_tax_non_invoice: 0}
