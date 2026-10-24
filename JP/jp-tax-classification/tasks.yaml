@@ -1,0 +1,11 @@
+tasks:
+    - id: jp-tax-classification.classify
+      title: Classify consumption tax
+      summary: Inspect explicit tax settings and journal classifications. Tax-excluded postings use net amounts; tax-included postings use gross amounts.
+      target: journal
+      fields: [book.consumption_tax, book.consumption_tax.status, book.consumption_tax.method, book.consumption_tax.accounting, book.consumption_tax.business_class, journal.lines]
+      rules: [tax.settings, tax.status-required, tax.block-type, tax.invoice-type, tax.category-required, tax.category-unknown, tax.export-rate-zero, tax.rate-required, tax.rate-unknown, tax.rate-positive, tax.rate-not-allowed, tax.business-class-required]
+      guide: jp-tax-classification.classification
+      examples: ["tests/classification.yaml#classified purchase", "tests/classification.yaml#missing tax status", "tests/classification.yaml#unknown category"]
+      coverage: [Recorded tax blocks, category and rate vocabulary, simplified business class and explicit Book tax settings. Untagged lines are not classified automatically.]
+      judgment: [Confirm tax status, election, transaction category, invoice evidence, rounding and amount basis. Package selection establishes none of these facts.]

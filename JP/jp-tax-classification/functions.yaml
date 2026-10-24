@@ -1,0 +1,53 @@
+functions:
+    - name: manages_tax
+      doc: Whether the book is a 課税事業者 (consumption_tax.status == taxable).
+      params: [{name: b, type: map}]
+      returns: bool
+      expr: >-
+        has(b.consumption_tax) && type(b.consumption_tax) == map && has(b.consumption_tax.status) && b.consumption_tax.status == 'taxable'
+    - name: tax_method
+      doc: The book's consumption-tax method (general | simplified), or ''.
+      params: [{name: b, type: map}]
+      returns: string
+      expr: >-
+        has(b.consumption_tax) && type(b.consumption_tax) == map && has(b.consumption_tax.method) && type(b.consumption_tax.method) == string ? b.consumption_tax.method : ''
+    - name: classified
+      doc: >-
+        Whether a journal line is subject to the per-line tax checks: the book manages consumption tax and the line carries a tax block.
+      params: [{name: b, type: map}, {name: l, type: map}]
+      returns: bool
+      expr: manages_tax(b) && has(l.tax) && type(l.tax) == map
+    - name: category
+      doc: The line's tax.category, or '' when absent.
+      params: [{name: l, type: map}]
+      returns: string
+      expr: >-
+        has(l.tax.category) && type(l.tax.category) == string ? l.tax.category : ''
+    - name: rate
+      doc: >-
+        The line's tax.rate as a token ('10', '8r', …). A YAML integer (`rate: 10`) is accepted and normalised; absent → ''.
+      params: [{name: l, type: map}]
+      returns: string
+      expr: >-
+        !has(l.tax.rate) ? '' : type(l.tax.rate) == string ? l.tax.rate : type(l.tax.rate) == int ? string(l.tax.rate) : type(l.tax.rate) == double ? string(int(l.tax.rate)) : ''
+    - name: rated
+      doc: Whether a category carries an explicit positive rate (課税売上 / 課税仕入).
+      params: [{name: c, type: string}]
+      returns: bool
+      expr: c == 'taxable_sale' || c == 'taxable_purchase'
+    - name: business_class
+      doc: >-
+        簡易課税 事業区分 for a 課税売上 line — the per-line override, else the book default, else 0.
+      params: [{name: b, type: map}, {name: l, type: map}]
+      returns: int
+      expr: >-
+        (has(l.tax) && type(l.tax) == map && has(l.tax.business_class) && type(l.tax.business_class) == int) ? l.tax.business_class : (has(b.consumption_tax) && type(b.consumption_tax) == map && has(b.consumption_tax.business_class)
+
+         && type(b.consumption_tax.business_class) == int)
+        ? b.consumption_tax.business_class : 0
+    - name: tax_accounting
+      doc: The book's consumption-tax accounting posture (tax_included | tax_excluded), or ''.
+      params: [{name: b, type: map}]
+      returns: string
+      expr: >-
+        has(b.consumption_tax) && type(b.consumption_tax) == map && has(b.consumption_tax.accounting) && type(b.consumption_tax.accounting) == string ? b.consumption_tax.accounting : ''

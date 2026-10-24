@@ -1,0 +1,11 @@
+tasks:
+  - id: jp-tax-amount.propose
+    title: Propose a missing tax amount
+    summary: Inspect jp-tax-classification.classify for tax settings, then review a missing amount proposal on a net posting.
+    target: journal
+    fields: [journal.lines, line.tax.amount, book.currency, book.scale]
+    operations: [{kind: derivation, id: tax.amount}]
+    guide: jp-tax-amount.amount
+    examples: ["tests/amount.yaml#tax on a net posting is proposed once", "tests/amount.yaml#tax-included postings produce no proposal"]
+    coverage: [Missing line.tax.amount on classified taxable net postings; existing values are preserved.]
+    judgment: [Confirm amount basis and invoice rounding. Applying an amount does not add the separate tax posting or approve the journal.]

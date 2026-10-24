@@ -1,0 +1,6 @@
+id: journal.balance
+call: balance
+when: "!journal.lines.exists(l, l.unit != '' && l.side == 'credit')"
+description:
+  en: Fill one missing monetary amount from the recorded balancing postings.
+  ja: 記録済みの明細から、未記入の金額を1つ補完します。

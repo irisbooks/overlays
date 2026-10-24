@@ -1,0 +1,5 @@
+id: jp-small-asset-deduction
+version: 2026.10.1
+requires_bindings: 5
+region: JP
+description: Check explicitly selected Japanese small-asset immediate deduction, dated thresholds and all-book annual caps. Pooled depreciation remains unsupported.

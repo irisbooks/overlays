@@ -1,0 +1,35 @@
+book: &taxable
+  region: JP
+  currency: JPY
+  scale: 0
+  consumption_tax: {status: taxable, method: general, accounting: tax_included}
+cases:
+  - name: classified purchase
+    journal: &purchase
+      date: 2026-10-01
+      lines:
+        - {account: Expenses:Supplies, debit: 11000, tax: {category: taxable_purchase, rate: '10', invoice: true}}
+        - {account: Assets:Bank, credit: 11000}
+    expect: []
+  - name: missing tax status
+    book: {region: JP, currency: JPY, scale: 0}
+    journal: *purchase
+    expect: [{rule: tax.status-required}]
+  - name: unknown category
+    journal:
+      date: 2026-10-01
+      lines: [{account: Expenses:Supplies, debit: 11000, tax: {category: guessed, rate: '10'}}]
+    expect: [{rule: tax.category-unknown}]
+  - name: malformed invoice boolean
+    journal:
+      date: 2026-10-01
+      lines: [{account: Expenses:Supplies, debit: 11000, tax: {category: taxable_purchase, rate: '10', invoice: 'yes'}}]
+    expect: [{rule: tax.invoice-type}]
+  - name: settings must be explicit
+    book: {region: JP, currency: JPY, scale: 0, consumption_tax: {status: taxable}}
+    journal: *purchase
+    expect: [{rule: tax.settings}]
+  - name: unclassified line remains unclassified
+    book: {region: JP, currency: JPY, scale: 0}
+    journal: {date: 2026-10-01, lines: [{account: Assets:Bank, debit: 100}]}
+    expect: []

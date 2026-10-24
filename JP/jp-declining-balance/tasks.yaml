@@ -1,0 +1,11 @@
+tasks:
+  - id: jp-declining-balance.schedule
+    title: Calculate a full-year declining-balance schedule
+    summary: Preview the recorded calculation using explicitly confirmed full service years and published rates.
+    target: asset
+    fields: [asset.name, asset.acquisition_cost, asset.method, asset.useful_life_months, asset.salvage_value]
+    operations: [{kind: recipe, id: jp-declining-balance.teiritsu}]
+    guide: jp-declining-balance.schedule
+    examples: ["tests/recipes.yaml#定率法 8 years ¥1,000,000 — the manual's worked example (200% table)", "tests/coverage.yaml#full year confirmation required"]
+    coverage: [Recorded full twelve-month declining-balance schedule and guarantee/revised-rate transition.]
+    judgment: [Confirm method eligibility, service period, published rates and year-end. Partial first years are unsupported; activation does not select a statutory method for an asset.]

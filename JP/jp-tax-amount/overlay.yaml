@@ -1,0 +1,6 @@
+id: jp-tax-amount
+version: 2026.10.1
+requires_bindings: 5
+region: JP
+requires_overlays: {jp-tax-classification: ['2026.10.1']}
+description: Propose missing consumption-tax amounts on net journal lines. Requires explicit tax classification; does not create tax postings.
