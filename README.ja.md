@@ -6,17 +6,17 @@
 
 ## 使いたいパッケージを選ぶ
 
-以下の七つは、まだ公開していない `2026.10.1` の候補です。エンジンが提供する関数・値の仕様（バインディング）の**バージョン5**が必要です。利用者向けの配布には、対応する署名付きエンジンの公開が必要です。ソースのテスト方法は[エンジンの要件](CONTRIBUTING.ja.md#対応するエンジンを用意する)を参照してください。
+以下の七つは、署名付きの `2026.10.1` 公開版です。バインディングの**バージョン5**に対応する [Iris v0.2.18](https://github.com/irisbooks/iris/releases/tag/v0.2.18) で動作を確認しています。各リリースには、固定バージョンのパッケージ本体と署名を添付しています。ソースのテスト方法は[エンジンの要件](CONTRIBUTING.ja.md#対応するエンジンを用意する)を参照してください。
 
-| 分類 | パッケージ | 用途 |
-|---|---|---|
-| 仕訳補完 | [journal-balance](journal-balance/README.ja.md) | 貸借が一致するよう、未入力の金額を1件補完 |
-| 仕訳補完 | [inventory-disposal](inventory-disposal/README.ja.md) | 数量・決済額・取得履歴から売却原価と損益を提案 |
-| 日本の消費税 | [jp-tax-classification](JP/jp-tax-classification/README.ja.md) | 帳簿の税設定と仕訳明細の税区分を検証 |
-| 日本の消費税 | [jp-tax-amount](JP/jp-tax-amount/README.ja.md) | 税抜明細に未入力の税額を提案 |
-| 日本の消費税 | [jp-tax-filing](JP/jp-tax-filing/README.ja.md) | 本則課税・簡易課税の計算資料を作成 |
-| 日本の固定資産 | [jp-small-asset-deduction](JP/jp-small-asset-deduction/README.ja.md) | 少額資産特例の取得日別の金額基準と年間限度額を検証 |
-| 日本の固定資産 | [jp-declining-balance](JP/jp-declining-balance/README.ja.md) | 12か月分の定率法による償却表を計算 |
+| 分類 | パッケージ | 用途 | 署名付きリリース |
+|---|---|---|---|
+| 仕訳補完 | [journal-balance](journal-balance/README.ja.md) | 貸借が一致するよう、未入力の金額を1件補完 | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/journal-balance%402026.10.1) |
+| 仕訳補完 | [inventory-disposal](inventory-disposal/README.ja.md) | 数量・決済額・取得履歴から売却原価と損益を提案 | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/inventory-disposal%402026.10.1) |
+| 日本の消費税 | [jp-tax-classification](JP/jp-tax-classification/README.ja.md) | 帳簿の税設定と仕訳明細の税区分を検証 | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-tax-classification%402026.10.1) |
+| 日本の消費税 | [jp-tax-amount](JP/jp-tax-amount/README.ja.md) | 税抜明細に未入力の税額を提案 | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-tax-amount%402026.10.1) |
+| 日本の消費税 | [jp-tax-filing](JP/jp-tax-filing/README.ja.md) | 本則課税・簡易課税の計算資料を作成 | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-tax-filing%402026.10.1) |
+| 日本の固定資産 | [jp-small-asset-deduction](JP/jp-small-asset-deduction/README.ja.md) | 少額資産特例の取得日別の金額基準と年間限度額を検証 | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-small-asset-deduction%402026.10.1) |
+| 日本の固定資産 | [jp-declining-balance](JP/jp-declining-balance/README.ja.md) | 12か月分の定率法による償却表を計算 | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-declining-balance%402026.10.1) |
 
 `JP/` に日本向けのパッケージをまとめ、共通パッケージはリポジトリのルートに置きます。フォルダーはソースを整理するためのもので、パッケージ ID、固定バージョンの指定、有効化の方法は変わりません。
 
@@ -24,7 +24,7 @@
 
 ## 帳簿で使う
 
-初めて使う方は、[CLI の導入と帳簿の作成](https://irisbooks.io/docs/ja/getting-started/)から始めてください。以下は、**対応するエンジンとパッケージの公開後**に、既存の帳簿フォルダーで実行する例です。
+初めて使う方は、[CLI の導入と帳簿の作成](https://irisbooks.io/docs/ja/getting-started/)から始めてください。以下は、Iris v0.2.18、またはバインディング5と現在の CLI コマンドに対応するエンジンで、既存の帳簿フォルダーから実行する例です。
 
 インストールすると `config/overlay-packages/` にパッケージが保存されます。その後、有効化するパッケージを選択します。次は貸借補完だけを有効にする例です。`select` は有効な一覧全体を置き換えるため、ほかに使い続けるパッケージがあれば、それも指定してください。
 
@@ -44,7 +44,7 @@ iris overlay example journal-balance.journal 'tests/autocomplete.yaml#money-only
 
 ## CLI コマンドの使い分け
 
-バインディングのバージョン5に加え、現在の CLI コマンドに対応するエンジンが必要です。候補パッケージを使う前に `iris journal complete --help`、`iris validate --help`、`iris overlay recipe --help` を確認してください。CLI の旧名 `autocomplete`・`show`・`attention` は削除しました。ローカル MCP は `complete_journal`・`list_sync_issues`・`retry_sync_issues` を使います。テストの `autocomplete` 項目は変わりません。
+バインディングのバージョン5に加え、現在の CLI コマンドに対応するエンジンが必要です。パッケージを使う前に `iris journal complete --help`、`iris validate --help`、`iris overlay recipe --help` を確認してください。CLI の旧名 `autocomplete`・`show`・`attention` は削除しました。ローカル MCP は `complete_journal`・`list_sync_issues`・`retry_sync_issues` を使います。テストの `autocomplete` 項目は変わりません。
 
 上の例は帳簿フォルダーで実行します。別の場所から実行する場合は `--book-path PATH` で帳簿を指定します。サーバーの帳簿を操作するときは `--book-id ID` を使います。CLI のフラグは引数の前後どちらにも置けます。`--` 以降はフラグとして解釈しません。
 

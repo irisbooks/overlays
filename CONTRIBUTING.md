@@ -9,19 +9,19 @@ result. For questions or proposed engine changes, open a
 
 ## Use a compatible engine
 
-The current `2026.10.1` candidates all declare `requires_bindings: 5`.
+The published `2026.10.1` packages all declare `requires_bindings: 5`.
 Bindings are the functions and values the Iris engine makes available to package
 expressions written in CEL. The engine is distributed separately; start with the
 [CLI installation guide](https://irisbooks.io/docs/en/getting-started/) and
 [signed engine releases](https://github.com/irisbooks/iris/releases).
 
-Use an engine that supports bindings 5 and `iris overlay test --dir`. A version
-number alone does not establish compatibility. If the latest signed release
-rejects these candidates, request a compatible development build in an issue for
-local testing. These packages remain unreleased candidates until a compatible
-signed engine is available. CI tests with the latest signed release; unsupported
-bindings or test suites must fail, never be skipped. New engine bindings must
-ship before a package using them can merge or be released.
+[Iris v0.2.18](https://github.com/irisbooks/iris/releases/tag/v0.2.18) supports
+bindings 5 and `iris overlay test --dir`; all 59 golden cases for this catalog
+pass with that signed engine. For another engine, check its binding and command
+support explicitly. CI tests with the latest signed release; unsupported
+bindings or test suites must fail, never be skipped. Future engine bindings must
+ship before a package using them can merge or be released. Published bundles and
+signatures are linked from the [package catalog](README.md#choose-a-package).
 
 The guides also require the current command surface: journal completion is
 `iris journal complete`, applying derived fields uses `iris validate --apply`,

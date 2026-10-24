@@ -9,20 +9,20 @@ packages to enable in your Book.
 
 ## Choose a package
 
-The seven packages below are unreleased `2026.10.1` candidates. They require an
-Iris engine with **bindings 5**; a compatible signed release is required before
-these candidates can be distributed to users. See [engine requirements](CONTRIBUTING.md#use-a-compatible-engine)
-for testing the source checkout.
+The seven packages below are signed `2026.10.1` releases, tested with
+[Iris v0.2.18](https://github.com/irisbooks/iris/releases/tag/v0.2.18), which supports
+**bindings 5**. Each release contains its exact package bundle and signature.
+See [engine requirements](CONTRIBUTING.md#use-a-compatible-engine) for testing the source checkout.
 
-| Category | Package | What it does |
-|---|---|---|
-| Journal completion | [journal-balance](journal-balance/README.md) | Fills one missing monetary amount so a journal balances |
-| Journal completion | [inventory-disposal](inventory-disposal/README.md) | Proposes disposal cost and gain/loss from quantities, settlement and acquisition history |
-| Japanese consumption tax | [jp-tax-classification](JP/jp-tax-classification/README.md) | Checks recorded tax settings and journal line classifications |
-| Japanese consumption tax | [jp-tax-amount](JP/jp-tax-amount/README.md) | Proposes missing tax amounts on tax-exclusive journal lines |
-| Japanese consumption tax | [jp-tax-filing](JP/jp-tax-filing/README.md) | Calculates supporting figures for general or simplified taxation |
-| Japanese fixed assets | [jp-small-asset-deduction](JP/jp-small-asset-deduction/README.md) | Checks acquisition-date limits and the annual small-asset deduction cap |
-| Japanese fixed assets | [jp-declining-balance](JP/jp-declining-balance/README.md) | Calculates full-year declining-balance depreciation schedules |
+| Category | Package | What it does | Signed release |
+|---|---|---|---|
+| Journal completion | [journal-balance](journal-balance/README.md) | Fills one missing monetary amount so a journal balances | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/journal-balance%402026.10.1) |
+| Journal completion | [inventory-disposal](inventory-disposal/README.md) | Proposes disposal cost and gain/loss from quantities, settlement and acquisition history | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/inventory-disposal%402026.10.1) |
+| Japanese consumption tax | [jp-tax-classification](JP/jp-tax-classification/README.md) | Checks recorded tax settings and journal line classifications | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-tax-classification%402026.10.1) |
+| Japanese consumption tax | [jp-tax-amount](JP/jp-tax-amount/README.md) | Proposes missing tax amounts on tax-exclusive journal lines | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-tax-amount%402026.10.1) |
+| Japanese consumption tax | [jp-tax-filing](JP/jp-tax-filing/README.md) | Calculates supporting figures for general or simplified taxation | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-tax-filing%402026.10.1) |
+| Japanese fixed assets | [jp-small-asset-deduction](JP/jp-small-asset-deduction/README.md) | Checks acquisition-date limits and the annual small-asset deduction cap | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-small-asset-deduction%402026.10.1) |
+| Japanese fixed assets | [jp-declining-balance](JP/jp-declining-balance/README.md) | Calculates full-year declining-balance depreciation schedules | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-declining-balance%402026.10.1) |
 
 The `JP/` folder groups packages for Japan. Common packages stay at the repository
 root. Folder names organize the source; package IDs, version pins and selection
@@ -36,8 +36,8 @@ category names only help you find them.
 ## Use packages in a Book
 
 Start with the [CLI installation and Book setup guide](https://irisbooks.io/docs/en/getting-started/).
-The commands below run from an existing Book folder, **after the selected package
-versions and a compatible engine have been released**.
+The commands below run from an existing Book folder with Iris v0.2.18 or a
+compatible engine supporting bindings 5 and the current CLI commands.
 
 Installation copies a package into `config/overlay-packages/`; selection enables
 it. The example below selects only journal balancing. Since `select` replaces the
@@ -66,7 +66,7 @@ Existing Books keep their selections until you change them.
 
 Use an engine with the current CLI command surface as well as bindings 5. Check
 `iris journal complete --help`, `iris validate --help` and `iris overlay recipe
---help` before using these candidate packages. The former CLI names
+--help` before using these packages. The former CLI names
 `autocomplete`, `show` and `attention` are removed; local MCP uses
 `complete_journal`, `list_sync_issues` and `retry_sync_issues`. The golden-test
 `autocomplete` field remains unchanged.
