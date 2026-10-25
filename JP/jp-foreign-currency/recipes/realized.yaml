@@ -1,0 +1,14 @@
+id: realized
+output: figures
+description:
+  en: Prepare ordinary USD realized currency gains as miscellaneous-income supporting figures. Transfers preserve basis; unrealized currency movements and securities holding-period FX are excluded.
+  ja: 通常の米ドル現預金の実現為替差損益を雑所得の申告準備資料として計算します。口座移動では取得費を引き継ぎ、未実現損益と株式保有中の為替変動は含めません。
+params:
+  - {name: scope_confirmed, type: bool, enum: [true], doc: Confirm the complete ordinary cash pool and the explicitly selected methodology; no margin FX or fund sweeps.}
+  - {name: from, type: string, doc: Period start YYYY-MM-DD.}
+  - {name: to, type: string, doc: Period end YYYY-MM-DD.}
+let:
+  basis: inventory_basis_v1(journals, 'jp-foreign-currency.cash', date(from), date(to))
+result: >-
+  {'period_from': from, 'period_to': to, 'income_category': 'miscellaneous',
+   'realized_fx_gain': sum(basis.disposals.map(d, d.gain)), 'basis': basis}

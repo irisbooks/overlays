@@ -1,0 +1,27 @@
+book:
+  schema_version: 1
+  region: JP
+  currency: JPY
+  scale: 0
+  fiscal_year: 2026
+  fiscal_start_month: 1
+  units: [{symbol: AMZN, scale: 0}]
+  jp_securities_basis: {scope_confirmed: true, account_regime: ordinary-listed-shares, acquisition_fees_capitalized: true, accounts: ['Assets:AMZN'], commodities: [AMZN], settlement_accounts: ['Assets:JPY'], fee_accounts: ['Expenses:ShareFees'], gain_account: 'Income:Shares'}
+cases:
+  - name: ordinary shares need no RSU metadata
+    journals:
+      - schema_version: 1
+        date: 2026-01-01
+        status: posted
+        lines:
+          - {account: 'Assets:AMZN', debit: 5700000, quantity: 7000, unit: AMZN}
+          - {account: 'Assets:JPY', credit: 5700000}
+      - schema_version: 1
+        date: 2026-03-01
+        status: posted
+        lines:
+          - {account: 'Assets:AMZN', credit: 2442857, quantity: 3000, unit: AMZN}
+          - {account: 'Assets:JPY', debit: 3000000}
+          - {account: 'Income:Shares', credit: 557143}
+    recipe: {id: jp-securities-basis.basis, params: {scope_confirmed: true, from: '2026-01-01', to: '2026-12-31'}}
+    figures: {acquisition_cost: 2445000, taxable_gain: 555000, gross_proceeds: 3000000, fees: 0}

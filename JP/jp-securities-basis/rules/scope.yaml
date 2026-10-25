@@ -1,0 +1,8 @@
+rules:
+  - id: securities-basis.scope
+    target: journal
+    when: has(book.jp_securities_basis)
+    assert: securities_scope(book)
+    message:
+      en: Confirm JP individual ordinary listed shares, JPY scale 0, calendar year and capitalized acquisition costs before using this policy.
+      ja: 個人の通常の上場株式、JPY・scale 0、暦年、取得時費用の資産計上を確認してから適用してください。

@@ -1,0 +1,7 @@
+id: cash
+when: currency_scope(book)
+with: >-
+  {'method': 'moving-average', 'round_up': false, 'pool_accounts': true, 'whole_units': false,
+   'accounts': book.jp_foreign_currency.accounts, 'commodities': book.jp_foreign_currency.currencies,
+   'settlement_accounts': book.jp_foreign_currency.settlement_accounts,
+   'fee_accounts': book.jp_foreign_currency.fee_accounts, 'gain_account': book.jp_foreign_currency.gain_account}

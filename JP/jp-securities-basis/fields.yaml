@@ -1,0 +1,6 @@
+fields:
+  book.jp_securities_basis:
+    type: map
+    description:
+      en: Confirm ordinary listed shares, complete own-account scope, capitalized acquisition costs, account mappings and commodities.
+      ja: 通常の上場株式、本人名義の対象口座全体、取得時費用の資産計上、勘定科目、銘柄を明示します。

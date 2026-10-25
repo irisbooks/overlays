@@ -1,0 +1,11 @@
+tasks:
+  - id: jp-foreign-currency.cash
+    title: Track ordinary foreign cash realization
+    summary: Preserve historical USD cash basis through own-account transfers and calculate realized currency gains separately from share gains and salary.
+    target: book
+    fields: [book.jp_foreign_currency, journal.lines]
+    operations: [{kind: completion, id: currency.complete}, {kind: recipe, id: jp-foreign-currency.realized}]
+    guide: jp-foreign-currency.cash
+    examples: ['tests/cash.yaml#sale proceeds later converted to yen']
+    coverage: [Ordinary USD cash, an explicitly confirmed moving-average pool, actual conversions and paired own-account transfers.]
+    judgment: [Confirm all participating USD holdings and costs. Automatic MMF sweeps, margin FX, foreign tax credits and unsupported settlement timing are excluded.]

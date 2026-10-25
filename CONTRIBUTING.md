@@ -131,3 +131,9 @@ maintainers tag `<id>@<version>` and publish a signed package bundle. Candidate
 bundle building and signing belong to the maintainer's engine release workflow.
 An Iris release includes a curated catalog for offline installation. Books keep
 exact installed definitions for execution and historical replay.
+
+## Bindings 6 investment contract (development)
+
+`inventory/*.yaml` exports typed, qualified policies (`id`, boolean `when`, map-valued `with`). Consumers require one exact provider version. Private CEL helpers remain private. Policy maps select declared accounts/commodities, settlement/fee/gain accounts, arithmetic method (`unit-average` or `moving-average`), rounding, pooling and whole-unit scope. `inventory_basis_v1(journals, policy, from, to)` returns checked disposal/remaining-basis facts. Recipes freeze the exact policy inputs under `source.inventory_policies`; replay uses those inputs and the retained package. `unit_income_v1` and `unit_value_v1` value evidenced non-cash acquisitions exactly. Completion calls `inventory-policy` and `unit-income` use the same native arithmetic. Source Book unit scales are exposed as `book.units`. Local complete inputs are required; streaming sums cannot supply these facts. These primitives are versioned independently from the package policy.
+
+Rollover keeps native carrying value plus generic `allocation_cost_minor` and `allocation_policy` openings. Filing figures are preparation aids; this contract does not add regional financial-view acceptance or cloud CEL execution. Golden source syntax for bindings 6 recipe journals uses the actual Book parser, including declared currency/unit precision. Test with the matching development engine until a qualified signed engine supports bindings 6.

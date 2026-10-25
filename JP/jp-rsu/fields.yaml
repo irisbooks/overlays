@@ -1,0 +1,11 @@
+fields:
+  book.jp_rsu:
+    type: map
+    description:
+      en: Confirm the supported Japan-resident employee scope, exclusion from the domestic salary statement, no Japanese withholding, self-assessment and the RSU salary account.
+      ja: 対応する日本居住・勤務の従業員、国内給与の源泉徴収票への未算入、日本の源泉徴収なし、自己申告納税、RSU給与科目を確認します。
+  line.jp_rsu:
+    type: map
+    description:
+      en: Vesting evidence on the holding debit; native quantity and amount remain authoritative.
+      ja: 株式取得の借方明細に権利確定の根拠を記録します。株数と金額には既存の仕訳項目を使います。

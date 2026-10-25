@@ -1,0 +1,11 @@
+functions:
+  - name: securities_scope
+    params: [{name: b, type: map}]
+    returns: bool
+    doc: "Ordinary Japanese individual listed-share scope; NTA No.1466, checked 2026-10-25. Whole shares and capitalized acquisition costs only."
+    expr: >-
+      b.region == 'JP' && b.currency == 'JPY' && b.scale == 0 && b.fiscal_start_month == 1
+      && has(b.jp_securities_basis) && type(b.jp_securities_basis) == map
+      && has(b.jp_securities_basis.scope_confirmed) && b.jp_securities_basis.scope_confirmed == true
+      && has(b.jp_securities_basis.account_regime) && b.jp_securities_basis.account_regime == 'ordinary-listed-shares'
+      && has(b.jp_securities_basis.acquisition_fees_capitalized) && b.jp_securities_basis.acquisition_fees_capitalized == true

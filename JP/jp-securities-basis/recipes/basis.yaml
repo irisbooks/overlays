@@ -1,0 +1,17 @@
+id: basis
+output: figures
+description:
+  en: Prepare Japanese listed-share disposal figures and rounded remaining basis from the complete declared pool. These are filing aids, not an accepted financial view or submitted return.
+  ja: 明示した対象口座全体から、上場株式の譲渡損益と端数処理後の残存取得費を計算します。申告準備資料であり、承認済み財務ビューや提出済み申告書ではありません。
+params:
+  - {name: scope_confirmed, type: bool, enum: [true], doc: Confirm complete ordinary listed-share holdings and the guide's supported scope.}
+  - {name: from, type: string, doc: Period start YYYY-MM-DD.}
+  - {name: to, type: string, doc: Period end YYYY-MM-DD.}
+let:
+  basis: inventory_basis_v1(journals, 'jp-securities-basis.shares', date(from), date(to))
+result: >-
+  {'period_from': from, 'period_to': to, 'income_category': 'listed_securities',
+   'taxable_gain': sum(basis.disposals.map(d, d.gain)),
+   'gross_proceeds': sum(basis.disposals.map(d, d.gross_proceeds)),
+   'acquisition_cost': sum(basis.disposals.map(d, d.basis)),
+   'fees': sum(basis.disposals.map(d, d.fees)), 'basis': basis}

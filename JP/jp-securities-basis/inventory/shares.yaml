@@ -1,0 +1,9 @@
+id: shares
+when: securities_scope(book)
+with: >-
+  {'method': 'unit-average', 'round_up': true, 'pool_accounts': true, 'whole_units': true,
+   'accounts': book.jp_securities_basis.accounts,
+   'commodities': book.jp_securities_basis.commodities,
+   'settlement_accounts': book.jp_securities_basis.settlement_accounts,
+   'fee_accounts': book.jp_securities_basis.fee_accounts,
+   'gain_account': book.jp_securities_basis.gain_account}

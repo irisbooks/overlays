@@ -1,0 +1,14 @@
+functions:
+  - name: currency_scope
+    params: [{name: b, type: map}]
+    returns: bool
+    doc: Explicit ordinary USD cash scope and confirmed cost methodology; not securities, margin FX or automatic fund sweeps.
+    expr: >-
+      b.region == 'JP' && b.currency == 'JPY' && b.scale == 0 && b.fiscal_start_month == 1
+      && has(b.jp_foreign_currency) && type(b.jp_foreign_currency) == map
+      && has(b.jp_foreign_currency.scope_confirmed) && b.jp_foreign_currency.scope_confirmed == true
+      && has(b.jp_foreign_currency.method_confirmed) && b.jp_foreign_currency.method_confirmed == true
+      && has(b.jp_foreign_currency.method) && b.jp_foreign_currency.method == 'moving-average'
+      && has(b.jp_foreign_currency.account_regime) && b.jp_foreign_currency.account_regime == 'ordinary-cash'
+      && has(b.jp_foreign_currency.currencies) && type(b.jp_foreign_currency.currencies) == list
+      && b.jp_foreign_currency.currencies.size() == 1 && b.jp_foreign_currency.currencies[0] == 'USD'

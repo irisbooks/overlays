@@ -1,0 +1,13 @@
+functions:
+  - name: rsu_scope
+    params: [{name: b, type: map}]
+    returns: bool
+    doc: Explicit user-confirmed self-assessment profile; never inferred from employer identity.
+    expr: >-
+      b.region == 'JP' && b.currency == 'JPY' && b.scale == 0 && b.fiscal_start_month == 1
+      && has(b.jp_rsu) && type(b.jp_rsu) == map
+      && has(b.jp_rsu.scope_confirmed) && b.jp_rsu.scope_confirmed == true
+      && has(b.jp_rsu.included_in_salary_statement) && b.jp_rsu.included_in_salary_statement == false
+      && has(b.jp_rsu.japan_withholding) && b.jp_rsu.japan_withholding == false
+      && has(b.jp_rsu.tax_funding) && b.jp_rsu.tax_funding == 'self-assessment'
+      && has(b.jp_rsu.income_account) && type(b.jp_rsu.income_account) == string && b.jp_rsu.income_account != ''

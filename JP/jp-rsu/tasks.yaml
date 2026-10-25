@@ -1,0 +1,11 @@
+tasks:
+  - id: jp-rsu.vesting
+    title: Record RSU vesting and additional salary
+    summary: Record evidenced gross share vesting without Japanese payroll withholding or automatic tax sales, then prepare the additional salary schedule.
+    target: journal
+    fields: [book.jp_rsu, line.jp_rsu, journal.lines]
+    operations: [{kind: completion, id: journal.balance}, {kind: recipe, id: jp-rsu.salary}]
+    guide: jp-rsu.vesting
+    examples: ['tests/vesting.yaml#vest without a tax sale']
+    coverage: [Ordinary USD stock-settled employee RSUs while resident and working in Japan; explicit self-assessment profile.]
+    judgment: [Confirm the legal recognition date and valuation evidence. No employer name infers treatment; net settlement, international service and foreign tax credits are unsupported.]

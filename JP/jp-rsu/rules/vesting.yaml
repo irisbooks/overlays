@@ -1,0 +1,30 @@
+rules:
+  - id: rsu.scope
+    target: journal
+    when: journal.lines.exists(l, has(l.jp_rsu))
+    assert: rsu_scope(book)
+    message:
+      en: RSU vesting requires explicit Japan-resident employee scope, no domestic salary-statement inclusion or Japanese withholding, and self-assessment.
+      ja: 日本居住・勤務の従業員、国内給与の源泉徴収票への未算入、日本の源泉徴収なし、自己申告納税を明示してください。
+  - id: rsu.valuation
+    target: journal
+    when: journal.lines.exists(l, has(l.jp_rsu)) && rsu_scope(book)
+    assert: >-
+      journal.lines.size() == 2 && journal.lines.filter(l, has(l.jp_rsu)).size() == 1
+      && journal.lines.filter(l, has(l.jp_rsu)).all(l,
+         type(l.jp_rsu) == map && l.side == 'debit' && l.unit != '' && unit_scale_v1(book, l.unit) == 0
+         && has(l.jp_rsu.event_id) && type(l.jp_rsu.event_id) == string && l.jp_rsu.event_id != ''
+         && has(l.jp_rsu.grant_id) && type(l.jp_rsu.grant_id) == string && l.jp_rsu.grant_id != ''
+         && has(l.jp_rsu.payer) && type(l.jp_rsu.payer) == string && l.jp_rsu.payer != ''
+         && has(l.jp_rsu.price_source) && type(l.jp_rsu.price_source) == string && l.jp_rsu.price_source != ''
+         && has(l.jp_rsu.fx_source) && type(l.jp_rsu.fx_source) == string && l.jp_rsu.fx_source != ''
+         && has(l.jp_rsu.currency) && l.jp_rsu.currency == 'USD'
+         && has(l.jp_rsu.fx_kind) && l.jp_rsu.fx_kind == 'TTM'
+         && has(l.jp_rsu.recognition_date) && date(l.jp_rsu.recognition_date) == journal.date
+         && has(l.jp_rsu.fx_date) && date(l.jp_rsu.fx_date) <= journal.date
+         && has(l.jp_rsu.unit_price) && has(l.jp_rsu.fx_rate)
+         && l.debit == unit_value_v1(l.quantity, unit_scale_v1(book, l.unit), l.jp_rsu.unit_price, l.jp_rsu.fx_rate, book.scale)
+         && journal.lines.exists(i, i.account == book.jp_rsu.income_account && i.unit == '' && i.side == 'credit' && i.credit == l.debit))
+    message:
+      en: Record one gross vested share acquisition and matching salary with exact USD price, TTM rate/date, payer, grant/event IDs and valuation sources; no tax sale or withholding is inferred.
+      ja: 権利確定した株式取得と同額の給与を記録し、ドル株価、TTM・適用日、支払者、付与・イベント番号、評価の根拠を明示してください。税金のための売却や源泉徴収は推定しません。

@@ -1,0 +1,27 @@
+book:
+  schema_version: 1
+  region: JP
+  currency: JPY
+  scale: 0
+  fiscal_year: 2026
+  fiscal_start_month: 1
+  jp_foreign_currency: {scope_confirmed: true, method_confirmed: true, method: moving-average, account_regime: ordinary-cash, currencies: [USD], accounts: ['Assets:USD'], settlement_accounts: ['Assets:JPY', 'Assets:AMZN', 'Income:Shares'], fee_accounts: ['Expenses:FXFees'], gain_account: 'Income:FX'}
+cases:
+  - name: sale proceeds later converted to yen
+    journals:
+      - schema_version: 1
+        date: 2026-06-01
+        status: posted
+        lines:
+          - {account: 'Assets:USD', debit: 696000, quantity: 4800, unit: USD}
+          - {account: 'Assets:AMZN', credit: 600000}
+          - {account: 'Income:Shares', credit: 96000}
+      - schema_version: 1
+        date: 2026-07-01
+        status: posted
+        lines:
+          - {account: 'Assets:USD', credit: 696000, quantity: 4800, unit: USD}
+          - {account: 'Assets:JPY', debit: 744000}
+          - {account: 'Income:FX', credit: 48000}
+    recipe: {id: jp-foreign-currency.realized, params: {scope_confirmed: true, from: '2026-01-01', to: '2026-12-31'}}
+    figures: {income_category: miscellaneous, realized_fx_gain: 48000}

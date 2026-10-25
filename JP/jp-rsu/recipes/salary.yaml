@@ -1,0 +1,17 @@
+id: salary
+output: figures
+description:
+  en: Prepare additional gross RSU salary for a confirmed no-payroll-inclusion, no-Japanese-withholding self-assessment profile. No withholding statement import or stock sale is required.
+  ja: 国内給与の源泉徴収票への未算入・日本の源泉徴収なし・自己申告納税を確認したRSUの追加給与収入を集計します。源泉徴収票の取込みや株式売却は不要です。
+params:
+  - {name: scope_confirmed, type: bool, enum: [true], doc: Confirm stock-settled Japan-resident employee USD RSUs, no domestic payroll inclusion/withholding, supported dates and complete vest records.}
+  - {name: income_account, type: string, doc: Explicit RSU gross salary account.}
+  - {name: from, type: string, doc: Calendar tax-year period start YYYY-MM-DD.}
+  - {name: to, type: string, doc: Calendar tax-year period end YYYY-MM-DD.}
+let:
+  receipts: "unit_income_v1(journals, {'metadata_field': 'jp_rsu', 'income_account': income_account, 'from': from, 'to': to, 'currency': 'USD', 'base_currency': 'JPY', 'fx_kind': 'TTM', 'whole_units': true})"
+result: >-
+  {'period_from': from, 'period_to': to, 'income_category': 'salary',
+   'additional_salary_receipts': receipts.gross_receipts, 'japan_withholding': 0,
+   'included_in_salary_statement': false, 'records': receipts.records,
+   'inputs_sha256': receipts.inputs_sha256}

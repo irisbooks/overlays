@@ -1,0 +1,8 @@
+rules:
+  - id: currency.scope
+    target: journal
+    when: has(book.jp_foreign_currency)
+    assert: currency_scope(book)
+    message:
+      en: Confirm ordinary USD cash, complete ownership scope and moving-average methodology; securities and margin FX use different policies.
+      ja: 通常の米ドル現預金、本人名義の対象口座全体、移動平均による計算方法を確認してください。株式や証拠金FXは別の規則で扱います。

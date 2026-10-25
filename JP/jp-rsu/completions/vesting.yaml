@@ -1,0 +1,14 @@
+id: journal.balance
+call: unit-income
+when: >-
+  !journal.lines.exists(l, l.unit != '' && l.side == 'credit')
+  && (!journal.lines.exists(l, has(l.jp_rsu)) || rsu_scope(book))
+  && journal.lines.filter(l, has(l.jp_rsu)).all(l,
+     type(l.jp_rsu) == map && has(l.jp_rsu.currency) && l.jp_rsu.currency == 'USD'
+     && has(l.jp_rsu.fx_kind) && l.jp_rsu.fx_kind == 'TTM' && unit_scale_v1(book, l.unit) == 0)
+with: >-
+  {'metadata_field': 'jp_rsu',
+   'income_account': has(book.jp_rsu) && has(book.jp_rsu.income_account) ? book.jp_rsu.income_account : ''}
+description:
+  en: Value a gross RSU acquisition and salary from exact price/FX facts; ordinary monetary journals retain balancing completion.
+  ja: 株価と為替の記録から株式取得額と給与総額を正確に計算します。通常の金額仕訳では貸借の補完を行います。

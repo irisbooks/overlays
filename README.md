@@ -127,3 +127,7 @@ Remote cloud MCP bookkeeping is read-only in the first release. It reads
 stored package references and can optionally capture raw documents, which do
 not invoke overlays. It runs neither CEL nor recipes and never edits journals. The tools and write examples here refer to the local CLI
 and local MCP server; validate locally before syncing changes.
+
+## Development candidates requiring bindings 6
+
+Unreleased `2026.10.2` sources: [Japanese securities basis](JP/jp-securities-basis/README.md), [RSU salary](JP/jp-rsu/README.md), and [ordinary USD cash](JP/jp-foreign-currency/README.md). RSU requires the exact securities-basis version; ordinary cash is independent. These are not signed releases and are not part of the seven-package published catalog. Test with the matching development engine; Iris v0.2.18 cannot execute bindings 6. Publish a qualified engine before merging/releasing these packages.
