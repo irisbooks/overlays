@@ -25,27 +25,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install minisign
         run: sudo apt-get update -qq && sudo apt-get install -y -qq minisign
-      - name: Download and verify iris
+      - name: Download and verify the pinned iris
         run: .github/scripts/fetch-iris.sh
       - name: Run every overlay's golden tests
-        run: |
-          # Candidate packages must be checked by a compatible signed engine.
-          # Missing support is a release blocker, never a skipped success.
-          if ! iris overlay test -h 2>&1 | grep -q 'overlay-dir'; then
-            echo "::error::iris $(cat "$RUNNER_TEMP/iris/version.txt") lacks overlay test --dir; publish a compatible signed engine before accepting this catalog"
-            exit 1
-          fi
-          shopt -s nullglob
-          manifests=(*/overlay.yaml */*/overlay.yaml)
-          [ "${#manifests[@]}" -gt 0 ] || { echo "::error::no overlay packages found"; exit 1; }
-          status=0
-          for manifest in "${manifests[@]}"; do
-            package_dir="${manifest%/overlay.yaml}"
-            echo "::group::$package_dir"
-            iris overlay test --dir "$package_dir" || status=1
-            echo "::endgroup::"
-          done
-          exit "$status"
+        run: .github/scripts/run-goldens.sh
 
   dco:
     name: dco

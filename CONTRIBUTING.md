@@ -18,8 +18,10 @@ expressions written in CEL. The engine is distributed separately; start with the
 [Iris v0.2.18](https://github.com/irisbooks/iris/releases/tag/v0.2.18) supports
 bindings 5 and `iris overlay test --dir`; all 59 golden cases for this catalog
 pass with that signed engine. For another engine, check its binding and command
-support explicitly. CI tests with the latest signed release; unsupported
-bindings or test suites must fail, never be skipped. Future engine bindings must
+support explicitly. CI tests with the signed engine pinned in
+[`.github/engine.txt`](.github/engine.txt), so a new engine release never changes
+the result for an unchanged commit. Raise the pin in the PR that needs a newer
+engine. Unsupported bindings or test suites must fail, never be skipped. Future engine bindings must
 ship before a package using them can merge or be released. Published bundles and
 signatures are linked from the [package catalog](README.md#choose-a-package).
 

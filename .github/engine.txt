@@ -1,0 +1,4 @@
+# Signed engine used by CI golden tests. Raise it in the PR that needs newer
+# bindings or commands, after that engine is published.
+version v0.2.18
+bindings 5

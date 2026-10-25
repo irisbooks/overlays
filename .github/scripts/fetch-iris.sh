@@ -1,13 +1,22 @@
 #!/usr/bin/env bash
-# Download the latest signed iris release for linux/amd64 and verify it the
-# way https://irisbooks.jp/install.sh does — except that the minisign check is
-# mandatory here. Puts `iris` on the job's PATH.
+# Download the signed iris release pinned in .github/engine.txt for
+# linux/amd64 and verify it the way https://irisbooks.io/install.sh does —
+# except that the minisign check is mandatory here. Puts `iris` on the job's
+# PATH. A pin, not releases/latest: a new engine release must not change the
+# result of an unchanged package commit.
 set -euo pipefail
 
 # IrisBooks release public key (minisign), key id 11D9CC26444B9F65.
 PUBKEY="RWRln0tEJszZEcTL7VcSL5XR+zcAA2FyqnfOAeLDnwaE7LAa7E3tJCCJ"
-BASE="https://github.com/irisbooks/iris/releases/latest/download"
 ASSET="iris_linux_amd64"
+PIN_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/engine.txt"
+
+VERSION="$(awk '$1 == "version" {print $2}' "$PIN_FILE")"
+if ! [[ "$VERSION" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+  echo "::error file=.github/engine.txt::engine version '${VERSION}' is not a stable vX.Y.Z"
+  exit 1
+fi
+BASE="https://github.com/irisbooks/iris/releases/download/$VERSION"
 
 dir="${RUNNER_TEMP:?}/iris"
 mkdir -p "$dir"
@@ -17,7 +26,10 @@ for f in "$ASSET" checksums.txt checksums.txt.minisig version.txt; do
 done
 minisign -Vm checksums.txt -P "$PUBKEY"
 grep " $ASSET\$" checksums.txt | sha256sum -c -
+grep " version.txt\$" checksums.txt | sha256sum -c -
+[ "$(cat version.txt)" = "$VERSION" ] || { echo "::error::downloaded engine is $(cat version.txt), pinned $VERSION"; exit 1; }
 chmod +x "$ASSET"
 mv "$ASSET" iris
+[ "$(./iris version)" = "iris $VERSION" ] || { echo "::error::engine binary does not report $VERSION"; exit 1; }
 echo "$dir" >>"$GITHUB_PATH"
-echo "iris $(cat version.txt) verified"
+echo "iris $VERSION verified"
