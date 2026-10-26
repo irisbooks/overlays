@@ -1,0 +1,6 @@
+fields:
+  book.jp_foreign_currency:
+    type: map
+    description:
+      en: Confirm ordinary USD cash, complete own-account scope, moving-average methodology and separate FX gain/settlement/fee accounts.
+      ja: 通常の米ドル現預金、本人名義の対象口座全体、移動平均による計算方法、外貨損益・決済・手数料科目を確認します。

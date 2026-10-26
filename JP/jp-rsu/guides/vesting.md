@@ -1,11 +1,11 @@
 # RSU vesting and recorded salary
 
-This candidate runs on the signed published Iris v0.2.18 engine (bindings 5).
-It has no dependency on the unreleased securities-basis or foreign-currency
-packages. It calculates whole-share JPY vesting with exact Overlay functions, validates
-recorded compensation, fills a missing salary credit from a reviewed share debit,
-and sums posted salary for a calendar year. Securities disposal basis, foreign-cash
-basis, withholding, tax and tax returns remain outside this package.
+This source candidate requires bindings 6 and must pass qualification with the
+published signed stable engine pinned by CI. It calculates whole-share JPY
+vesting in Overlay functions, fills both missing native posting amounts, checks
+matched receipt evidence and prepares calendar-year salary figures from complete
+local journals. Salary has no securities/foreign-currency package dependency.
+Select those separate packages for the later investment lifecycle.
 
 Confirm the user's actual arrangement: ordinary employee stock-settled RSUs,
 Japanese residence and service throughout the relevant period, exclusion from
@@ -17,6 +17,7 @@ need a separately supported treatment. A sell-to-cover workflow is not required.
 Configure the Book using full account paths:
 
 ```yaml
+units: [{symbol: AMZN, scale: 0}]
 jp_rsu:
   scope_confirmed: true
   included_in_salary_statement: false
@@ -28,8 +29,8 @@ jp_rsu:
 ```
 
 Use a calendar-year JPY Book with scale 0 and configure the stock unit with
-quantity scale 0. The valuation recipe supports whole shares only. It does not
-infer the Book unit scale or calculate acquisition/disposal basis. The salary account is dedicated
+quantity scale 0. The valuation recipe supports whole shares only. The package checks the declared
+Book unit scale; acquisition/disposal basis is handled by the separate policy. The salary account is dedicated
 to this profile; ordinary salary and other income use separate accounts.
 
 ## Calculate the JPY vesting value
@@ -62,9 +63,9 @@ unsupported rounding and a value that rounds to zero refuse.
 Review the returned `gross_jpy` and `valuation` map. Save the reviewed calculation
 with `--apply --out filings/rsu-valuation-vest-1.md` if needed; ordinary recipe
 provenance retains all calculation parameters for replay. The recipe produces
-figures and does not edit journal postings. Enter its reviewed gross amount as
-the share debit, then use salary-credit completion below. Published bindings 5
-cannot use Overlay derivations to write both missing native posting amounts.
+figures and does not edit journal postings. Record the exact `valuation` inputs or the reviewed positive `gross_jpy` on
+both journal lines. The completion below can fill both native amounts through a
+general checked posting proposal. The formula itself remains in the Overlay.
 
 Keep the statements, observation dates and calculation evidence under `raw/`
 with ordinary attachment references. `valuation_source` identifies evidence;
@@ -77,7 +78,7 @@ Put identical evidence on both share and salary lines:
 ```yaml
 lines:
   - account: Assets:AMZN
-    debit: 1505003
+    debit: null
     quantity: 100
     unit: AMZN
     jp_rsu: &vesting
@@ -85,7 +86,6 @@ lines:
       grant_id: grant-1
       payer: Amazon.com Inc.
       recognition_date: '2026-05-01'
-      gross_jpy: 1505003
       valuation_source: raw/vesting-2026-05.pdf
       valuation:
         quantity: 100
@@ -101,12 +101,12 @@ lines:
 ```
 
 The journal date must match `recognition_date`. Run `iris journal complete` to
-preview the salary credit; review/apply it using the normal revision guard.
-The existing balance primitive requires the reviewed share debit to be present.
+preview both posting amounts; review/apply it using the normal revision guard.
+The host checks the coordinated proposal and preserves recorded values.
 When `valuation` is recorded, validation recomputes it with the same Overlay
-functions and checks the gross amount, quantity and both postings. Incomplete or
+functions and checks the quantity, both postings and any separately recorded gross amount. Incomplete or
 out-of-range calculation metadata is an explicit validation error. It
-refuses two missing amounts and never overwrites a conflicting recorded amount.
+supports two missing amounts and refuses a conflicting recorded amount.
 It creates no cash, withholding or sale line. Validate the complete Book with
 `iris validate` and resolve all issues before posting and preparing figures.
 Posting is a separate owner decision.
@@ -125,20 +125,60 @@ recipe provenance. Local MCP uses `complete_journal` for completion and
 MCP preview by default. Remote MCP does not execute these operations.
 
 The recipe sums posted salary only and requires matching share/salary evidence,
-unique event IDs, positive recorded gross amounts and complete dedicated-account
+unique event IDs, positive evidenced gross amounts and complete dedicated-account
 metadata. It refuses duplicates, missing/orphan evidence, inconsistent amounts,
-wrong accounts, reversals and partial/cross-year periods. Journal validation is
-still required: aggregate sums cannot prove each journal's date, quantity,
-structure or attachment authenticity. Reconcile the complete event list against
+wrong accounts, reversals and partial/cross-year periods. The complete local snapshot checks each posted journal's structure, actual
+date and quantity before interpreting receipts. Normal Book validation is still
+required; neither the snapshot nor a source path authenticates attachments. Reconcile the complete event list against
 broker/employer records; an entirely missing vest cannot be inferred.
 
 The output is additional **gross salary receipts** for the declared profile,
 not separately calculated taxable salary or tax payable. Combine it with other
 salary receipts before the applicable salary-income deduction. Saved figures
-replay against the retained package and ledger; this does not add the unpublished
-inventory-policy snapshots, input hashes or basis continuation features.
+record `inputs_sha256` and the versioned source contract. They replay against
+the retained package and unchanged source facts; changed source facts invalidate
+the result. Securities/FX policy snapshots and basis continuation belong to the
+separately selected packages.
 
 Sources checked 2026-10-26:
 
 - [NTA salary income](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1400.htm)
 - [National Tax Tribunal RSU decision](https://www.kfs.go.jp/service/JP/88/02/index.html)
+
+## Continue through disposal, cash realization and year-end
+
+Select `jp-securities-basis` independently when preparing share disposal figures.
+Its complete eligible pool includes both ordinary purchases and vested shares.
+Select `jp-foreign-currency` for ordinary USD cash after a sale: that policy
+preserves cost through paired own-account transfers and calculates later currency
+realization separately from salary and securities results. Each package needs its
+own confirmed scope and complete account mappings; none is activated implicitly.
+
+With the qualified packages installed and selected, the existing root-Book
+year-end operation retains quantity, native carrying value and separate rounded
+allocation basis. For a local successor, use `iris yearend --local --to
+../book-2027 ./book-2026`; the retained sources let that successor run independently.
+Rollover does not recognize salary again. Confirm the complete source facts and
+the same-day chronology recorded in journal paths before carrying state forward.
+
+The complete-ledger helper accepts at most 4096 input journals in one Book fiscal
+year, subject to the engine's data and execution budgets. Unsupported/incomplete
+sources and exhausted limits fail explicitly. Named-view filings/rollover and
+accepted financial generations are separate unfinished host work; these packages
+produce filing aids rather than submitted returns.
+
+### Follow the numeric example
+
+A vest of 100 shares at USD 100 and JPY 150/USD creates JPY 1,500,000 of
+share cost and additional gross salary. Selling 40 shares for USD 4,800 valued
+at JPY 696,000 gives JPY 600,000 basis and JPY 96,000 securities gain, with
+60 shares and JPY 900,000 basis remaining. Transferring that USD 4,800 between
+declared own accounts preserves its JPY 696,000 cash basis. A later conversion
+to JPY 744,000 produces JPY 48,000 of separate currency gain.
+
+The [securities guide](../../jp-securities-basis/guides/shares.md) and
+[cash guide](../../jp-foreign-currency/guides/cash.md) describe their separate
+settings. Their task examples exercise the sale, transfer and realization, plus
+successor-state cases. Reconcile each step to actual source evidence. The exact
+amounts above illustrate the declared no-fee case; separately recorded eligible
+fees change the supported net figures as those guides describe.

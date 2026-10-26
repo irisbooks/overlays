@@ -1,8 +1,13 @@
 id: journal.balance
-call: balance
+call: postings
 when: >-
   !journal.lines.exists(l, l.unit != '' && l.side == 'credit')
   && (!journal.lines.exists(l, has(l.jp_rsu)) || rsu_scope(book))
+with: >-
+  journal.lines.exists(l, has(l.jp_rsu))
+  ? rsu_posting_proposal(book, journal,
+      ledger_snapshot_v1(journals, date(string(book.fiscal_year) + '-01-01'), date(string(book.fiscal_year) + '-12-31')))
+  : {'amounts': []}
 description:
-  en: Fill the salary credit from an already recorded JPY share debit. Calculate the gross value with jp-rsu.vesting-value or supply a reviewed value first. Ordinary monetary journals retain balancing; no price, FX, cash, withholding or sale is calculated.
-  ja: jp-rsu.vesting-valueなどで計算・確認した円建て株式取得額から給与の貸方金額を補完します。通常の金額仕訳の貸借補完も継続します。株価・為替による評価、現金、源泉徴収、売却の計算は行いません。
+  en: Fill both missing share-debit and salary-credit amounts from reviewed JPY or exact valuation facts. Ordinary monetary journals retain balancing. No cash, withholding or tax sale is invented.
+  ja: 確認済みの円換算額、または正確な評価入力から、株式の借方と給与の貸方を同時に補完します。通常の貸借補完も継続します。現金、源泉徴収、納税目的の売却は推定しません。

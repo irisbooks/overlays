@@ -338,4 +338,4 @@ cases:
           - account: "Income:RSU"
             credit: null
             jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505004, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
-    error: "completed journal: Recorded RSU valuation inputs"
+    error: "RSU scope, period or vesting evidence"

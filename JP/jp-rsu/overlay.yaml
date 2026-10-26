@@ -1,5 +1,5 @@
 id: jp-rsu
 version: 2026.10.2
-requires_bindings: 5
+requires_bindings: 6
 region: JP
-description: Validate recorded RSU vesting amounts and summarize additional gross salary using the published engine.
+description: Calculate and complete evidenced gross RSU vesting and prepare additional salary with complete local source checks. Securities and foreign-cash policies remain independently selectable.

@@ -1,11 +1,11 @@
 tasks:
   - id: jp-rsu.vesting
     title: Record RSU vesting and additional salary
-    summary: Calculate and validate whole-share JPY vesting with Overlay functions, complete a salary credit from the reviewed share debit, and summarize additional salary with the published core.
+    summary: Calculate and validate whole-share JPY vesting with Overlay functions, complete both native posting amounts, and prepare additional salary from complete local journals.
     target: journal
     fields: [book.jp_rsu, line.jp_rsu, journal.lines]
     operations: [{kind: recipe, id: jp-rsu.vesting-value}, {kind: completion, id: journal.balance}, {kind: recipe, id: jp-rsu.salary}]
     guide: jp-rsu.vesting
-    examples: ['tests/valuation.yaml#exact price and FX with final truncation', 'tests/vesting.yaml#vest without a tax sale']
+    examples: ['tests/valuation.yaml#exact price and FX with final truncation', 'tests/vesting.yaml#vest without a tax sale', 'tests/full-workflow.yaml#complete both missing amounts: exact inputs without redundant gross']
     coverage: [Recorded JPY employee stock-settled RSU compensation; Japan-resident self-assessment profile with no domestic payroll inclusion or withholding.]
     judgment: [Review recognition date and JPY valuation independently. Review price/FX observations and choose rounding explicitly. Whole-share valuation is supported within declared bounds; securities/FX basis, net settlement, international service and tax calculations remain outside this package.]

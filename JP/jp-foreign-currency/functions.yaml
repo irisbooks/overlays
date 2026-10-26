@@ -1,0 +1,71 @@
+functions:
+  - name: currency_scope
+    params: [{name: b, type: map}]
+    returns: bool
+    doc: Explicit ordinary USD cash scope and confirmed cost methodology; not securities, margin FX or automatic fund sweeps.
+    expr: >-
+      b.region == 'JP' && b.currency == 'JPY' && b.scale == 0 && b.fiscal_start_month == 1
+      && has(b.jp_foreign_currency) && type(b.jp_foreign_currency) == map
+      && has(b.jp_foreign_currency.scope_confirmed) && b.jp_foreign_currency.scope_confirmed == true
+      && has(b.jp_foreign_currency.method_confirmed) && b.jp_foreign_currency.method_confirmed == true
+      && has(b.jp_foreign_currency.method) && b.jp_foreign_currency.method == 'moving-average'
+      && has(b.jp_foreign_currency.account_regime) && b.jp_foreign_currency.account_regime == 'ordinary-cash'
+      && has(b.jp_foreign_currency.currencies) && type(b.jp_foreign_currency.currencies) == list
+      && b.jp_foreign_currency.currencies.size() == 1 && b.jp_foreign_currency.currencies[0] == 'USD'
+  - name: currency_mapping_valid
+    params: [{name: p, type: map}]
+    returns: bool
+    doc: Layer-owned classification must use bounded disjoint inventory, settlement, fee and gain accounts.
+    expr: >-
+      has(p.accounts) && type(p.accounts) == list && p.accounts.size() > 0 && p.accounts.size() <= 64
+      && has(p.settlement_accounts) && type(p.settlement_accounts) == list && p.settlement_accounts.size() > 0 && p.settlement_accounts.size() <= 64
+      && has(p.fee_accounts) && type(p.fee_accounts) == list && p.fee_accounts.size() <= 64
+      && has(p.gain_account) && type(p.gain_account) == string && p.gain_account != ''
+      && (p.accounts + p.settlement_accounts + p.fee_accounts + [p.gain_account]).all(a,
+        type(a) == string && a != ''
+        && (p.accounts + p.settlement_accounts + p.fee_accounts + [p.gain_account]).filter(other, other == a).size() == 1)
+  - name: currency_journal_scope
+    params: [{name: p, type: map}, {name: j, type: map}]
+    returns: bool
+    doc: Refuse unrelated disposal lines; the core does not decide regional settlement/fee/gain scope.
+    expr: >-
+      currency_mapping_valid(p) && j.lines.all(l,
+        l.account in p.accounts || l.account in p.settlement_accounts || l.account in p.fee_accounts || l.account == p.gain_account)
+  - name: currency_source_scope
+    params: [{name: f, type: map}, {name: j, type: map}]
+    returns: bool
+    doc: Refuse missing/unsupported holding units and mixed acquisitions/disposals. Paired own transfers are replayed separately without being interpreted as a disposal.
+    expr: >-
+      j.lines.filter(l, l.account in f.inventory_accounts).all(l, l.unit in f.commodities && l.quantity > 0)
+      && (!(j.lines.exists(l, l.account in f.inventory_accounts && l.side == 'debit')
+        && j.lines.exists(l, l.account in f.inventory_accounts && l.side == 'credit'))
+        || j.lines.filter(l, l.account in f.inventory_accounts).all(l,
+          has(l.inventory) && type(l.inventory) == map && has(l.inventory.transfer)
+          && type(l.inventory.transfer) == string && l.inventory.transfer != ''))
+  - name: currency_require
+    params: [{name: ok, type: bool}]
+    returns: int
+    doc: Refuse unsupported source movements instead of silently omitting them from a selected pool.
+    expr: "ok ? 0 : {}['unsupported inventory source scope']"
+  - name: currency_interpret_disposal
+    params: [{name: d, type: map}, {name: facts, type: map}, {name: entries, type: list}]
+    returns: map
+    doc: The layer classifies settlement and fees; native replay supplies disposal basis.
+    expr: >-
+      entries.filter(j, j.path == d.source).size() == 1
+      && entries.filter(j, j.path == d.source).all(j, j.lines.all(l,
+        l.account in facts.inventory_accounts || l.account in facts.settlement_accounts
+        || l.account in facts.fee_accounts || l.account == facts.gain_account))
+      ? {'basis': d.basis, 'source': d.source,
+          'fees': sum(entries.filter(j, j.path == d.source)[0].lines.filter(l, l.account in facts.fee_accounts).map(l, l.debit - l.credit)),
+          'net_proceeds': sum(entries.filter(j, j.path == d.source)[0].lines.filter(l, l.account in facts.settlement_accounts).map(l, l.debit - l.credit))}
+      : {}['unsupported disposal account scope or missing source']
+  - name: currency_finish_disposal
+    params: [{name: d, type: map}]
+    returns: map
+    doc: Explicit policy interpretation of the replayed cost; refuse negative gross proceeds or fees.
+    expr: >-
+      d.fees >= 0 && d.net_proceeds + d.fees >= 0
+      ? {'source': d.source, 'basis': d.basis, 'gain': d.net_proceeds - d.basis,
+          'gross_proceeds': d.net_proceeds + d.fees, 'fees': d.fees}
+      : {}['negative disposal proceeds or fees']

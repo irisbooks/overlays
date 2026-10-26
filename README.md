@@ -33,13 +33,25 @@ behavior are unchanged.
 dependency explicitly when selecting packages. The other packages are independent;
 category names only help you find them.
 
-## Unreleased candidate
+## Unreleased candidates
 
-[`jp-rsu@2026.10.2`](JP/jp-rsu/README.md) adds exact whole-share JPY vesting
-calculation, recorded-amount validation, salary-credit completion and annual gross salary figures. It runs on the same
-published v0.2.18 engine with bindings 5 and has no unpublished package dependency.
-It is not yet signed or installable from a release. Valuation uses integer Overlay functions with explicit rounding; the share debit
-requires review/entry before salary completion. Securities/FX basis remains separate.
+Three independently selectable `2026.10.2` source candidates restore the supported
+RSU lifecycle with bindings 6. They must pass against the published signed stable
+engine pinned in CI before merge/release:
+
+- [`jp-rsu`](JP/jp-rsu/README.md): exact valuation, coordinated gross vesting,
+  complete-local-ledger receipt checks and annual additional salary.
+- [`jp-securities-basis`](JP/jp-securities-basis/README.md): the declared eligible
+  share pool, disposal figures and rounded basis distinct from carrying value.
+- [`jp-foreign-currency`](JP/jp-foreign-currency/README.md): ordinary USD cost,
+  paired own transfers and subsequent realized currency figures.
+
+Local qualification with signed published Iris v0.2.23 / bindings 6 passes all
+160 catalog goldens (80 RSU, 12 securities, 9 cash and 59 existing cases) and
+162 independent rational comparisons. CI repeats these checks on the pinned Linux binary.
+
+Salary has no mandatory securities/FX dependency. Existing released packages stay
+unchanged; these candidates are not yet signed public package releases.
 
 ## Use packages in a Book
 

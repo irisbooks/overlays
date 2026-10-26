@@ -1,0 +1,636 @@
+{
+  "book": {
+    "schema_version": 1,
+    "region": "JP",
+    "currency": "JPY",
+    "scale": 0,
+    "fiscal_year": 2026,
+    "fiscal_start_month": 1,
+    "units": [
+      {
+        "symbol": "AMZN",
+        "scale": 0
+      }
+    ],
+    "jp_foreign_currency": {
+      "scope_confirmed": true,
+      "method_confirmed": true,
+      "method": "moving-average",
+      "account_regime": "ordinary-cash",
+      "currencies": [
+        "USD"
+      ],
+      "accounts": [
+        "Assets:USD",
+        "Assets:BankUSD"
+      ],
+      "settlement_accounts": [
+        "Assets:AMZN",
+        "Assets:JPY",
+        "Income:Shares"
+      ],
+      "fee_accounts": [
+        "Expenses:FXFees"
+      ],
+      "gain_account": "Income:FX"
+    }
+  },
+  "cases": [
+    {
+      "name": "own USD transfer preserves basis without realized gain",
+      "recipe": {
+        "id": "jp-foreign-currency.realized",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2026-01-01",
+          "to": "2026-12-31"
+        }
+      },
+      "figures": {
+        "realized_fx_gain": 0,
+        "remaining_allocation_cost": 696000,
+        "remaining_carrying_value": 696000
+      },
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2026-06-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:USD",
+              "debit": 696000,
+              "quantity": 4800,
+              "unit": "USD"
+            },
+            {
+              "account": "Assets:AMZN",
+              "credit": 600000,
+              "quantity": 40,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Income:Shares",
+              "credit": 96000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-07-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:BankUSD",
+              "debit": 696000,
+              "quantity": 4800,
+              "unit": "USD",
+              "inventory": {
+                "transfer": "own-usd"
+              }
+            },
+            {
+              "account": "Assets:USD",
+              "credit": 696000,
+              "quantity": 4800,
+              "unit": "USD",
+              "inventory": {
+                "transfer": "own-usd"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "later cash conversion is separate from salary and securities",
+      "recipe": {
+        "id": "jp-foreign-currency.realized",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2026-01-01",
+          "to": "2026-12-31"
+        }
+      },
+      "figures": {
+        "realized_fx_gain": 48000,
+        "remaining_allocation_cost": 0,
+        "remaining_carrying_value": 0
+      },
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2026-06-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:USD",
+              "debit": 696000,
+              "quantity": 4800,
+              "unit": "USD"
+            },
+            {
+              "account": "Assets:AMZN",
+              "credit": 600000,
+              "quantity": 40,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Income:Shares",
+              "credit": 96000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-07-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:BankUSD",
+              "debit": 696000,
+              "quantity": 4800,
+              "unit": "USD",
+              "inventory": {
+                "transfer": "own-usd"
+              }
+            },
+            {
+              "account": "Assets:USD",
+              "credit": 696000,
+              "quantity": 4800,
+              "unit": "USD",
+              "inventory": {
+                "transfer": "own-usd"
+              }
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-08-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:BankUSD",
+              "credit": 696000,
+              "quantity": 4800,
+              "unit": "USD"
+            },
+            {
+              "account": "Assets:JPY",
+              "debit": 744000
+            },
+            {
+              "account": "Income:FX",
+              "credit": 48000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "eligible realized-currency fee reduces net gain once",
+      "recipe": {
+        "id": "jp-foreign-currency.realized",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2026-01-01",
+          "to": "2026-12-31"
+        }
+      },
+      "figures": {
+        "realized_fx_gain": 47000
+      },
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2026-06-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:USD",
+              "debit": 696000,
+              "quantity": 4800,
+              "unit": "USD"
+            },
+            {
+              "account": "Assets:AMZN",
+              "credit": 600000,
+              "quantity": 40,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Income:Shares",
+              "credit": 96000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-07-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:BankUSD",
+              "debit": 696000,
+              "quantity": 4800,
+              "unit": "USD",
+              "inventory": {
+                "transfer": "own-usd"
+              }
+            },
+            {
+              "account": "Assets:USD",
+              "credit": 696000,
+              "quantity": 4800,
+              "unit": "USD",
+              "inventory": {
+                "transfer": "own-usd"
+              }
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-08-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:BankUSD",
+              "credit": 696000,
+              "quantity": 4800,
+              "unit": "USD"
+            },
+            {
+              "account": "Assets:JPY",
+              "debit": 743000
+            },
+            {
+              "account": "Expenses:FXFees",
+              "debit": 1000
+            },
+            {
+              "account": "Income:FX",
+              "credit": 48000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unsupported holding source before requested subperiod still refuses",
+      "recipe": {
+        "id": "jp-foreign-currency.realized",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2026-07-01",
+          "to": "2026-12-31"
+        }
+      },
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2026-06-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:USD",
+              "debit": 696000,
+              "quantity": 4800,
+              "unit": "USD"
+            },
+            {
+              "account": "Assets:AMZN",
+              "credit": 600000,
+              "quantity": 40,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Income:Shares",
+              "credit": 96000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-07-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:BankUSD",
+              "debit": 696000,
+              "quantity": 4800,
+              "unit": "USD",
+              "inventory": {
+                "transfer": "own-usd"
+              }
+            },
+            {
+              "account": "Assets:USD",
+              "credit": 696000,
+              "quantity": 4800,
+              "unit": "USD",
+              "inventory": {
+                "transfer": "own-usd"
+              }
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-01-02",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:USD",
+              "debit": 1,
+              "quantity": 1,
+              "unit": "EUR"
+            },
+            {
+              "account": "Equity:Capital",
+              "credit": 1
+            }
+          ]
+        }
+      ],
+      "error": "unsupported inventory source scope"
+    },
+    {
+      "name": "missing quantity unit in holding account refuses",
+      "recipe": {
+        "id": "jp-foreign-currency.realized",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2026-01-01",
+          "to": "2026-12-31"
+        }
+      },
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2026-06-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:USD",
+              "debit": 696000,
+              "quantity": 4800,
+              "unit": "USD"
+            },
+            {
+              "account": "Assets:AMZN",
+              "credit": 600000,
+              "quantity": 40,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Income:Shares",
+              "credit": 96000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-07-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:BankUSD",
+              "debit": 696000,
+              "quantity": 4800,
+              "unit": "USD",
+              "inventory": {
+                "transfer": "own-usd"
+              }
+            },
+            {
+              "account": "Assets:USD",
+              "credit": 696000,
+              "quantity": 4800,
+              "unit": "USD",
+              "inventory": {
+                "transfer": "own-usd"
+              }
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-01-02",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:USD",
+              "debit": 1
+            },
+            {
+              "account": "Equity:Capital",
+              "credit": 1
+            }
+          ]
+        }
+      ],
+      "error": "unsupported inventory source scope"
+    },
+    {
+      "name": "validation refuses an unsupported holding unit",
+      "journal": {
+        "schema_version": 1,
+        "date": "2026-06-01",
+        "status": "posted",
+        "lines": [
+          {
+            "account": "Assets:USD",
+            "debit": 696000,
+            "quantity": 4800,
+            "unit": "EUR"
+          },
+          {
+            "account": "Assets:AMZN",
+            "credit": 600000,
+            "quantity": 40,
+            "unit": "AMZN"
+          },
+          {
+            "account": "Income:Shares",
+            "credit": 96000
+          }
+        ]
+      },
+      "expect": [
+        {
+          "rule": "currency.source-scope"
+        }
+      ]
+    },
+    {
+      "name": "standalone successor realizes retained cash basis without prior-year sources",
+      "book": {
+        "schema_version": 1,
+        "region": "JP",
+        "currency": "JPY",
+        "scale": 0,
+        "fiscal_year": 2027,
+        "fiscal_start_month": 1,
+        "units": [
+          {
+            "symbol": "AMZN",
+            "scale": 0
+          }
+        ],
+        "jp_foreign_currency": {
+          "scope_confirmed": true,
+          "method_confirmed": true,
+          "method": "moving-average",
+          "account_regime": "ordinary-cash",
+          "currencies": [
+            "USD"
+          ],
+          "accounts": [
+            "Assets:USD",
+            "Assets:BankUSD"
+          ],
+          "settlement_accounts": [
+            "Assets:AMZN",
+            "Assets:JPY",
+            "Income:Shares"
+          ],
+          "fee_accounts": [
+            "Expenses:FXFees"
+          ],
+          "gain_account": "Income:FX"
+        },
+        "opening_inventory": [
+          {
+            "account": "Assets:BankUSD",
+            "unit": "USD",
+            "quantity": 480000,
+            "method": "moving-average",
+            "carrying_value_minor": 696000,
+            "acquisition_cost_minor": 696000,
+            "allocation_cost_minor": 696000,
+            "allocation_policy": "jp-foreign-currency@2026.10.2#jp-foreign-currency.cash"
+          }
+        ]
+      },
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2027-01-01",
+          "status": "posted",
+          "tags": [
+            "opening-balance"
+          ],
+          "lines": [
+            {
+              "account": "Assets:BankUSD",
+              "debit": 696000,
+              "quantity": 4800,
+              "unit": "USD"
+            },
+            {
+              "account": "Equity:Opening",
+              "credit": 696000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2027-04-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:BankUSD",
+              "credit": 696000,
+              "quantity": 4800,
+              "unit": "USD"
+            },
+            {
+              "account": "Assets:JPY",
+              "debit": 744000
+            },
+            {
+              "account": "Income:FX",
+              "credit": 48000
+            }
+          ]
+        }
+      ],
+      "recipe": {
+        "id": "jp-foreign-currency.realized",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2027-01-01",
+          "to": "2027-12-31"
+        }
+      },
+      "figures": {
+        "realized_fx_gain": 48000,
+        "remaining_allocation_cost": 0,
+        "remaining_carrying_value": 0
+      }
+    },
+    {
+      "name": "eligible fees above gross proceeds retain the net loss",
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2026-05-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:USD",
+              "debit": 1000,
+              "quantity": 10,
+              "unit": "USD"
+            },
+            {
+              "account": "Assets:JPY",
+              "credit": 1000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-06-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:USD",
+              "credit": 1000,
+              "quantity": 10,
+              "unit": "USD"
+            },
+            {
+              "account": "Assets:JPY",
+              "credit": 100
+            },
+            {
+              "account": "Expenses:FXFees",
+              "debit": 600
+            },
+            {
+              "account": "Income:FX",
+              "debit": 500
+            }
+          ]
+        }
+      ],
+      "recipe": {
+        "id": "jp-foreign-currency.realized",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2026-01-01",
+          "to": "2026-12-31"
+        }
+      },
+      "figures": {
+        "realized_fx_gain": -1100,
+        "remaining_allocation_cost": 0,
+        "remaining_carrying_value": 0
+      }
+    }
+  ]
+}

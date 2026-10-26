@@ -51,6 +51,7 @@ def main():
                 cases.append(case)
     book = {"schema_version": 1, "region": "JP", "currency": "JPY", "scale": 0,
             "fiscal_year": 2026, "fiscal_start_month": 1,
+            "units": [{"symbol": "AMZN", "scale": 0}],
             "jp_rsu": {"scope_confirmed": True, "included_in_salary_statement": False,
                        "japan_withholding": False, "tax_funding": "self-assessment",
                        "income_account": "Income:RSU", "share_account": "Assets:AMZN", "share_unit": "AMZN"}}

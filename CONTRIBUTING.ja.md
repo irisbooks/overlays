@@ -6,9 +6,9 @@
 
 ## 対応するエンジンを用意する
 
-公開済みの `2026.10.1` パッケージは、すべて `requires_bindings: 5` を宣言しています。バインディングは、パッケージの式を記述する言語 CEL から使える関数と値の仕様です。エンジンは別に配布しています。[CLI の導入手順](https://irisbooks.io/docs/ja/getting-started/)と[署名付きエンジンのリリース](https://github.com/irisbooks/iris/releases)を確認してください。
+公開済みの七つの `2026.10.1` パッケージは `requires_bindings: 5` を宣言しています。未公開のRSU・株式取得費・米ドル現預金の `2026.10.2` 候補版には、バインディング6が必要です。バインディングは、パッケージの式を記述する言語 CEL から使える関数と値の仕様です。エンジンは別に配布しています。[CLI の導入手順](https://irisbooks.io/docs/ja/getting-started/)と[署名付きエンジンのリリース](https://github.com/irisbooks/iris/releases)を確認してください。
 
-[Iris v0.2.18](https://github.com/irisbooks/iris/releases/tag/v0.2.18) は、バインディング5と `iris overlay test --dir` に対応しています。この署名付きエンジンで、七つのパッケージの全59件のゴールデンテストが通ることを確認しています。ほかのエンジンでは、必要なバインディングとコマンドへの対応を確認してください。CI は [`.github/engine.txt`](.github/engine.txt) に固定した署名付きエンジンでテストします。新しいエンジンが公開されても、変更のないコミットの結果は変わりません。新しいエンジンが必要な PR では、この固定バージョンも更新してください。未対応のバインディングやテストは省略せず、失敗として扱います。今後、新しいバインディングを使うパッケージをマージ・公開するときも、先にエンジン側の公開が必要です。公開済みのパッケージ本体と署名は、[パッケージ一覧](README.ja.md#使いたいパッケージを選ぶ)から取得できます。
+このソースの検証には、公開済み・署名付きの [Iris v0.2.23](https://github.com/irisbooks/iris/releases/tag/v0.2.23)（バインディング6）を使います。このバイナリで全160件のゴールデンテストと、RSUの独立した有理数比較162件がローカルで通っています。CIも同じバージョンの署名付きLinux版で全件を確認します。[`.github/engine.txt`](.github/engine.txt) にバージョンを固定するため、別のエンジンが公開されても、変更のないコミットの結果は変わりません。新しいエンジンが必要なPRでは、その公開後に固定バージョンを更新してください。未対応のバインディングやテストは省略せず、失敗として扱います。変更していない `2026.10.1` 配布物については、従来のv0.2.18・バインディング5での検証結果も保持します。署名付き配布物は[パッケージ一覧](README.ja.md#使いたいパッケージを選ぶ)から取得できます。
 
 ガイドには、現在の CLI コマンドに対応するエンジンも必要です。仕訳補完は `iris journal complete`、導出値の適用は `iris validate --apply`、レシピの保存は `--apply --out PATH` を使います。そのエンジンの `--help` で例を確認し、英語・日本語のガイドと、YAML 内の利用者向けの説明・メッセージを一緒に更新してください。MCP の名前と例も合わせて更新し、`complete_journal` と、両モード共通の `list_recipes` / `run_recipe` を使います。レシピ ID は CLI と同じです。`params` にはレシピの入力だけを入れ、保存には `apply=true` と `out` を指定します。省略時は結果の表示だけです。テストの `autocomplete` などの項目名は変わりません。
 
@@ -80,12 +80,11 @@ python3 .github/scripts/check-engine.py
   パッケージでコアを公開します。そのコアを使う未公開のパッケージ待ちには
   しません。
 
-例えば、[RSUの評価関数](JP/jp-rsu/functions.yaml)は、公開済みbindings 5で
-株価と為替による円換算を正確に実行します。[ゴールデンテスト](JP/jp-rsu/tests/valuation.yaml)と
-[独立した有理数の検証](.github/scripts/check-rsu-valuation.py)で確認しています。
-[操作ガイド](JP/jp-rsu/guides/vesting.ja.md)は、仕訳金額の適用と在庫状態の保持の
-境界を別に説明します。計算そのものに新しいエンジンAPIは不要でした。
-これらは通常のコードレビューの判断基準であり、リリース承認を増やすものではありません。
+[RSUの評価関数](JP/jp-rsu/functions.yaml)は、最初に公開済みv0.2.18・bindings 5で
+[ゴールデンテスト](JP/jp-rsu/tests/valuation.yaml)と
+[独立した有理数比較](.github/scripts/check-rsu-valuation.py)を通しました。
+[復元したワークフロー](JP/jp-rsu/guides/vesting.ja.md)は、両明細の変更案と完全なローカル台帳・状態の読取りに、bindings 6の汎用ホスト機能を使います。
+計算式と地域別の扱いはオーバーレイに置きます。これらは通常のコードレビューの判断基準であり、リリース承認を増やすものではありません。
 
 ## パッケージごとに一つの機能をまとめる
 
@@ -112,6 +111,7 @@ python3 .github/scripts/check-engine.py
 | `derive/*.yaml` | 未入力項目の補完候補 |
 | `completions/*.yaml` | 仕訳補完の定義 |
 | `recipes/*.yaml` | 計算のパラメータ、手順、出力形式 |
+| `inventory/*.yaml` | 汎用の在庫再計算で使う方式、対象口座と保持する事実 |
 | `tasks.yaml` | タスクの ID、入力項目、操作、ガイドとテスト例の参照先 |
 | `guides/*.md` | 操作手順、対応範囲、利用者が判断すること |
 | `tests/*.yaml` | 入力と期待する結果、またはエラーを組にしたテスト |

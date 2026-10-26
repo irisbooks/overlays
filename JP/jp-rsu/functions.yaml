@@ -13,18 +13,7 @@ functions:
       && has(b.jp_rsu.income_account) && type(b.jp_rsu.income_account) == string && b.jp_rsu.income_account != ''
       && has(b.jp_rsu.share_account) && type(b.jp_rsu.share_account) == string && b.jp_rsu.share_account != b.jp_rsu.income_account && b.jp_rsu.share_account != ''
       && has(b.jp_rsu.share_unit) && type(b.jp_rsu.share_unit) == string && b.jp_rsu.share_unit != ''
-  - name: rsu_evidence
-    params: [{name: e, type: map}]
-    returns: bool
-    doc: A reviewed JPY gross valuation and its evidence; optional valuation inputs are recomputed separately with the Overlay helpers.
-    expr: >-
-      has(e.event_id) && type(e.event_id) == string && e.event_id != ''
-      && has(e.grant_id) && type(e.grant_id) == string && e.grant_id != ''
-      && has(e.payer) && type(e.payer) == string && e.payer != ''
-      && has(e.recognition_date) && type(e.recognition_date) == string
-      && e.recognition_date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
-      && has(e.gross_jpy) && type(e.gross_jpy) == int && e.gross_jpy > 0
-      && has(e.valuation_source) && type(e.valuation_source) == string && e.valuation_source != ''
+      && b.units.exists(u, u.symbol == b.jp_rsu.share_unit && u.scale == 0)
   - name: rsu_require
     params: [{name: ok, type: bool}]
     returns: int
@@ -100,3 +89,71 @@ functions:
     returns: int
     doc: Recompute recorded valuation with the same helpers as the preview recipe. Call only after rsu_valuation_valid; no independent arithmetic implementation.
     expr: rsu_round_value(rsu_value_parts(v.quantity, v.price_coefficient, v.price_scale, v.fx_coefficient, v.fx_scale), v.rounding)
+  - name: rsu_evidence
+    params: [{name: e, type: map}]
+    returns: bool
+    doc: An evidenced reviewed JPY amount or complete exact valuation inputs; preserve the existing reviewed-value path while enabling coordinated calculated posting.
+    expr: >-
+      has(e.event_id) && type(e.event_id) == string && e.event_id != ''
+      && has(e.grant_id) && type(e.grant_id) == string && e.grant_id != ''
+      && has(e.payer) && type(e.payer) == string && e.payer != ''
+      && has(e.recognition_date) && type(e.recognition_date) == string
+      && e.recognition_date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+      && ((has(e.gross_jpy) && type(e.gross_jpy) == int && e.gross_jpy > 0)
+        || (!has(e.gross_jpy) && has(e.valuation) && type(e.valuation) == map
+          && rsu_valuation_valid(e.valuation) && rsu_recorded_value(e.valuation) > 0))
+      && has(e.valuation_source) && type(e.valuation_source) == string && e.valuation_source != ''
+  - name: rsu_gross
+    params: [{name: e, type: map}]
+    returns: int
+    doc: Use the reviewed amount when recorded; otherwise compute from exact input facts. The calculation rule separately refuses conflicts with recorded valuation inputs.
+    expr: >-
+      has(e.gross_jpy) && type(e.gross_jpy) == int && e.gross_jpy > 0 ? e.gross_jpy
+      : has(e.valuation) && type(e.valuation) == map && rsu_valuation_valid(e.valuation)
+        ? rsu_recorded_value(e.valuation)
+        : {}['RSU needs a reviewed positive JPY amount or valid exact valuation inputs']
+  - name: rsu_journal_valid
+    params: [{name: b, type: map}, {name: j, type: map}]
+    returns: bool
+    doc: One whole-share acquisition and equal gross salary with identical evidence, checked per journal instead of inferred from aggregate rows.
+    expr: >-
+      j.lines.size() == 2
+      && j.lines.all(l, has(l.jp_rsu) && type(l.jp_rsu) == map && rsu_evidence(l.jp_rsu)
+        && string(j.date) == l.jp_rsu.recognition_date + 'T00:00:00Z')
+      && j.lines.exists(s, s.account == b.jp_rsu.share_account
+        && s.unit == b.jp_rsu.share_unit && s.quantity > 0
+        && s.credit == 0 && s.debit == rsu_gross(s.jp_rsu)
+        && j.lines.exists(i, i.account == b.jp_rsu.income_account && i.unit == ''
+          && i.debit == 0 && i.credit == s.debit && i.jp_rsu == s.jp_rsu))
+  - name: rsu_calculation_valid
+    params: [{name: b, type: map}, {name: j, type: map}]
+    returns: bool
+    doc: Check recorded exact inputs without forcing a duplicate gross_jpy field. Invalid or conflicting inputs are an explicit refusal, not a CEL overflow warning.
+    expr: >-
+      !j.lines.exists(l, has(l.jp_rsu) && type(l.jp_rsu) == map && has(l.jp_rsu.valuation))
+      || (j.lines.all(l, has(l.jp_rsu) && type(l.jp_rsu) == map
+        && has(l.jp_rsu.valuation) && type(l.jp_rsu.valuation) == map && rsu_valuation_valid(l.jp_rsu.valuation)
+        && (!has(l.jp_rsu.gross_jpy) || (type(l.jp_rsu.gross_jpy) == int
+          && l.jp_rsu.gross_jpy == rsu_recorded_value(l.jp_rsu.valuation))))
+        && j.lines.exists(s, s.account == b.jp_rsu.share_account
+          && s.quantity == s.jp_rsu.valuation.quantity && s.unit == b.jp_rsu.share_unit))
+  - name: rsu_posting_proposal
+    params: [{name: b, type: map}, {name: j, type: map}, {name: history, type: map}]
+    returns: map
+    doc: Coordinate both native amounts using a general checked host proposal. The layer owns gross-value calculation, required receipt structure and duplicate recognition policy.
+    expr: >-
+      rsu_scope(b) && j.lines.size() == 2
+      && j.lines.all(l, has(l.jp_rsu) && type(l.jp_rsu) == map && rsu_evidence(l.jp_rsu)
+        && string(j.date) == l.jp_rsu.recognition_date + 'T00:00:00Z')
+      && j.lines[0].jp_rsu == j.lines[1].jp_rsu
+      && j.lines.filter(l, l.account == b.jp_rsu.share_account && l.unit == b.jp_rsu.share_unit
+        && l.quantity > 0 && l.side == 'debit').size() == 1
+      && j.lines.filter(l, l.account == b.jp_rsu.income_account && l.unit == '' && l.side == 'credit').size() == 1
+      && rsu_calculation_valid(b, j)
+      ? (history.entries.exists(e, e.lines.exists(l, has(l.jp_rsu) && type(l.jp_rsu) == map
+          && has(l.jp_rsu.event_id) && l.jp_rsu.event_id == j.lines[0].jp_rsu.event_id))
+        ? {}['duplicate RSU event']
+        : {'amounts': [0, 1].map(i, {'line': i,
+          'side': j.lines[i].account == b.jp_rsu.share_account ? 'debit' : 'credit',
+          'amount': rsu_gross(j.lines[i].jp_rsu)})})
+      : {}['RSU scope, period or vesting evidence is incomplete or inconsistent']

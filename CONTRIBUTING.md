@@ -9,21 +9,22 @@ result. For questions or proposed engine changes, open a
 
 ## Use a compatible engine
 
-The published `2026.10.1` packages all declare `requires_bindings: 5`.
+The seven published `2026.10.1` packages declare `requires_bindings: 5`.
+The unreleased RSU, securities-basis and USD-cash `2026.10.2` candidates require 6.
 Bindings are the functions and values the Iris engine makes available to package
 expressions written in CEL. The engine is distributed separately; start with the
 [CLI installation guide](https://irisbooks.io/docs/en/getting-started/) and
 [signed engine releases](https://github.com/irisbooks/iris/releases).
 
-[Iris v0.2.18](https://github.com/irisbooks/iris/releases/tag/v0.2.18) supports
-bindings 5 and `iris overlay test --dir`; all 59 golden cases for this catalog
-pass with that signed engine. For another engine, check its binding and command
-support explicitly. CI tests with the signed engine pinned in
-[`.github/engine.txt`](.github/engine.txt), so a new engine release never changes
-the result for an unchanged commit. Raise the pin in the PR that needs a newer
-engine. Unsupported bindings or test suites must fail, never be skipped. Future engine bindings must
-ship before a package using them can merge or be released. Published bundles and
-signatures are linked from the [package catalog](README.md#choose-a-package).
+[Iris v0.2.23](https://github.com/irisbooks/iris/releases/tag/v0.2.23) is the
+published signed baseline for this source checkout (bindings 6). All 160 catalog
+goldens and 162 independent RSU rational comparisons pass locally with that
+binary; CI repeats the full checks with its signed Linux build. CI uses
+[`.github/engine.txt`](.github/engine.txt), so another engine release does not
+change an unchanged commit's result. Raise the pin in the PR that needs a newer
+engine, after publication. Unsupported bindings and tests fail rather than skip.
+The unchanged `2026.10.1` bundles retain their earlier v0.2.18 / bindings-5
+qualification. Signed bundles are linked from the [catalog](README.md#choose-a-package).
 
 The guides also require the current command surface: journal completion is
 `iris journal complete`, applying derived fields uses `iris validate --apply`,
@@ -105,13 +106,13 @@ python3 .github/scripts/check-engine.py
   the core capability release must work with existing compatible packages and
   must not wait for its unpublished consumer.
 
-For example, [RSU valuation functions](JP/jp-rsu/functions.yaml) calculate exact
-price × FX values on published bindings 5, with
-[golden cases](JP/jp-rsu/tests/valuation.yaml) and an
-[independent rational oracle](.github/scripts/check-rsu-valuation.py). The
-[workflow guide](JP/jp-rsu/guides/vesting.md) separately identifies the existing
-posting-apply and inventory-state limits. Arithmetic alone did not require a new
-engine API. These are ordinary code-review criteria, not another release approval.
+The [RSU valuation functions](JP/jp-rsu/functions.yaml) initially qualified
+on published v0.2.18 / bindings 5, with [goldens](JP/jp-rsu/tests/valuation.yaml)
+and an [independent rational oracle](.github/scripts/check-rsu-valuation.py).
+The [restored workflow](JP/jp-rsu/guides/vesting.md) uses general bindings-6 host
+capabilities for coordinated posting proposals and complete local facts/state.
+The arithmetic and regional treatment remain in the Overlays. These are ordinary
+code-review criteria and do not add another release approval.
 
 ## Keep each package focused
 
@@ -155,6 +156,7 @@ The paths below are relative to a package directory. Use that directory with
 | `derive/*.yaml` | Missing-field proposals |
 | `completions/*.yaml` | Journal completion definitions |
 | `recipes/*.yaml` | Calculation parameters, steps and result shape |
+| `inventory/*.yaml` | Explicit method, pool and retained facts for general inventory replay |
 | `tasks.yaml` | Task IDs, inputs, operations, guide and executable example selectors |
 | `guides/*.md` | Workflow, coverage and remaining human judgment |
 | `tests/*.yaml` | Inputs with expected results or errors (golden tests) |

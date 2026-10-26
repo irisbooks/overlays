@@ -1,0 +1,818 @@
+{
+  "book": {
+    "schema_version": 1,
+    "region": "JP",
+    "currency": "JPY",
+    "scale": 0,
+    "fiscal_year": 2026,
+    "fiscal_start_month": 1,
+    "units": [
+      {
+        "symbol": "AMZN",
+        "scale": 0
+      }
+    ],
+    "jp_securities_basis": {
+      "scope_confirmed": true,
+      "account_regime": "ordinary-listed-shares",
+      "acquisition_fees_capitalized": true,
+      "accounts": [
+        "Assets:AMZN",
+        "Assets:OtherAMZN"
+      ],
+      "commodities": [
+        "AMZN"
+      ],
+      "settlement_accounts": [
+        "Assets:JPY",
+        "Assets:USD"
+      ],
+      "fee_accounts": [
+        "Expenses:ShareFees"
+      ],
+      "gain_account": "Income:Shares"
+    }
+  },
+  "cases": [
+    {
+      "name": "vested shares feed the independent securities pool",
+      "recipe": {
+        "id": "jp-securities-basis.basis",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2026-01-01",
+          "to": "2026-12-31"
+        }
+      },
+      "figures": {
+        "taxable_gain": 96000,
+        "gross_proceeds": 696000,
+        "acquisition_cost": 600000,
+        "remaining_allocation_cost": 900000,
+        "remaining_carrying_value": 900000
+      },
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2026-05-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "debit": 1500000,
+              "quantity": 100,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Income:RSU",
+              "credit": 1500000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-06-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "credit": 600000,
+              "quantity": 40,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Assets:USD",
+              "debit": 696000,
+              "quantity": 4800,
+              "unit": "USD"
+            },
+            {
+              "account": "Income:Shares",
+              "credit": 96000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "sale fees are deducted once and not added twice to gross proceeds",
+      "recipe": {
+        "id": "jp-securities-basis.basis",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2026-01-01",
+          "to": "2026-12-31"
+        }
+      },
+      "figures": {
+        "taxable_gain": 88000,
+        "gross_proceeds": 696000,
+        "fees": 8000,
+        "acquisition_cost": 600000
+      },
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2026-05-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "debit": 1500000,
+              "quantity": 100,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Income:RSU",
+              "credit": 1500000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-06-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "credit": 600000,
+              "quantity": 40,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Assets:JPY",
+              "debit": 688000
+            },
+            {
+              "account": "Expenses:ShareFees",
+              "debit": 8000
+            },
+            {
+              "account": "Income:Shares",
+              "credit": 96000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "pooled custody preserves rounded basis separate from carrying value",
+      "recipe": {
+        "id": "jp-securities-basis.basis",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2026-01-01",
+          "to": "2026-12-31"
+        }
+      },
+      "figures": {
+        "acquisition_cost": 2445000,
+        "taxable_gain": 255000,
+        "remaining_allocation_cost": 3260000,
+        "remaining_carrying_value": 3257143
+      },
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2026-05-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "debit": 4000000,
+              "quantity": 5000,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Assets:JPY",
+              "credit": 4000000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-08-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:OtherAMZN",
+              "debit": 1700000,
+              "quantity": 2000,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Assets:JPY",
+              "credit": 1700000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-09-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "credit": 2442857,
+              "quantity": 3000,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Assets:JPY",
+              "debit": 2700000
+            },
+            {
+              "account": "Income:Shares",
+              "credit": 257143
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unsupported unit in a declared holding account refuses",
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2026-05-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "debit": 1500000,
+              "quantity": 100,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Income:RSU",
+              "credit": 1500000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-06-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "credit": 600000,
+              "quantity": 40,
+              "unit": "EUR"
+            },
+            {
+              "account": "Assets:USD",
+              "debit": 696000,
+              "quantity": 4800,
+              "unit": "USD"
+            },
+            {
+              "account": "Income:Shares",
+              "credit": 96000
+            }
+          ]
+        }
+      ],
+      "recipe": {
+        "id": "jp-securities-basis.basis",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2026-01-01",
+          "to": "2026-12-31"
+        }
+      },
+      "error": "unsupported inventory source scope"
+    },
+    {
+      "name": "unsupported holding source before requested subperiod still refuses",
+      "recipe": {
+        "id": "jp-securities-basis.basis",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2026-07-01",
+          "to": "2026-12-31"
+        }
+      },
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2026-05-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "debit": 1500000,
+              "quantity": 100,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Income:RSU",
+              "credit": 1500000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-06-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "credit": 600000,
+              "quantity": 40,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Assets:USD",
+              "debit": 696000,
+              "quantity": 4800,
+              "unit": "USD"
+            },
+            {
+              "account": "Income:Shares",
+              "credit": 96000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-01-02",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "debit": 1,
+              "quantity": 1,
+              "unit": "EUR"
+            },
+            {
+              "account": "Equity:Capital",
+              "credit": 1
+            }
+          ]
+        }
+      ],
+      "error": "unsupported inventory source scope"
+    },
+    {
+      "name": "missing quantity unit in holding account refuses",
+      "recipe": {
+        "id": "jp-securities-basis.basis",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2026-01-01",
+          "to": "2026-12-31"
+        }
+      },
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2026-05-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "debit": 1500000,
+              "quantity": 100,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Income:RSU",
+              "credit": 1500000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-06-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "credit": 600000,
+              "quantity": 40,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Assets:USD",
+              "debit": 696000,
+              "quantity": 4800,
+              "unit": "USD"
+            },
+            {
+              "account": "Income:Shares",
+              "credit": 96000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-01-02",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "debit": 1
+            },
+            {
+              "account": "Equity:Capital",
+              "credit": 1
+            }
+          ]
+        }
+      ],
+      "error": "unsupported inventory source scope"
+    },
+    {
+      "name": "validation refuses an unsupported holding unit",
+      "journal": {
+        "schema_version": 1,
+        "date": "2026-05-01",
+        "status": "posted",
+        "lines": [
+          {
+            "account": "Assets:AMZN",
+            "debit": 1500000,
+            "quantity": 100,
+            "unit": "EUR"
+          },
+          {
+            "account": "Income:RSU",
+            "credit": 1500000
+          }
+        ]
+      },
+      "expect": [
+        {
+          "rule": "securities.source-scope"
+        }
+      ]
+    },
+    {
+      "name": "standalone successor retains rounded basis and recomputes after another purchase",
+      "book": {
+        "schema_version": 1,
+        "region": "JP",
+        "currency": "JPY",
+        "scale": 0,
+        "fiscal_year": 2027,
+        "fiscal_start_month": 1,
+        "units": [
+          {
+            "symbol": "AMZN",
+            "scale": 0
+          }
+        ],
+        "jp_securities_basis": {
+          "scope_confirmed": true,
+          "account_regime": "ordinary-listed-shares",
+          "acquisition_fees_capitalized": true,
+          "accounts": [
+            "Assets:AMZN",
+            "Assets:OtherAMZN"
+          ],
+          "commodities": [
+            "AMZN"
+          ],
+          "settlement_accounts": [
+            "Assets:JPY",
+            "Assets:USD"
+          ],
+          "fee_accounts": [
+            "Expenses:ShareFees"
+          ],
+          "gain_account": "Income:Shares"
+        },
+        "opening_inventory": [
+          {
+            "account": "Assets:AMZN",
+            "unit": "AMZN",
+            "quantity": 4000,
+            "method": "moving-average",
+            "carrying_value_minor": 3257143,
+            "acquisition_cost_minor": 3257143,
+            "allocation_cost_minor": 3260000,
+            "allocation_policy": "jp-securities-basis@2026.10.2#jp-securities-basis.shares"
+          }
+        ]
+      },
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2027-01-01",
+          "status": "posted",
+          "tags": [
+            "opening-balance"
+          ],
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "debit": 3257143,
+              "quantity": 4000,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Equity:Opening",
+              "credit": 3257143
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2027-04-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "debit": 4350000,
+              "quantity": 5000,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Assets:JPY",
+              "credit": 4350000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2027-08-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "credit": 5071428,
+              "quantity": 6000,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Assets:JPY",
+              "debit": 6000000
+            },
+            {
+              "account": "Income:Shares",
+              "credit": 928572
+            }
+          ]
+        }
+      ],
+      "recipe": {
+        "id": "jp-securities-basis.basis",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2027-01-01",
+          "to": "2027-12-31"
+        }
+      },
+      "figures": {
+        "acquisition_cost": 5076000,
+        "taxable_gain": 924000,
+        "remaining_allocation_cost": 2538000,
+        "remaining_carrying_value": 2535715
+      }
+    },
+    {
+      "name": "successor refuses an allocation from a different exact policy",
+      "book": {
+        "schema_version": 1,
+        "region": "JP",
+        "currency": "JPY",
+        "scale": 0,
+        "fiscal_year": 2027,
+        "fiscal_start_month": 1,
+        "units": [
+          {
+            "symbol": "AMZN",
+            "scale": 0
+          }
+        ],
+        "jp_securities_basis": {
+          "scope_confirmed": true,
+          "account_regime": "ordinary-listed-shares",
+          "acquisition_fees_capitalized": true,
+          "accounts": [
+            "Assets:AMZN",
+            "Assets:OtherAMZN"
+          ],
+          "commodities": [
+            "AMZN"
+          ],
+          "settlement_accounts": [
+            "Assets:JPY",
+            "Assets:USD"
+          ],
+          "fee_accounts": [
+            "Expenses:ShareFees"
+          ],
+          "gain_account": "Income:Shares"
+        },
+        "opening_inventory": [
+          {
+            "account": "Assets:AMZN",
+            "unit": "AMZN",
+            "quantity": 4000,
+            "method": "moving-average",
+            "carrying_value_minor": 3257143,
+            "acquisition_cost_minor": 3257143,
+            "allocation_cost_minor": 3260000,
+            "allocation_policy": "jp-securities-basis@2026.10.1#jp-securities-basis.shares"
+          }
+        ]
+      },
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2027-01-01",
+          "status": "posted",
+          "tags": [
+            "opening-balance"
+          ],
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "debit": 3257143,
+              "quantity": 4000,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Equity:Opening",
+              "credit": 3257143
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2027-04-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "debit": 4350000,
+              "quantity": 5000,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Assets:JPY",
+              "credit": 4350000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2027-08-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "credit": 5071428,
+              "quantity": 6000,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Assets:JPY",
+              "debit": 6000000
+            },
+            {
+              "account": "Income:Shares",
+              "credit": 928572
+            }
+          ]
+        }
+      ],
+      "recipe": {
+        "id": "jp-securities-basis.basis",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2027-01-01",
+          "to": "2027-12-31"
+        }
+      },
+      "error": "opening allocation policy differs"
+    },
+    {
+      "name": "paired own-account share transfer preserves basis without a disposal",
+      "recipe": {
+        "id": "jp-securities-basis.basis",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2026-01-01",
+          "to": "2026-12-31"
+        }
+      },
+      "figures": {
+        "taxable_gain": 0,
+        "gross_proceeds": 0,
+        "acquisition_cost": 0,
+        "remaining_allocation_cost": 1500000,
+        "remaining_carrying_value": 1500000
+      },
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2026-05-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "debit": 1500000,
+              "quantity": 100,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Income:RSU",
+              "credit": 1500000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-07-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "credit": 600000,
+              "quantity": 40,
+              "unit": "AMZN",
+              "inventory": {
+                "transfer": "own-shares-1"
+              }
+            },
+            {
+              "account": "Assets:OtherAMZN",
+              "debit": 600000,
+              "quantity": 40,
+              "unit": "AMZN",
+              "inventory": {
+                "transfer": "own-shares-1"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "eligible fees above gross proceeds retain the net loss",
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2026-05-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "debit": 1000,
+              "quantity": 10,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Assets:JPY",
+              "credit": 1000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-06-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:AMZN",
+              "credit": 1000,
+              "quantity": 10,
+              "unit": "AMZN"
+            },
+            {
+              "account": "Assets:JPY",
+              "credit": 100
+            },
+            {
+              "account": "Expenses:ShareFees",
+              "debit": 600
+            },
+            {
+              "account": "Income:Shares",
+              "debit": 500
+            }
+          ]
+        }
+      ],
+      "recipe": {
+        "id": "jp-securities-basis.basis",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2026-01-01",
+          "to": "2026-12-31"
+        }
+      },
+      "figures": {
+        "taxable_gain": -1100,
+        "remaining_allocation_cost": 0,
+        "remaining_carrying_value": 0,
+        "gross_proceeds": 500,
+        "fees": 600,
+        "acquisition_cost": 1000
+      }
+    }
+  ]
+}
