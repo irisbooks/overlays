@@ -74,6 +74,45 @@ python3 .github/scripts/check-engine.py
 .github/scripts/run-goldens.sh
 ```
 
+## Decide what belongs in a layer or core
+
+- **Put policy and supported calculations in Overlays.** Regional eligibility,
+  dated legal values, classifications, rounding choices and recipes belong here.
+  Try clear, exact, bounded CEL functions on the published engine before asking
+  for a native primitive. Complexity or reuse alone does not make a function core.
+- **Keep core guarantees universal.** Book structure, double-entry integrity,
+  exact native types, execution budgets and guarded host operations must hold
+  with every optional package disabled. Universal ledger aggregates and host
+  workflow state remain core/host responsibilities. Core may expose a typed fact snapshot,
+  general arithmetic/recurrence primitive or checked posting proposal; the layer
+  chooses the regional method and treatment.
+- **Separate policy from facts and local adaptations.** Observed prices/rates,
+  source evidence and owner settings are Book data. A business-specific override
+  belongs in a trusted Book-local layer with exact parents and retained source.
+  Select independent functions and declare necessary exact dependencies; a
+  dependency does not expose another package's private CEL helpers.
+- **Separate calculation from apply.** A recipe computes figures/proposals. An
+  authorized host operation applies changes with scope, revision and lock guards.
+  CEL cannot fetch facts, access credentials or perform arbitrary I/O. Package
+  instructions alone do not authorize actions.
+- **Require evidence for an engine addition.** Show the smallest attempted case
+  on the published engine, the missing data/numeric/apply/state capability, and
+  the minimal jurisdiction-independent interface. Specify bounds, refusal and
+  replay/compatibility tests. Avoid both premature native code and an opaque CEL
+  workaround. Report missing behavior explicitly rather than silently narrowing
+  the feature or skipping tests.
+- **Publish the core prerequisite first.** Follow the dependency policy above;
+  the core capability release must work with existing compatible packages and
+  must not wait for its unpublished consumer.
+
+For example, [RSU valuation functions](JP/jp-rsu/functions.yaml) calculate exact
+price × FX values on published bindings 5, with
+[golden cases](JP/jp-rsu/tests/valuation.yaml) and an
+[independent rational oracle](.github/scripts/check-rsu-valuation.py). The
+[workflow guide](JP/jp-rsu/guides/vesting.md) separately identifies the existing
+posting-apply and inventory-state limits. Arithmetic alone did not require a new
+engine API. These are ordinary code-review criteria, not another release approval.
+
 ## Keep each package focused
 
 An overlay provides one independently useful accounting function. Keep its
