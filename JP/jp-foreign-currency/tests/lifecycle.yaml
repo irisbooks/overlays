@@ -571,6 +571,66 @@
         "remaining_allocation_cost": 0,
         "remaining_carrying_value": 0
       }
+    },
+    {
+      "name": "eligible fees above gross proceeds retain the net loss",
+      "journals": [
+        {
+          "schema_version": 1,
+          "date": "2026-05-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:USD",
+              "debit": 1000,
+              "quantity": 10,
+              "unit": "USD"
+            },
+            {
+              "account": "Assets:JPY",
+              "credit": 1000
+            }
+          ]
+        },
+        {
+          "schema_version": 1,
+          "date": "2026-06-01",
+          "status": "posted",
+          "lines": [
+            {
+              "account": "Assets:USD",
+              "credit": 1000,
+              "quantity": 10,
+              "unit": "USD"
+            },
+            {
+              "account": "Assets:JPY",
+              "credit": 100
+            },
+            {
+              "account": "Expenses:FXFees",
+              "debit": 600
+            },
+            {
+              "account": "Income:FX",
+              "debit": 500
+            }
+          ]
+        }
+      ],
+      "recipe": {
+        "id": "jp-foreign-currency.realized",
+        "params": {
+          "scope_confirmed": true,
+          "from": "2026-01-01",
+          "to": "2026-12-31"
+        }
+      },
+      "figures": {
+        "realized_fx_gain": -1100,
+        "remaining_allocation_cost": 0,
+        "remaining_carrying_value": 0
+      }
     }
   ]
 }

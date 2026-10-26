@@ -47,7 +47,7 @@ engine pinned in CI before merge/release:
   paired own transfers and subsequent realized currency figures.
 
 Local qualification with signed published Iris v0.2.23 / bindings 6 passes all
-158 catalog goldens (80 RSU, 11 securities, 8 cash and 59 existing cases) and
+160 catalog goldens (80 RSU, 12 securities, 9 cash and 59 existing cases) and
 162 independent rational comparisons. CI repeats these checks on the pinned Linux binary.
 
 Salary has no mandatory securities/FX dependency. Existing released packages stay

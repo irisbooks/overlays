@@ -63,7 +63,7 @@ functions:
     returns: map
     doc: Explicit policy interpretation of the replayed cost; refuse negative gross proceeds or fees.
     expr: >-
-      d.fees >= 0 && d.net_proceeds >= 0
+      d.fees >= 0 && d.net_proceeds + d.fees >= 0
       ? {'source': d.source, 'basis': d.basis, 'gain': d.net_proceeds - d.basis,
           'gross_proceeds': d.net_proceeds + d.fees, 'fees': d.fees}
       : {}['negative disposal proceeds or fees']

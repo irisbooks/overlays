@@ -17,7 +17,7 @@ expressions written in CEL. The engine is distributed separately; start with the
 [signed engine releases](https://github.com/irisbooks/iris/releases).
 
 [Iris v0.2.23](https://github.com/irisbooks/iris/releases/tag/v0.2.23) is the
-published signed baseline for this source checkout (bindings 6). All 158 catalog
+published signed baseline for this source checkout (bindings 6). All 160 catalog
 goldens and 162 independent RSU rational comparisons pass locally with that
 binary; CI repeats the full checks with its signed Linux build. CI uses
 [`.github/engine.txt`](.github/engine.txt), so another engine release does not
