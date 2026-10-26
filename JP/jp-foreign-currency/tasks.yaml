@@ -6,6 +6,6 @@ tasks:
     fields: [book.jp_foreign_currency, journal.lines]
     operations: [{kind: completion, id: currency.complete}, {kind: recipe, id: jp-foreign-currency.realized}]
     guide: jp-foreign-currency.cash
-    examples: ['tests/cash.yaml#sale proceeds later converted to yen']
+    examples: ['tests/cash.yaml#sale proceeds later converted to yen', 'tests/lifecycle.yaml#own USD transfer preserves basis without realized gain', 'tests/lifecycle.yaml#later cash conversion is separate from salary and securities', 'tests/lifecycle.yaml#standalone successor realizes retained cash basis without prior-year sources']
     coverage: [Ordinary USD cash, an explicitly confirmed moving-average pool, actual conversions and paired own-account transfers.]
     judgment: [Confirm all participating USD holdings and costs. Automatic MMF sweeps, margin FX, foreign tax credits and unsupported settlement timing are excluded.]

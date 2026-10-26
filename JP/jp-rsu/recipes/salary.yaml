@@ -1,17 +1,32 @@
 id: salary
 output: figures
 description:
-  en: Prepare additional gross RSU salary for a confirmed no-payroll-inclusion, no-Japanese-withholding self-assessment profile. No withholding statement import or stock sale is required.
-  ja: 国内給与の源泉徴収票への未算入・日本の源泉徴収なし・自己申告納税を確認したRSUの追加給与収入を集計します。源泉徴収票の取込みや株式売却は不要です。
+  en: Prepare posted RSU salary from complete local journals for the declared self-assessment profile. Requires a full calendar year, valid journal structure and matching unique vesting evidence. No separate salary deduction or tax amount is computed.
+  ja: 確認済みの自己申告納税の運用について、完全なローカル台帳から記帳済みRSU給与を暦年で集計します。仕訳の構造、一意の権利確定の根拠、対応する明細を確認します。給与所得控除や税額は計算しません。
 params:
-  - {name: scope_confirmed, type: bool, enum: [true], doc: Confirm stock-settled Japan-resident employee USD RSUs, no domestic payroll inclusion/withholding, supported dates and complete vest records.}
-  - {name: income_account, type: string, doc: Explicit RSU gross salary account.}
-  - {name: from, type: string, doc: Calendar tax-year period start YYYY-MM-DD.}
-  - {name: to, type: string, doc: Calendar tax-year period end YYYY-MM-DD.}
+  - {name: scope_confirmed, type: bool, enum: [true], doc: Confirm the supported resident employee profile, reviewed JPY valuations and complete validated vesting records.}
+  - {name: income_account, type: string, doc: The exact dedicated RSU salary account configured in book.jp_rsu.}
+  - {name: from, type: string, doc: Calendar tax-year start YYYY-01-01.}
+  - {name: to, type: string, doc: Same calendar tax-year end YYYY-12-31.}
 let:
-  receipts: "unit_income_v1(journals, {'metadata_field': 'jp_rsu', 'income_account': income_account, 'from': from, 'to': to, 'currency': 'USD', 'base_currency': 'JPY', 'fx_kind': 'TTM', 'whole_units': true})"
+  guard: >-
+    rsu_require(scope_confirmed && rsu_scope(book) && income_account == book.jp_rsu.income_account
+      && from == string(book.fiscal_year) + '-01-01' && to == string(book.fiscal_year) + '-12-31')
+  snapshot: ledger_snapshot_v1(journals, date(from), date(to))
+  receipts: >-
+    snapshot.entries.filter(j, j.lines.exists(l, has(l.jp_rsu))
+      || (!('opening-balance' in j.tags) && j.lines.exists(l, l.account == income_account)))
+  checked: >-
+    rsu_require(receipts.all(j, rsu_journal_valid(book, j) && rsu_calculation_valid(book, j))
+      && receipts.all(j, receipts.filter(other,
+        other.lines[0].jp_rsu.event_id == j.lines[0].jp_rsu.event_id).size() == 1))
 result: >-
   {'period_from': from, 'period_to': to, 'income_category': 'salary',
-   'additional_salary_receipts': receipts.gross_receipts, 'japan_withholding': 0,
-   'included_in_salary_statement': false, 'records': receipts.records,
-   'inputs_sha256': receipts.inputs_sha256}
+   'additional_salary_receipts': sum(receipts.map(j, rsu_gross(j.lines[0].jp_rsu))) + guard + checked,
+   'japan_withholding': 0, 'included_in_salary_statement': false,
+   'inputs_sha256': snapshot.inputs_sha256,
+   'records': receipts.map(j, {'source': j.path, 'event_id': j.lines[0].jp_rsu.event_id,
+     'grant_id': j.lines[0].jp_rsu.grant_id, 'payer': j.lines[0].jp_rsu.payer,
+     'recognition_date': j.lines[0].jp_rsu.recognition_date,
+     'valuation_source': j.lines[0].jp_rsu.valuation_source,
+     'gross_receipts': rsu_gross(j.lines[0].jp_rsu)})}

@@ -17,3 +17,20 @@ A same-currency transfer between declared accounts of the same owner uses one ba
 - Method discussion (research, not binding guidance): https://www.nta.go.jp/about/organization/ntc/kenkyu/ronsou/114/01/index.htm
 
 Candidate source; not a signed publication. Tax-return preparation only.
+
+## Settlement and eligible realization fees
+
+Declare only confirmed directly attributable realization expenses in the fee
+mapping. Net settlement minus currency allocation cost gives the supported
+realized figure; separately recorded fees are deducted once, not added to an
+already balanced gain credit. This does not classify arbitrary personal fees as
+deductible. [NTA miscellaneous-income calculation](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1500.htm),
+[directly attributable expenses](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2210.htm).
+
+The selected USD accounts must use the declared currency and quantities. Matched
+own-account transfers carry basis without creating disposal figures. Use a
+declared USD clearing account for an evidenced transfer in transit; do not infer
+an unpaired receipt or silently absorb a fee into a mismatched transfer.
+Other currency pools, fund sweeps and margin-FX treatments are not computed by
+this USD policy. Retained root-Book openings preserve carrying and allocation
+values independently; the result remains a filing aid.

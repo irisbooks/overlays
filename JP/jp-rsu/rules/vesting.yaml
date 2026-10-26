@@ -1,30 +1,29 @@
 rules:
   - id: rsu.scope
     target: journal
-    when: journal.lines.exists(l, has(l.jp_rsu))
+    severity: error
+    when: "journal.lines.exists(l, has(l.jp_rsu))"
     assert: rsu_scope(book)
     message:
-      en: RSU vesting requires explicit Japan-resident employee scope, no domestic salary-statement inclusion or Japanese withholding, and self-assessment.
-      ja: 日本居住・勤務の従業員、国内給与の源泉徴収票への未算入、日本の源泉徴収なし、自己申告納税を明示してください。
+      en: Confirm Japan-resident employee scope, salary-statement exclusion, no Japanese withholding, self-assessment and dedicated salary/share accounts before using RSU records.
+      ja: 日本居住・勤務の従業員、国内源泉徴収票への未算入、日本の源泉徴収なし、自己申告納税、給与と株式の専用科目を確認してください。
   - id: rsu.valuation
     target: journal
-    when: journal.lines.exists(l, has(l.jp_rsu)) && rsu_scope(book)
-    assert: >-
-      journal.lines.size() == 2 && journal.lines.filter(l, has(l.jp_rsu)).size() == 1
-      && journal.lines.filter(l, has(l.jp_rsu)).all(l,
-         type(l.jp_rsu) == map && l.side == 'debit' && l.unit != '' && unit_scale_v1(book, l.unit) == 0
-         && has(l.jp_rsu.event_id) && type(l.jp_rsu.event_id) == string && l.jp_rsu.event_id != ''
-         && has(l.jp_rsu.grant_id) && type(l.jp_rsu.grant_id) == string && l.jp_rsu.grant_id != ''
-         && has(l.jp_rsu.payer) && type(l.jp_rsu.payer) == string && l.jp_rsu.payer != ''
-         && has(l.jp_rsu.price_source) && type(l.jp_rsu.price_source) == string && l.jp_rsu.price_source != ''
-         && has(l.jp_rsu.fx_source) && type(l.jp_rsu.fx_source) == string && l.jp_rsu.fx_source != ''
-         && has(l.jp_rsu.currency) && l.jp_rsu.currency == 'USD'
-         && has(l.jp_rsu.fx_kind) && l.jp_rsu.fx_kind == 'TTM'
-         && has(l.jp_rsu.recognition_date) && date(l.jp_rsu.recognition_date) == journal.date
-         && has(l.jp_rsu.fx_date) && date(l.jp_rsu.fx_date) <= journal.date
-         && has(l.jp_rsu.unit_price) && has(l.jp_rsu.fx_rate)
-         && l.debit == unit_value_v1(l.quantity, unit_scale_v1(book, l.unit), l.jp_rsu.unit_price, l.jp_rsu.fx_rate, book.scale)
-         && journal.lines.exists(i, i.account == book.jp_rsu.income_account && i.unit == '' && i.side == 'credit' && i.credit == l.debit))
+    severity: error
+    when: >-
+      rsu_scope(book) && (journal.lines.exists(l, has(l.jp_rsu))
+        || journal.lines.exists(l, l.account == book.jp_rsu.income_account))
+    assert: rsu_journal_valid(book, journal)
     message:
-      en: Record one gross vested share acquisition and matching salary with exact USD price, TTM rate/date, payer, grant/event IDs and valuation sources; no tax sale or withholding is inferred.
-      ja: 権利確定した株式取得と同額の給与を記録し、ドル株価、TTM・適用日、支払者、付与・イベント番号、評価の根拠を明示してください。税金のための売却や源泉徴収は推定しません。
+      en: Record one share debit and equal gross-salary credit with identical event/grant/payer/date, a reviewed positive gross_jpy or complete exact valuation inputs, and valuation_source evidence. Confirm the valuation facts; no tax sale or withholding is inferred.
+      ja: 株式の借方と同額の給与の貸方に、同じイベント・付与番号・支払者・日付・valuation_sourceと、確認済みの正のgross_jpyまたは完全な評価入力を記録してください。評価の根拠を確認し、税金のための売却や源泉徴収は推定しません。
+  - id: rsu.calculation
+    target: journal
+    severity: error
+    when: >-
+      rsu_scope(book) && journal.lines.exists(l,
+        has(l.jp_rsu) && type(l.jp_rsu) == map && has(l.jp_rsu.valuation))
+    assert: rsu_calculation_valid(book, journal)
+    message:
+      en: Recorded RSU valuation inputs must be complete, within supported bounds and identical on both lines; use whole shares with Book unit scale 0. The Overlay-calculated JPY amount must match the postings and any recorded gross_jpy. Choose truncation or half-up explicitly.
+      ja: 計算入力を両明細に同じ内容で記録し、対応範囲内の値・整数株数・帳簿の単位scale 0を使ってください。オーバーレイで計算した円換算額を仕訳金額と、記録されている場合はgross_jpyに一致させ、切捨てか四捨五入を明示してください。

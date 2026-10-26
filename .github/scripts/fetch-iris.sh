@@ -9,18 +9,18 @@ set -euo pipefail
 # IrisBooks release public key (minisign), key id 11D9CC26444B9F65.
 PUBKEY="RWRln0tEJszZEcTL7VcSL5XR+zcAA2FyqnfOAeLDnwaE7LAa7E3tJCCJ"
 ASSET="iris_linux_amd64"
-PIN_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/engine.txt"
-
-VERSION="$(awk '$1 == "version" {print $2}' "$PIN_FILE")"
-if ! [[ "$VERSION" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
-  echo "::error file=.github/engine.txt::engine version '${VERSION}' is not a stable vX.Y.Z"
-  exit 1
-fi
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VERSION="$(python3 "$SCRIPT_DIR/check-engine.py" --version)"
 BASE="https://github.com/irisbooks/iris/releases/download/$VERSION"
 
 dir="${RUNNER_TEMP:?}/iris"
 mkdir -p "$dir"
 cd "$dir"
+# A source tag or a draft is not a released engine, even if its name is stable.
+curl -fsSL --retry 3 -H 'Accept: application/vnd.github+json' \
+  -o release-state.json "https://api.github.com/repos/irisbooks/iris/releases/tags/$VERSION" \
+  || { echo "::error::publish stable engine $VERSION before depending on it in an Overlay"; exit 1; }
+python3 "$SCRIPT_DIR/check-engine.py" --release release-state.json
 for f in "$ASSET" checksums.txt checksums.txt.minisig version.txt; do
   curl -fsSL --retry 3 -o "$f" "$BASE/$f"
 done

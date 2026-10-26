@@ -1,14 +1,13 @@
 id: journal.balance
-call: unit-income
+call: postings
 when: >-
   !journal.lines.exists(l, l.unit != '' && l.side == 'credit')
   && (!journal.lines.exists(l, has(l.jp_rsu)) || rsu_scope(book))
-  && journal.lines.filter(l, has(l.jp_rsu)).all(l,
-     type(l.jp_rsu) == map && has(l.jp_rsu.currency) && l.jp_rsu.currency == 'USD'
-     && has(l.jp_rsu.fx_kind) && l.jp_rsu.fx_kind == 'TTM' && unit_scale_v1(book, l.unit) == 0)
 with: >-
-  {'metadata_field': 'jp_rsu',
-   'income_account': has(book.jp_rsu) && has(book.jp_rsu.income_account) ? book.jp_rsu.income_account : ''}
+  journal.lines.exists(l, has(l.jp_rsu))
+  ? rsu_posting_proposal(book, journal,
+      ledger_snapshot_v1(journals, date(string(book.fiscal_year) + '-01-01'), date(string(book.fiscal_year) + '-12-31')))
+  : {'amounts': []}
 description:
-  en: Value a gross RSU acquisition and salary from exact price/FX facts; ordinary monetary journals retain balancing completion.
-  ja: 株価と為替の記録から株式取得額と給与総額を正確に計算します。通常の金額仕訳では貸借の補完を行います。
+  en: Fill both missing share-debit and salary-credit amounts from reviewed JPY or exact valuation facts. Ordinary monetary journals retain balancing. No cash, withholding or tax sale is invented.
+  ja: 確認済みの円換算額、または正確な評価入力から、株式の借方と給与の貸方を同時に補完します。通常の貸借補完も継続します。現金、源泉徴収、納税目的の売却は推定しません。

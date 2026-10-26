@@ -9,21 +9,22 @@ result. For questions or proposed engine changes, open a
 
 ## Use a compatible engine
 
-The published `2026.10.1` packages all declare `requires_bindings: 5`.
+The seven published `2026.10.1` packages declare `requires_bindings: 5`.
+The unreleased RSU, securities-basis and USD-cash `2026.10.2` candidates require 6.
 Bindings are the functions and values the Iris engine makes available to package
 expressions written in CEL. The engine is distributed separately; start with the
 [CLI installation guide](https://irisbooks.io/docs/en/getting-started/) and
 [signed engine releases](https://github.com/irisbooks/iris/releases).
 
-[Iris v0.2.18](https://github.com/irisbooks/iris/releases/tag/v0.2.18) supports
-bindings 5 and `iris overlay test --dir`; all 59 golden cases for this catalog
-pass with that signed engine. For another engine, check its binding and command
-support explicitly. CI tests with the signed engine pinned in
-[`.github/engine.txt`](.github/engine.txt), so a new engine release never changes
-the result for an unchanged commit. Raise the pin in the PR that needs a newer
-engine. Unsupported bindings or test suites must fail, never be skipped. Future engine bindings must
-ship before a package using them can merge or be released. Published bundles and
-signatures are linked from the [package catalog](README.md#choose-a-package).
+[Iris v0.2.23](https://github.com/irisbooks/iris/releases/tag/v0.2.23) is the
+published signed baseline for this source checkout (bindings 6). All 158 catalog
+goldens and 162 independent RSU rational comparisons pass locally with that
+binary; CI repeats the full checks with its signed Linux build. CI uses
+[`.github/engine.txt`](.github/engine.txt), so another engine release does not
+change an unchanged commit's result. Raise the pin in the PR that needs a newer
+engine, after publication. Unsupported bindings and tests fail rather than skip.
+The unchanged `2026.10.1` bundles retain their earlier v0.2.18 / bindings-5
+qualification. Signed bundles are linked from the [catalog](README.md#choose-a-package).
 
 The guides also require the current command surface: journal completion is
 `iris journal complete`, applying derived fields uses `iris validate --apply`,
@@ -43,6 +44,75 @@ iris overlay test --dir JP/jp-tax-classification
 
 Repeat for each changed package. No Book folder or engine source checkout is
 needed for `--dir` tests.
+
+## Published-engine dependency policy
+
+Every package must work with the already published, signed, stable engine pinned
+in `.github/engine.txt`. An engine source tag, PR build, staging candidate, draft
+release or prerelease does not satisfy this dependency. There is no candidate
+engine or `--bindings` override for the merge gate.
+
+CI checks the pin and every package's `requires_bindings`, confirms the GitHub
+release is published and stable, verifies its signature and checksums, and runs
+all package golden tests with that exact binary. Lowering `requires_bindings`
+without adapting the implementation is not a compatibility fix; package loading
+and real execution must pass too.
+
+If a package needs a new core primitive, release that engine capability first
+with the existing compatible catalog. After publication, update the engine pin
+and add the package change. The core release must not wait for the dependent
+unpublished package. Merge and tag package source only after this published-engine
+gate passes; vendor the tag into the application afterwards. The final application
+candidate may repeat tests with its new engine as an additional compatibility
+check, but cannot replace the published-engine baseline.
+
+Run the same checks locally:
+
+```sh
+python3 .github/scripts/check-engine.py
+# In CI, fetch-iris.sh downloads/verifies the pin and puts it on GITHUB_PATH.
+# Locally, install that exact signed version and put it on PATH first.
+.github/scripts/run-goldens.sh
+```
+
+## Decide what belongs in a layer or core
+
+- **Put policy and supported calculations in Overlays.** Regional eligibility,
+  dated legal values, classifications, rounding choices and recipes belong here.
+  Try clear, exact, bounded CEL functions on the published engine before asking
+  for a native primitive. Complexity or reuse alone does not make a function core.
+- **Keep core guarantees universal.** Book structure, double-entry integrity,
+  exact native types, execution budgets and guarded host operations must hold
+  with every optional package disabled. Universal ledger aggregates and host
+  workflow state remain core/host responsibilities. Core may expose a typed fact snapshot,
+  general arithmetic/recurrence primitive or checked posting proposal; the layer
+  chooses the regional method and treatment.
+- **Separate policy from facts and local adaptations.** Observed prices/rates,
+  source evidence and owner settings are Book data. A business-specific override
+  belongs in a trusted Book-local layer with exact parents and retained source.
+  Select independent functions and declare necessary exact dependencies; a
+  dependency does not expose another package's private CEL helpers.
+- **Separate calculation from apply.** A recipe computes figures/proposals. An
+  authorized host operation applies changes with scope, revision and lock guards.
+  CEL cannot fetch facts, access credentials or perform arbitrary I/O. Package
+  instructions alone do not authorize actions.
+- **Require evidence for an engine addition.** Show the smallest attempted case
+  on the published engine, the missing data/numeric/apply/state capability, and
+  the minimal jurisdiction-independent interface. Specify bounds, refusal and
+  replay/compatibility tests. Avoid both premature native code and an opaque CEL
+  workaround. Report missing behavior explicitly rather than silently narrowing
+  the feature or skipping tests.
+- **Publish the core prerequisite first.** Follow the dependency policy above;
+  the core capability release must work with existing compatible packages and
+  must not wait for its unpublished consumer.
+
+The [RSU valuation functions](JP/jp-rsu/functions.yaml) initially qualified
+on published v0.2.18 / bindings 5, with [goldens](JP/jp-rsu/tests/valuation.yaml)
+and an [independent rational oracle](.github/scripts/check-rsu-valuation.py).
+The [restored workflow](JP/jp-rsu/guides/vesting.md) uses general bindings-6 host
+capabilities for coordinated posting proposals and complete local facts/state.
+The arithmetic and regional treatment remain in the Overlays. These are ordinary
+code-review criteria and do not add another release approval.
 
 ## Keep each package focused
 
@@ -86,6 +156,7 @@ The paths below are relative to a package directory. Use that directory with
 | `derive/*.yaml` | Missing-field proposals |
 | `completions/*.yaml` | Journal completion definitions |
 | `recipes/*.yaml` | Calculation parameters, steps and result shape |
+| `inventory/*.yaml` | Explicit method, pool and retained facts for general inventory replay |
 | `tasks.yaml` | Task IDs, inputs, operations, guide and executable example selectors |
 | `guides/*.md` | Workflow, coverage and remaining human judgment |
 | `tests/*.yaml` | Inputs with expected results or errors (golden tests) |
@@ -131,9 +202,3 @@ maintainers tag `<id>@<version>` and publish a signed package bundle. Candidate
 bundle building and signing belong to the maintainer's engine release workflow.
 An Iris release includes a curated catalog for offline installation. Books keep
 exact installed definitions for execution and historical replay.
-
-## Bindings 6 investment contract (development)
-
-`inventory/*.yaml` exports typed, qualified policies (`id`, boolean `when`, map-valued `with`). Consumers require one exact provider version. Private CEL helpers remain private. Policy maps select declared accounts/commodities, settlement/fee/gain accounts, arithmetic method (`unit-average` or `moving-average`), rounding, pooling and whole-unit scope. `inventory_basis_v1(journals, policy, from, to)` returns checked disposal/remaining-basis facts. Recipes freeze the exact policy inputs under `source.inventory_policies`; replay uses those inputs and the retained package. `unit_income_v1` and `unit_value_v1` value evidenced non-cash acquisitions exactly. Completion calls `inventory-policy` and `unit-income` use the same native arithmetic. Source Book unit scales are exposed as `book.units`. Local complete inputs are required; streaming sums cannot supply these facts. These primitives are versioned independently from the package policy.
-
-Rollover keeps native carrying value plus generic `allocation_cost_minor` and `allocation_policy` openings. Filing figures are preparation aids; this contract does not add regional financial-view acceptance or cloud CEL execution. Golden source syntax for bindings 6 recipe journals uses the actual Book parser, including declared currency/unit precision. Test with the matching development engine until a qualified signed engine supports bindings 6.

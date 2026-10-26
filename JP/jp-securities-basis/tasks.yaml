@@ -6,6 +6,6 @@ tasks:
     fields: [book.jp_securities_basis, journal.lines]
     operations: [{kind: completion, id: inventory.complete}, {kind: recipe, id: jp-securities-basis.basis}]
     guide: jp-securities-basis.shares
-    examples: ['tests/basis.yaml#ordinary shares need no RSU metadata']
+    examples: ['tests/basis.yaml#ordinary shares need no RSU metadata', 'tests/lifecycle.yaml#vested shares feed the independent securities pool', 'tests/lifecycle.yaml#sale fees are deducted once and not added twice to gross proceeds', 'tests/lifecycle.yaml#standalone successor retains rounded basis and recomputes after another purchase']
     coverage: [Whole ordinary listed shares, pooled declared own accounts, unit-cost ceiling and remaining statutory basis.]
     judgment: [Confirm complete pool scope and cost evidence. NISA, special accounts, fractional shares and unresolved settlement timing are unsupported.]

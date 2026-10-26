@@ -3,7 +3,7 @@ call: inventory-policy
 when: >-
   has(book.jp_foreign_currency) && has(book.jp_foreign_currency.accounts)
   && journal.lines.exists(l, l.unit != '' && l.side == 'credit' && l.account in book.jp_foreign_currency.accounts)
-with: "{'policy': 'jp-foreign-currency.cash'}"
+with: "{'policy': 'jp-foreign-currency.cash', 'gain_account': book.jp_foreign_currency.gain_account}"
 description:
   en: Complete foreign-cash carrying cost and realized gain, or carry basis through an explicitly paired own-account transfer.
   ja: 外貨の帳簿価額と実現損益を補完し、明示的に対応付けた本人名義口座間の移動では取得費を引き継ぎます。

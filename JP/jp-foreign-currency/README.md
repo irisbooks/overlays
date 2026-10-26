@@ -1,7 +1,7 @@
 # jp-foreign-currency
 
-Unreleased 2026.10.2 candidate, requires Iris bindings 6.
+Unreleased 2026.10.2 source candidate, requires Iris bindings 6.
 
 [English guide](guides/cash.md) | [日本語](README.ja.md) | [Executable examples](tests/)
 
-Canonical source: `irisbooks.overlays/JP/jp-foreign-currency`. The Iris engine repository retains matching development fixtures. Publication requires a qualified engine and signed immutable packages.
+Canonical public package source. Qualification must use the already published signed stable engine pinned in `.github/engine.txt`; development fixtures and source builds cannot satisfy that gate. Existing released package bytes remain unchanged.

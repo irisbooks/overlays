@@ -2,5 +2,4 @@ id: jp-rsu
 version: 2026.10.2
 requires_bindings: 6
 region: JP
-requires_overlays: {jp-securities-basis: ['2026.10.2']}
-description: Record ordinary employee RSU vesting and additional salary without payroll withholding or automatic tax sales.
+description: Calculate and complete evidenced gross RSU vesting and prepare additional salary with complete local source checks. Securities and foreign-cash policies remain independently selectable.

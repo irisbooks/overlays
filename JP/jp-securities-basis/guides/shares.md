@@ -12,3 +12,18 @@ This candidate supports a January–December JPY personal Book. It excludes NISA
 
 - NTA No.1466: https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1466.htm
 - Foreign-stock gains: https://www.nta.go.jp/law/shitsugi/shotoku/02/02.htm
+
+## Proceeds, fees and retained basis
+
+Map only confirmed eligible sale fees to `fee_accounts`. The recipe derives net
+settlement from the declared settlement accounts, adds the separately recorded
+fees once to show gross proceeds, and subtracts allocation cost from net
+settlement for the gain. It does not add fees to an income credit that already
+balances a separate fee-expense line. [NTA acquisition costs and sale fees](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1464.htm).
+
+`remaining_allocation_cost` and `remaining_carrying_value` summarize the distinct
+remaining values; `basis.positions` retains per-account/unit detail. Keep all
+eligible custody accounts in the declared pool. Unknown units in those accounts
+and mixed acquisitions/disposals refuse; record paired own transfers separately.
+Reconcile observations and fees against source statements. Missing external
+events cannot be inferred from ledger totals.

@@ -9,6 +9,10 @@ params:
   - {name: to, type: string, doc: Period end YYYY-MM-DD.}
 let:
   basis: inventory_basis_v1(journals, 'jp-foreign-currency.cash', date(from), date(to))
+  snapshot: ledger_snapshot_v1(journals, date(string(book.fiscal_year) + '-01-01'), date(to))
+  source_guard: currency_require(snapshot.entries.filter(j, j.lines.exists(l, l.account in basis.policy_facts.inventory_accounts)).all(j, currency_source_scope(basis.policy_facts, j)))
+  interpreted: basis.disposals.map(d, currency_finish_disposal(currency_interpret_disposal(d, basis.policy_facts, snapshot.entries)))
 result: >-
   {'period_from': from, 'period_to': to, 'income_category': 'miscellaneous',
-   'realized_fx_gain': sum(basis.disposals.map(d, d.gain)), 'basis': basis}
+   'realized_fx_gain': sum(interpreted.map(d, d.gain)) + source_guard, 'remaining_allocation_cost': sum(basis.positions.map(p, p.basis)),
+   'remaining_carrying_value': sum(basis.positions.map(p, p.carrying)), 'basis': basis}

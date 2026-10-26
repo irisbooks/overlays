@@ -1,7 +1,7 @@
 id: cash
-when: currency_scope(book)
+when: currency_scope(book) && currency_mapping_valid(book.jp_foreign_currency)
 with: >-
-  {'method': 'moving-average', 'round_up': false, 'pool_accounts': true, 'whole_units': false,
+  {'method': 'moving-average', 'round_up': false, 'pool_accounts': true,
    'accounts': book.jp_foreign_currency.accounts, 'commodities': book.jp_foreign_currency.currencies,
-   'settlement_accounts': book.jp_foreign_currency.settlement_accounts,
-   'fee_accounts': book.jp_foreign_currency.fee_accounts, 'gain_account': book.jp_foreign_currency.gain_account}
+   'facts': {'commodities': book.jp_foreign_currency.currencies, 'inventory_accounts': book.jp_foreign_currency.accounts, 'settlement_accounts': book.jp_foreign_currency.settlement_accounts,
+   'fee_accounts': book.jp_foreign_currency.fee_accounts, 'gain_account': book.jp_foreign_currency.gain_account}}

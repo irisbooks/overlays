@@ -2,10 +2,10 @@ fields:
   book.jp_rsu:
     type: map
     description:
-      en: Confirm the supported Japan-resident employee scope, exclusion from the domestic salary statement, no Japanese withholding, self-assessment and the RSU salary account.
-      ja: 対応する日本居住・勤務の従業員、国内給与の源泉徴収票への未算入、日本の源泉徴収なし、自己申告納税、RSU給与科目を確認します。
+      en: Confirm the resident employee self-assessment profile, dedicated income_account/share_account and share_unit. Salary-statement inclusion and Japanese withholding must both be false.
+      ja: 日本居住・勤務の従業員の自己申告納税、専用のincome_account・share_account・share_unitを確認します。国内源泉徴収票への算入と日本の源泉徴収は、どちらもfalseにします。
   line.jp_rsu:
     type: map
     description:
-      en: Vesting evidence on the holding debit; native quantity and amount remain authoritative.
-      ja: 株式取得の借方明細に権利確定の根拠を記録します。株数と金額には既存の仕訳項目を使います。
+      en: Put identical event_id, grant_id, payer, recognition_date, valuation_source and either a reviewed positive integer gross_jpy or complete exact valuation inputs on both vesting lines. Valuation inputs use the vesting-value recipe format; any recorded gross_jpy must agree with them. Keep the original price/FX evidence.
+      ja: 権利確定の両明細に同じevent_id・grant_id・payer・recognition_date・valuation_sourceと、確認済みの正の整数gross_jpyまたは完全なvaluation入力を記録します。valuationはvesting-valueと同じ形式で、gross_jpyも記録する場合は計算結果に一致させます。株価と為替の原資料を保存します。

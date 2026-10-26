@@ -9,9 +9,13 @@ params:
   - {name: to, type: string, doc: Period end YYYY-MM-DD.}
 let:
   basis: inventory_basis_v1(journals, 'jp-securities-basis.shares', date(from), date(to))
+  snapshot: ledger_snapshot_v1(journals, date(string(book.fiscal_year) + '-01-01'), date(to))
+  source_guard: securities_require(snapshot.entries.filter(j, j.lines.exists(l, l.account in basis.policy_facts.inventory_accounts)).all(j, securities_source_scope(basis.policy_facts, j)))
+  interpreted: basis.disposals.map(d, securities_finish_disposal(securities_interpret_disposal(d, basis.policy_facts, snapshot.entries)))
 result: >-
   {'period_from': from, 'period_to': to, 'income_category': 'listed_securities',
-   'taxable_gain': sum(basis.disposals.map(d, d.gain)),
-   'gross_proceeds': sum(basis.disposals.map(d, d.gross_proceeds)),
+   'taxable_gain': sum(interpreted.map(d, d.gain)) + source_guard,
+   'gross_proceeds': sum(interpreted.map(d, d.gross_proceeds)),
    'acquisition_cost': sum(basis.disposals.map(d, d.basis)),
-   'fees': sum(basis.disposals.map(d, d.fees)), 'basis': basis}
+   'fees': sum(interpreted.map(d, d.fees)), 'remaining_allocation_cost': sum(basis.positions.map(p, p.basis)),
+   'remaining_carrying_value': sum(basis.positions.map(p, p.carrying)), 'basis': basis}

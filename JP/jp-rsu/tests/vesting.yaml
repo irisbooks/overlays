@@ -1,33 +1,617 @@
 book:
   schema_version: 1
-  region: JP
-  currency: JPY
+  region: "JP"
+  currency: "JPY"
   scale: 0
   fiscal_year: 2026
   fiscal_start_month: 1
-  units: [{symbol: AMZN, scale: 0}]
-  jp_rsu: {scope_confirmed: true, included_in_salary_statement: false, japan_withholding: false, tax_funding: self-assessment, income_account: 'Income:RSU'}
+  units: [{"symbol": "AMZN", "scale": 0}]
+  jp_rsu: {"scope_confirmed": true, "included_in_salary_statement": false, "japan_withholding": false, "tax_funding": "self-assessment", "income_account": "Income:RSU", "share_account": "Assets:AMZN", "share_unit": "AMZN"}
 cases:
-  - name: vest without a tax sale
+  - name: "vest without a tax sale"
     autocomplete:
-      chart:
-        accounts:
-          - {path: 'Assets:AMZN', type: asset}
-          - {path: 'Income:RSU', type: income}
+      chart: {"accounts": [{"path": "Assets:AMZN", "type": "asset"}, {"path": "Income:RSU", "type": "income"}]}
       journal:
         schema_version: 1
-        date: 2026-05-01
-        status: draft
+        date: "2026-05-01"
+        status: "draft"
         lines:
-          - account: Assets:AMZN
+          - account: "Assets:AMZN"
+            debit: 1500000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: null
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    lines:
+      - account: "Assets:AMZN"
+        debit: 1500000
+        quantity: 100
+        unit: "AMZN"
+        jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+      - account: "Income:RSU"
+        credit: 1500000
+        jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+  - name: "reviewed JPY completes both missing posting amounts"
+    autocomplete:
+      chart: {"accounts": [{"path": "Assets:AMZN", "type": "asset"}, {"path": "Income:RSU", "type": "income"}]}
+      journal:
+        schema_version: 1
+        date: "2026-05-01"
+        status: "draft"
+        lines:
+          - account: "Assets:AMZN"
             debit: null
             quantity: 100
-            unit: AMZN
-            jp_rsu: {event_id: amazon-2026-05, grant_id: grant-1, payer: Amazon.com Inc., recognition_date: '2026-05-01', unit_price: '100', currency: USD, fx_rate: '150', fx_kind: TTM, fx_date: '2026-05-01', price_source: vest-statement, fx_source: bank-quote}
-          - {account: 'Income:RSU', credit: null}
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: null
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
     lines:
-      - {account: 'Assets:AMZN', debit: 1500000, quantity: 100, unit: AMZN, jp_rsu: {event_id: amazon-2026-05, grant_id: grant-1, payer: Amazon.com Inc., recognition_date: '2026-05-01', unit_price: '100', currency: USD, fx_rate: '150', fx_kind: TTM, fx_date: '2026-05-01', price_source: vest-statement, fx_source: bank-quote}}
-      - {account: 'Income:RSU', credit: 1500000}
-  - name: no additional vesting
-    recipe: {id: jp-rsu.salary, params: {scope_confirmed: true, income_account: 'Income:RSU', from: '2026-01-01', to: '2026-12-31'}}
-    figures: {additional_salary_receipts: 0, japan_withholding: 0, income_category: salary}
+      - account: "Assets:AMZN"
+        debit: 1500000
+        quantity: 100
+        unit: "AMZN"
+        jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+      - account: "Income:RSU"
+        credit: 1500000
+        jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+  - name: "completion never overwrites a conflicting salary amount"
+    autocomplete:
+      chart: {"accounts": [{"path": "Assets:AMZN", "type": "asset"}, {"path": "Income:RSU", "type": "income"}]}
+      journal:
+        schema_version: 1
+        date: "2026-05-01"
+        status: "draft"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1500000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 1490000
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    error: "posting proposal conflicts with a recorded amount"
+  - name: "recorded gross vesting validates"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1500000
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+        - account: "Income:RSU"
+          credit: 1500000
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+  - name: "missing salary evidence"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1500000
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+        - account: "Income:RSU"
+          credit: 1500000
+    expect: [{"rule": "rsu.valuation"}]
+  - name: "conflicting gross valuation"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1500000
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1490000, "valuation_source": "raw/vesting-2026-05.pdf"}
+        - account: "Income:RSU"
+          credit: 1500000
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    expect: [{"rule": "rsu.valuation"}]
+  - name: "wrong recognition date"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1500000
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-02", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+        - account: "Income:RSU"
+          credit: 1500000
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    expect: [{"rule": "rsu.valuation"}]
+  - name: "invalid recognition date"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1500000
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-02-30", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+        - account: "Income:RSU"
+          credit: 1500000
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    expect: [{"rule": "rsu.valuation"}]
+  - name: "missing valuation source"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1500000
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": ""}
+        - account: "Income:RSU"
+          credit: 1500000
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    expect: [{"rule": "rsu.valuation"}]
+  - name: "net settlement is outside scope"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1500000
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+        - account: "Income:RSU"
+          credit: 1500000
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+        - account: "Assets:JPY"
+          debit: 10
+    expect: [{"rule": "rsu.valuation"}]
+  - name: "zero shares cannot establish vesting"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1500000
+          quantity: 0
+          unit: "AMZN"
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+        - account: "Income:RSU"
+          credit: 1500000
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    expect: [{"rule": "rsu.valuation"}]
+  - name: "unconfirmed resident profile refuses"
+    book:
+      schema_version: 1
+      region: "JP"
+      currency: "JPY"
+      scale: 0
+      fiscal_year: 2026
+      fiscal_start_month: 1
+      units: [{"symbol": "AMZN", "scale": 0}]
+      jp_rsu: {"scope_confirmed": false, "included_in_salary_statement": false, "japan_withholding": false, "tax_funding": "self-assessment", "income_account": "Income:RSU", "share_account": "Assets:AMZN", "share_unit": "AMZN"}
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1500000
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+        - account: "Income:RSU"
+          credit: 1500000
+          jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    expect: [{"rule": "rsu.scope"}]
+  - name: "no additional vesting"
+    journals: []
+    recipe:
+      id: "jp-rsu.salary"
+      params: {"scope_confirmed": true, "income_account": "Income:RSU", "from": "2026-01-01", "to": "2026-12-31"}
+    figures: {"additional_salary_receipts": 0, "japan_withholding": 0, "income_category": "salary"}
+  - name: "annual gross salary from posted vesting"
+    journals:
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1500000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 1500000
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    recipe:
+      id: "jp-rsu.salary"
+      params: {"scope_confirmed": true, "income_account": "Income:RSU", "from": "2026-01-01", "to": "2026-12-31"}
+    figures: {"additional_salary_receipts": 1500000, "japan_withholding": 0, "included_in_salary_statement": false, "income_category": "salary"}
+  - name: "two independent vesting events"
+    journals:
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1500000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 1500000
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+      - schema_version: 1
+        date: "2026-09-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 300000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "vest-2", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-09-01", "gross_jpy": 300000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 300000
+            jp_rsu: {"event_id": "vest-2", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-09-01", "gross_jpy": 300000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    recipe:
+      id: "jp-rsu.salary"
+      params: {"scope_confirmed": true, "income_account": "Income:RSU", "from": "2026-01-01", "to": "2026-12-31"}
+    figures: {"additional_salary_receipts": 1800000}
+  - name: "draft vesting is excluded"
+    journals:
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "draft"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1500000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 1500000
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    recipe:
+      id: "jp-rsu.salary"
+      params: {"scope_confirmed": true, "income_account": "Income:RSU", "from": "2026-01-01", "to": "2026-12-31"}
+    figures: {"additional_salary_receipts": 0}
+  - name: "calendar boundaries include both end dates"
+    journals:
+      - schema_version: 1
+        date: "2026-01-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 10
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "first", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-01-01", "gross_jpy": 10, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 10
+            jp_rsu: {"event_id": "first", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-01-01", "gross_jpy": 10, "valuation_source": "raw/vesting-2026-05.pdf"}
+      - schema_version: 1
+        date: "2026-12-31"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 20
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "last", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-12-31", "gross_jpy": 20, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 20
+            jp_rsu: {"event_id": "last", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-12-31", "gross_jpy": 20, "valuation_source": "raw/vesting-2026-05.pdf"}
+      - schema_version: 1
+        date: "2025-12-31"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 30
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "prior", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2025-12-31", "gross_jpy": 30, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 30
+            jp_rsu: {"event_id": "prior", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2025-12-31", "gross_jpy": 30, "valuation_source": "raw/vesting-2026-05.pdf"}
+      - schema_version: 1
+        date: "2027-01-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 40
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "next", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2027-01-01", "gross_jpy": 40, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 40
+            jp_rsu: {"event_id": "next", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2027-01-01", "gross_jpy": 40, "valuation_source": "raw/vesting-2026-05.pdf"}
+    recipe:
+      id: "jp-rsu.salary"
+      params: {"scope_confirmed": true, "income_account": "Income:RSU", "from": "2026-01-01", "to": "2026-12-31"}
+    figures: {"additional_salary_receipts": 30}
+  - name: "duplicate event is refused"
+    journals:
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1500000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 1500000
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1500000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 1500000
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    recipe:
+      id: "jp-rsu.salary"
+      params: {"scope_confirmed": true, "income_account": "Income:RSU", "from": "2026-01-01", "to": "2026-12-31"}
+    error: "RSU scope, period or vesting evidence"
+  - name: "salary without evidence refuses"
+    journals:
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1500000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 1500000
+    recipe:
+      id: "jp-rsu.salary"
+      params: {"scope_confirmed": true, "income_account": "Income:RSU", "from": "2026-01-01", "to": "2026-12-31"}
+    error: "RSU scope, period or vesting evidence"
+  - name: "unmatched stock amount refuses"
+    journals:
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1490000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 1500000
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    recipe:
+      id: "jp-rsu.salary"
+      params: {"scope_confirmed": true, "income_account": "Income:RSU", "from": "2026-01-01", "to": "2026-12-31"}
+    error: "double-entry imbalance"
+  - name: "unmatched event refuses"
+    journals:
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1500000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "different", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 1500000
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    recipe:
+      id: "jp-rsu.salary"
+      params: {"scope_confirmed": true, "income_account": "Income:RSU", "from": "2026-01-01", "to": "2026-12-31"}
+    error: "RSU scope, period or vesting evidence"
+  - name: "declared valuation differs from postings refuses"
+    journals:
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1500000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1490000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 1500000
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    recipe:
+      id: "jp-rsu.salary"
+      params: {"scope_confirmed": true, "income_account": "Income:RSU", "from": "2026-01-01", "to": "2026-12-31"}
+    error: "RSU scope, period or vesting evidence"
+  - name: "salary reversal requires separate treatment"
+    journals:
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1500000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+            debit: 1500000
+    recipe:
+      id: "jp-rsu.salary"
+      params: {"scope_confirmed": true, "income_account": "Income:RSU", "from": "2026-01-01", "to": "2026-12-31"}
+    error: "double-entry imbalance"
+  - name: "partial calendar period refuses"
+    journals:
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1500000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 1500000
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    recipe:
+      id: "jp-rsu.salary"
+      params: {"scope_confirmed": true, "income_account": "Income:RSU", "from": "2026-05-01", "to": "2026-12-31"}
+    error: "RSU scope, period or vesting evidence"
+  - name: "cross-year calendar period refuses"
+    journals:
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1500000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 1500000
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    recipe:
+      id: "jp-rsu.salary"
+      params: {"scope_confirmed": true, "income_account": "Income:RSU", "from": "2026-01-01", "to": "2027-12-31"}
+    error: "RSU scope, period or vesting evidence"
+  - name: "a different salary account cannot silently return zero"
+    journals:
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1500000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 1500000
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    recipe:
+      id: "jp-rsu.salary"
+      params: {"scope_confirmed": true, "income_account": "Income:Salary", "from": "2026-01-01", "to": "2026-12-31"}
+    error: "RSU scope, period or vesting evidence"
+  - name: "unconfirmed recipe scope refuses"
+    journals:
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1500000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 1500000
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    recipe:
+      id: "jp-rsu.salary"
+      params: {"scope_confirmed": false, "income_account": "Income:RSU", "from": "2026-01-01", "to": "2026-12-31"}
+    error: "must be one of"
+  - name: "withholding profile requires separate treatment"
+    journals:
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1500000
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+          - account: "Income:RSU"
+            credit: 1500000
+            jp_rsu: {"event_id": "amazon-2026-05", "grant_id": "grant-1", "payer": "Amazon.com Inc.", "recognition_date": "2026-05-01", "gross_jpy": 1500000, "valuation_source": "raw/vesting-2026-05.pdf"}
+    recipe:
+      id: "jp-rsu.salary"
+      params: {"scope_confirmed": true, "income_account": "Income:RSU", "from": "2026-01-01", "to": "2026-12-31"}
+    book:
+      schema_version: 1
+      region: "JP"
+      currency: "JPY"
+      scale: 0
+      fiscal_year: 2026
+      fiscal_start_month: 1
+      units: [{"symbol": "AMZN", "scale": 0}]
+      jp_rsu: {"scope_confirmed": true, "included_in_salary_statement": false, "japan_withholding": true, "tax_funding": "self-assessment", "income_account": "Income:RSU", "share_account": "Assets:AMZN", "share_unit": "AMZN"}
+    error: "RSU scope, period or vesting evidence"
+  - name: "ordinary balancing remains available with RSU scope True"
+    book:
+      schema_version: 1
+      region: "JP"
+      currency: "JPY"
+      scale: 0
+      fiscal_year: 2026
+      fiscal_start_month: 1
+      units: [{"symbol": "AMZN", "scale": 0}]
+      jp_rsu: {"scope_confirmed": true, "included_in_salary_statement": false, "japan_withholding": false, "tax_funding": "self-assessment", "income_account": "Income:RSU", "share_account": "Assets:AMZN", "share_unit": "AMZN"}
+    autocomplete:
+      chart: {"accounts": [{"path": "Expenses:Software", "type": "expense"}, {"path": "Assets:JPY", "type": "asset"}]}
+      journal:
+        schema_version: 1
+        date: "2026-05-01"
+        status: "draft"
+        lines:
+          - account: "Expenses:Software"
+            debit: 500
+          - account: "Assets:JPY"
+            credit: null
+    lines:
+      - account: "Expenses:Software"
+        debit: 500
+      - account: "Assets:JPY"
+        credit: 500
+  - name: "ordinary balancing remains available with RSU scope False"
+    book:
+      schema_version: 1
+      region: "JP"
+      currency: "JPY"
+      scale: 0
+      fiscal_year: 2026
+      fiscal_start_month: 1
+      units: [{"symbol": "AMZN", "scale": 0}]
+      jp_rsu: {"scope_confirmed": false, "included_in_salary_statement": false, "japan_withholding": false, "tax_funding": "self-assessment", "income_account": "Income:RSU", "share_account": "Assets:AMZN", "share_unit": "AMZN"}
+    autocomplete:
+      chart: {"accounts": [{"path": "Expenses:Software", "type": "expense"}, {"path": "Assets:JPY", "type": "asset"}]}
+      journal:
+        schema_version: 1
+        date: "2026-05-01"
+        status: "draft"
+        lines:
+          - account: "Expenses:Software"
+            debit: 500
+          - account: "Assets:JPY"
+            credit: null
+    lines:
+      - account: "Expenses:Software"
+        debit: 500
+      - account: "Assets:JPY"
+        credit: 500

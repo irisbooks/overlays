@@ -1,0 +1,23 @@
+id: vesting-value
+output: figures
+description:
+  en: Calculate whole-share gross JPY vesting from exact scaled-integer USD price and JPY/USD FX inputs. Choose truncation or half-up explicitly and review the valuation evidence; no journal is written by this calculation.
+  ja: 整数株数・係数と小数桁数で記録したドル株価・円／ドル為替から円建ての権利確定額を正確に計算します。切捨てか四捨五入を明示し、評価根拠を確認してください。この計算では仕訳を書き込みません。
+params:
+  - {name: scope_confirmed, type: bool, enum: [true], doc: Confirm the resident employee profile, whole shares, price/rate observations and rounding convention.}
+  - {name: quantity, type: int, doc: 1..1000000 whole vested shares; configure the Book stock unit with scale 0.}
+  - {name: price_coefficient, type: int, doc: Positive USD unit-price coefficient (price<=1000000), e.g. 10025 at scale 2 means USD 100.25.}
+  - {name: price_scale, type: int, enum: [0, 1, 2, 3, 4, 5, 6, 7, 8], doc: USD unit-price decimal digits, 0..8.}
+  - {name: fx_coefficient, type: int, doc: Positive JPY/USD rate coefficient (rate<=1000000), e.g. 1501250 at scale 4 means JPY 150.1250 per USD.}
+  - {name: fx_scale, type: int, enum: [0, 1, 2, 3, 4, 5, 6, 7, 8], doc: JPY/USD FX-rate decimal digits, 0..8.}
+  - {name: rounding, type: string, enum: [truncate, half-up], doc: Explicit whole-JPY rounding convention; confirm which applies to the supported valuation.}
+let:
+  guard: rsu_require(scope_confirmed && rsu_scope(book))
+  exact: rsu_value_parts(quantity, price_coefficient, price_scale, fx_coefficient, fx_scale)
+  gross: rsu_round_value(exact, rounding)
+  positive: "gross > 0 ? 0 : {}['RSU valuation rounds to zero']"
+result: >-
+  {'gross_jpy': gross + guard + positive, 'unrounded_floor_jpy': exact.whole,
+   'fraction_numerator': exact.remainder, 'fraction_denominator': exact.denominator,
+   'valuation': {'quantity': quantity, 'quantity_scale': 0, 'price_coefficient': price_coefficient, 'price_scale': price_scale,
+     'fx_coefficient': fx_coefficient, 'fx_scale': fx_scale, 'rounding': rounding}}

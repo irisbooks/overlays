@@ -3,7 +3,7 @@ call: inventory-policy
 when: >-
   has(book.jp_securities_basis) && has(book.jp_securities_basis.accounts)
   && journal.lines.exists(l, l.unit != '' && l.side == 'credit' && l.account in book.jp_securities_basis.accounts)
-with: "{'policy': 'jp-securities-basis.shares'}"
+with: "{'policy': 'jp-securities-basis.shares', 'gain_account': book.jp_securities_basis.gain_account}"
 description:
   en: Complete recorded carrying cost and gain; the separate basis recipe computes Japanese rounded tax basis.
   ja: 帳簿価額と売却損益を補完します。日本の端数処理を含む税務上の取得費は別途レシピで計算します。

@@ -2,7 +2,7 @@ functions:
   - name: rsu_scope
     params: [{name: b, type: map}]
     returns: bool
-    doc: Explicit user-confirmed self-assessment profile; never inferred from employer identity.
+    doc: Explicit Japan-resident employee stock-settled RSU profile; employer identity does not determine tax treatment. NTA No.1400 and KFS 88/02, checked 2026-10-26.
     expr: >-
       b.region == 'JP' && b.currency == 'JPY' && b.scale == 0 && b.fiscal_start_month == 1
       && has(b.jp_rsu) && type(b.jp_rsu) == map
@@ -11,3 +11,149 @@ functions:
       && has(b.jp_rsu.japan_withholding) && b.jp_rsu.japan_withholding == false
       && has(b.jp_rsu.tax_funding) && b.jp_rsu.tax_funding == 'self-assessment'
       && has(b.jp_rsu.income_account) && type(b.jp_rsu.income_account) == string && b.jp_rsu.income_account != ''
+      && has(b.jp_rsu.share_account) && type(b.jp_rsu.share_account) == string && b.jp_rsu.share_account != b.jp_rsu.income_account && b.jp_rsu.share_account != ''
+      && has(b.jp_rsu.share_unit) && type(b.jp_rsu.share_unit) == string && b.jp_rsu.share_unit != ''
+      && b.units.exists(u, u.symbol == b.jp_rsu.share_unit && u.scale == 0)
+  - name: rsu_require
+    params: [{name: ok, type: bool}]
+    returns: int
+    doc: Refuse an unsupported scope, non-calendar-year period, duplicate event or incomplete/mismatched vesting evidence instead of returning partial salary figures.
+    expr: "ok ? 0 : {}['RSU scope, period or vesting evidence is incomplete or inconsistent']"
+  - name: rsu_pow10
+    params: [{name: scale, type: int}]
+    returns: int
+    doc: Exact decimal scale 0..8. Bounded powers keep remainder products within int64; unsupported precision fails.
+    expr: "scale >= 0 && scale <= 8 ? [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000][scale] : {}['RSU decimal scale must be 0..8']"
+  - name: rsu_mul_div
+    params: [{name: a, type: int}, {name: b, type: int}, {name: d, type: int}]
+    returns: map
+    doc: Exact nonnegative a*b divmod d for 1<=d<=10^8. Splitting both operands avoids overflowing the unreduced product when the quotient fits; CEL rejects any remaining int64 overflow.
+    expr: >-
+      a >= 0 && b >= 0 && d >= 1 && d <= 100000000
+      ? {'whole': (a / d) * b + (a % d) * (b / d) + ((a % d) * (b % d)) / d,
+         'remainder': ((a % d) * (b % d)) % d}
+      : {}['RSU valuation requires nonnegative coefficients and a supported divisor']
+  - name: rsu_finish_value
+    params: [{name: main, type: map}, {name: fraction, type: map}, {name: price_den, type: int}, {name: fx_den, type: int}]
+    returns: map
+    doc: Combine exact divmod terms without dropping the fractional price before FX conversion; denominator<=10^16 and remainder products stay within int64.
+    expr: >-
+      {'whole': main.whole + fraction.whole / fx_den + (main.remainder + fraction.whole % fx_den) / fx_den,
+       'remainder': ((main.remainder + fraction.whole % fx_den) % fx_den) * price_den + fraction.remainder,
+       'denominator': price_den * fx_den}
+  - name: rsu_fx_value
+    params: [{name: price, type: map}, {name: fx, type: int}, {name: price_den, type: int}, {name: fx_den, type: int}]
+    returns: map
+    doc: Convert both the integral and fractional USD price terms to an exact JPY value.
+    expr: rsu_finish_value(rsu_mul_div(price.whole, fx, fx_den), rsu_mul_div(price.remainder, fx, price_den), price_den, fx_den)
+  - name: rsu_value_inputs
+    params: [{name: quantity, type: int}, {name: price, type: int}, {name: price_scale, type: int}, {name: fx, type: int}, {name: fx_scale, type: int}]
+    returns: bool
+    doc: Supported calculation range is 1..1000000 whole shares and positive price/rate up to 1000000 each, with 0..8 decimal digits. This bounds the USD quotient to 10^12 and JPY result to 10^18, including all divmod intermediates.
+    expr: >-
+      price_scale >= 0 && price_scale <= 8 && fx_scale >= 0 && fx_scale <= 8
+      ? quantity > 0 && quantity <= 1000000 && price > 0 && price <= 1000000 * rsu_pow10(price_scale)
+        && fx > 0 && fx <= 1000000 * rsu_pow10(fx_scale)
+      : false
+  - name: rsu_value_parts
+    params: [{name: quantity, type: int}, {name: price, type: int}, {name: price_scale, type: int}, {name: fx, type: int}, {name: fx_scale, type: int}]
+    returns: map
+    doc: Exact whole-share quantity * USD price * JPY/USD rate from positive integer coefficients and decimal scales. The explicit input range keeps all intermediates within int64. No floating point or engine valuation primitive is used.
+    expr: >-
+      rsu_value_inputs(quantity, price, price_scale, fx, fx_scale)
+      ? rsu_fx_value(rsu_mul_div(quantity, price, rsu_pow10(price_scale)), fx, rsu_pow10(price_scale), rsu_pow10(fx_scale))
+      : {}['RSU valuation inputs exceed supported positive quantity, price, rate or precision bounds']
+  - name: rsu_round_value
+    params: [{name: value, type: map}, {name: rounding, type: string}]
+    returns: int
+    doc: Explicit positive-amount truncation or half-up to whole JPY. The caller confirms the applicable convention; this function does not select a statutory rounding rule.
+    expr: >-
+      rounding == 'truncate' ? value.whole
+      : rounding == 'half-up' ? value.whole + (value.remainder * 2 >= value.denominator ? 1 : 0)
+      : {}['RSU rounding must be truncate or half-up']
+  - name: rsu_valuation_valid
+    params: [{name: v, type: map}]
+    returns: bool
+    doc: Validate optional recorded valuation inputs before arithmetic, so unsupported values produce an explicit validation failure rather than an overflowing CEL rule warning.
+    expr: >-
+      has(v.quantity) && type(v.quantity) == int
+      && has(v.quantity_scale) && type(v.quantity_scale) == int && v.quantity_scale == 0
+      && has(v.price_coefficient) && type(v.price_coefficient) == int
+      && has(v.price_scale) && type(v.price_scale) == int
+      && has(v.fx_coefficient) && type(v.fx_coefficient) == int
+      && has(v.fx_scale) && type(v.fx_scale) == int
+      && has(v.rounding) && type(v.rounding) == string && v.rounding in ['truncate', 'half-up']
+      && rsu_value_inputs(v.quantity, v.price_coefficient, v.price_scale, v.fx_coefficient, v.fx_scale)
+  - name: rsu_recorded_value
+    params: [{name: v, type: map}]
+    returns: int
+    doc: Recompute recorded valuation with the same helpers as the preview recipe. Call only after rsu_valuation_valid; no independent arithmetic implementation.
+    expr: rsu_round_value(rsu_value_parts(v.quantity, v.price_coefficient, v.price_scale, v.fx_coefficient, v.fx_scale), v.rounding)
+  - name: rsu_evidence
+    params: [{name: e, type: map}]
+    returns: bool
+    doc: An evidenced reviewed JPY amount or complete exact valuation inputs; preserve the existing reviewed-value path while enabling coordinated calculated posting.
+    expr: >-
+      has(e.event_id) && type(e.event_id) == string && e.event_id != ''
+      && has(e.grant_id) && type(e.grant_id) == string && e.grant_id != ''
+      && has(e.payer) && type(e.payer) == string && e.payer != ''
+      && has(e.recognition_date) && type(e.recognition_date) == string
+      && e.recognition_date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+      && ((has(e.gross_jpy) && type(e.gross_jpy) == int && e.gross_jpy > 0)
+        || (!has(e.gross_jpy) && has(e.valuation) && type(e.valuation) == map
+          && rsu_valuation_valid(e.valuation) && rsu_recorded_value(e.valuation) > 0))
+      && has(e.valuation_source) && type(e.valuation_source) == string && e.valuation_source != ''
+  - name: rsu_gross
+    params: [{name: e, type: map}]
+    returns: int
+    doc: Use the reviewed amount when recorded; otherwise compute from exact input facts. The calculation rule separately refuses conflicts with recorded valuation inputs.
+    expr: >-
+      has(e.gross_jpy) && type(e.gross_jpy) == int && e.gross_jpy > 0 ? e.gross_jpy
+      : has(e.valuation) && type(e.valuation) == map && rsu_valuation_valid(e.valuation)
+        ? rsu_recorded_value(e.valuation)
+        : {}['RSU needs a reviewed positive JPY amount or valid exact valuation inputs']
+  - name: rsu_journal_valid
+    params: [{name: b, type: map}, {name: j, type: map}]
+    returns: bool
+    doc: One whole-share acquisition and equal gross salary with identical evidence, checked per journal instead of inferred from aggregate rows.
+    expr: >-
+      j.lines.size() == 2
+      && j.lines.all(l, has(l.jp_rsu) && type(l.jp_rsu) == map && rsu_evidence(l.jp_rsu)
+        && string(j.date) == l.jp_rsu.recognition_date + 'T00:00:00Z')
+      && j.lines.exists(s, s.account == b.jp_rsu.share_account
+        && s.unit == b.jp_rsu.share_unit && s.quantity > 0
+        && s.credit == 0 && s.debit == rsu_gross(s.jp_rsu)
+        && j.lines.exists(i, i.account == b.jp_rsu.income_account && i.unit == ''
+          && i.debit == 0 && i.credit == s.debit && i.jp_rsu == s.jp_rsu))
+  - name: rsu_calculation_valid
+    params: [{name: b, type: map}, {name: j, type: map}]
+    returns: bool
+    doc: Check recorded exact inputs without forcing a duplicate gross_jpy field. Invalid or conflicting inputs are an explicit refusal, not a CEL overflow warning.
+    expr: >-
+      !j.lines.exists(l, has(l.jp_rsu) && type(l.jp_rsu) == map && has(l.jp_rsu.valuation))
+      || (j.lines.all(l, has(l.jp_rsu) && type(l.jp_rsu) == map
+        && has(l.jp_rsu.valuation) && type(l.jp_rsu.valuation) == map && rsu_valuation_valid(l.jp_rsu.valuation)
+        && (!has(l.jp_rsu.gross_jpy) || (type(l.jp_rsu.gross_jpy) == int
+          && l.jp_rsu.gross_jpy == rsu_recorded_value(l.jp_rsu.valuation))))
+        && j.lines.exists(s, s.account == b.jp_rsu.share_account
+          && s.quantity == s.jp_rsu.valuation.quantity && s.unit == b.jp_rsu.share_unit))
+  - name: rsu_posting_proposal
+    params: [{name: b, type: map}, {name: j, type: map}, {name: history, type: map}]
+    returns: map
+    doc: Coordinate both native amounts using a general checked host proposal. The layer owns gross-value calculation, required receipt structure and duplicate recognition policy.
+    expr: >-
+      rsu_scope(b) && j.lines.size() == 2
+      && j.lines.all(l, has(l.jp_rsu) && type(l.jp_rsu) == map && rsu_evidence(l.jp_rsu)
+        && string(j.date) == l.jp_rsu.recognition_date + 'T00:00:00Z')
+      && j.lines[0].jp_rsu == j.lines[1].jp_rsu
+      && j.lines.filter(l, l.account == b.jp_rsu.share_account && l.unit == b.jp_rsu.share_unit
+        && l.quantity > 0 && l.side == 'debit').size() == 1
+      && j.lines.filter(l, l.account == b.jp_rsu.income_account && l.unit == '' && l.side == 'credit').size() == 1
+      && rsu_calculation_valid(b, j)
+      ? (history.entries.exists(e, e.lines.exists(l, has(l.jp_rsu) && type(l.jp_rsu) == map
+          && has(l.jp_rsu.event_id) && l.jp_rsu.event_id == j.lines[0].jp_rsu.event_id))
+        ? {}['duplicate RSU event']
+        : {'amounts': [0, 1].map(i, {'line': i,
+          'side': j.lines[i].account == b.jp_rsu.share_account ? 'debit' : 'credit',
+          'amount': rsu_gross(j.lines[i].jp_rsu)})})
+      : {}['RSU scope, period or vesting evidence is incomplete or inconsistent']

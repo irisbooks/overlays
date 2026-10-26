@@ -33,6 +33,26 @@ behavior are unchanged.
 dependency explicitly when selecting packages. The other packages are independent;
 category names only help you find them.
 
+## Unreleased candidates
+
+Three independently selectable `2026.10.2` source candidates restore the supported
+RSU lifecycle with bindings 6. They must pass against the published signed stable
+engine pinned in CI before merge/release:
+
+- [`jp-rsu`](JP/jp-rsu/README.md): exact valuation, coordinated gross vesting,
+  complete-local-ledger receipt checks and annual additional salary.
+- [`jp-securities-basis`](JP/jp-securities-basis/README.md): the declared eligible
+  share pool, disposal figures and rounded basis distinct from carrying value.
+- [`jp-foreign-currency`](JP/jp-foreign-currency/README.md): ordinary USD cost,
+  paired own transfers and subsequent realized currency figures.
+
+Local qualification with signed published Iris v0.2.23 / bindings 6 passes all
+158 catalog goldens (80 RSU, 11 securities, 8 cash and 59 existing cases) and
+162 independent rational comparisons. CI repeats these checks on the pinned Linux binary.
+
+Salary has no mandatory securities/FX dependency. Existing released packages stay
+unchanged; these candidates are not yet signed public package releases.
+
 ## Use packages in a Book
 
 Start with the [CLI installation and Book setup guide](https://irisbooks.io/docs/en/getting-started/).
@@ -127,7 +147,3 @@ Remote cloud MCP bookkeeping is read-only in the first release. It reads
 stored package references and can optionally capture raw documents, which do
 not invoke overlays. It runs neither CEL nor recipes and never edits journals. The tools and write examples here refer to the local CLI
 and local MCP server; validate locally before syncing changes.
-
-## Development candidates requiring bindings 6
-
-Unreleased `2026.10.2` sources: [Japanese securities basis](JP/jp-securities-basis/README.md), [RSU salary](JP/jp-rsu/README.md), and [ordinary USD cash](JP/jp-foreign-currency/README.md). RSU requires the exact securities-basis version; ordinary cash is independent. These are not signed releases and are not part of the seven-package published catalog. Test with the matching development engine; Iris v0.2.18 cannot execute bindings 6. Publish a qualified engine before merging/releasing these packages.

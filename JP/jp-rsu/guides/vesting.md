@@ -1,18 +1,184 @@
-# RSU vesting / RSUの権利確定
+# RSU vesting and recorded salary
 
-Confirm the user's actual arrangement; employer identity does not determine tax handling. This profile follows the user's Amazon arrangement: vested stock is absent from the domestic salary withholding statement, there is no Japanese withholding or automatic tax sale, and tax is paid by self-assessment. Confirm Japanese residence and Japanese service throughout the relevant service period, ordinary stock settlement, and USD valuation. Other profiles need a separate reviewed treatment.
+This source candidate requires bindings 6 and must pass qualification with the
+published signed stable engine pinned by CI. It calculates whole-share JPY
+vesting in Overlay functions, fills both missing native posting amounts, checks
+matched receipt evidence and prepares calendar-year salary figures from complete
+local journals. Salary has no securities/foreign-currency package dependency.
+Select those separate packages for the later investment lifecycle.
 
-利用者が確認したAmazonでの運用として、国内給与の源泉徴収票への未算入、日本の源泉徴収なし、自己申告納税を明示します。会社名からは推定しません。権利確定時に株式の取得と給与収入を同額で記録します。ドル現金、納税、自動売却の仕訳は作りません。
+Confirm the user's actual arrangement: ordinary employee stock-settled RSUs,
+Japanese residence and service throughout the relevant period, exclusion from
+the domestic salary statement, no Japanese withholding and tax funding by
+self-assessment. These are explicit profile facts, not an Amazon-wide rule.
+Net settlement, payroll inclusion, international service and foreign tax credits
+need a separately supported treatment. A sell-to-cover workflow is not required.
 
-Configure `book.jp_rsu: {scope_confirmed: true, included_in_salary_statement: false, japan_withholding: false, tax_funding: self-assessment, income_account: 'Income:RSU'}`. Add the exact `jp-securities-basis@2026.10.2` dependency and configure its complete share pool. On the stock debit record quantity/unit plus `jp_rsu` metadata: `event_id`, `grant_id`, `payer`, `recognition_date`, `unit_price` (decimal string), `currency: USD`, `fx_rate` (decimal string), `fx_kind: TTM`, `fx_date`, `price_source`, `fx_source`. Recognition date equals the journal date; quote date cannot be later. Use the vesting-date observation, or the applicable preceding business-day quote with the reason recorded in the evidence. Keep original statements and valuation evidence in attachments. No market data feed rewrites historical values.
+Configure the Book using full account paths:
 
-Run `iris journal complete` on the vesting draft to fill the JPY stock debit and mapped salary credit. Completion changes no status beyond the existing draft workflow. For 100 shares at USD 100 and JPY 150/USD the gross salary and share cost are both JPY 1,500,000. Net-settlement, withholding or other extra lines are refused. Record actual later events in separate journals.
+```yaml
+units: [{symbol: AMZN, scale: 0}]
+jp_rsu:
+  scope_confirmed: true
+  included_in_salary_statement: false
+  japan_withholding: false
+  tax_funding: self-assessment
+  income_account: Income:RSU
+  share_account: Assets:AMZN
+  share_unit: AMZN
+```
 
-`jp-rsu.salary` accepts `scope_confirmed: true`, the dedicated `income_account`, and `from` / `to` dates. It reports `additional_salary_receipts`, grouped receipt evidence and zero Japanese withholding. Include that gross amount with other salary in the tax return; do not apply another salary-income deduction to RSU alone. The explicit dedicated income account detects missing vesting metadata. Duplicate event IDs fail. Confirm completeness against the vesting statement; a source missing from the Book cannot be inferred.
+Use a calendar-year JPY Book with scale 0 and configure the stock unit with
+quantity scale 0. The valuation recipe supports whole shares only. The package checks the declared
+Book unit scale; acquisition/disposal basis is handled by the separate policy. The salary account is dedicated
+to this profile; ordinary salary and other income use separate accounts.
 
-株式売却時までの為替変動は、円換算した株式の譲渡損益に含まれます。売却代金をドルで保有した後の円転などは、独立した外貨計算で扱います。源泉徴収票の取込みや税金のための売却は、この運用では必須にしません。
+## Calculate the JPY vesting value
 
-- Salary: https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1400.htm
-- Foreign parent share remuneration: https://www.kfs.go.jp/service/JP/88/02/index.html
+Review the recognition date, USD price and JPY/USD FX observation using original
+evidence. Run the valuation recipe with exact integer coefficients and decimal
+scales: USD 100.25 is coefficient `10025`, scale `2`; JPY 150.1250/USD is
+coefficient `1501250`, scale `4`.
 
-Candidate source; not a signed publication. Tax-return preparation only.
+```sh
+iris overlay recipe jp-rsu.vesting-value --set scope_confirmed=true \
+  --set quantity=100 --set price_coefficient=10025 --set price_scale=2 \
+  --set fx_coefficient=1501250 --set fx_scale=4 --set rounding=truncate
+```
+
+The exact value is JPY 1,505,003.125; this explicit truncation produces
+`gross_jpy: 1505003`. `half-up` rounds a fraction of at least 0.5 upward.
+There is no default rounding: confirm the applicable convention before choosing.
+The package computes the stated arithmetic and does not certify the observations
+or choose a statutory valuation/rounding rule.
+
+The functions use integers only. Quotient/remainder decomposition retains the
+fractional USD amount through FX conversion and rounds only the final JPY value.
+A raw product may exceed int64 even when the answer fits; it is never formed.
+The supported range is 1..1,000,000 whole shares, positive USD price and JPY/USD
+rate each at most 1,000,000, and 0..8 decimal digits for each. This bounds all
+intermediates and the JPY result safely. Zero/negative/out-of-range inputs,
+unsupported rounding and a value that rounds to zero refuse.
+
+Review the returned `gross_jpy` and `valuation` map. Save the reviewed calculation
+with `--apply --out filings/rsu-valuation-vest-1.md` if needed; ordinary recipe
+provenance retains all calculation parameters for replay. The recipe produces
+figures and does not edit journal postings. Record the exact `valuation` inputs or the reviewed positive `gross_jpy` on
+both journal lines. The completion below can fill both native amounts through a
+general checked posting proposal. The formula itself remains in the Overlay.
+
+Keep the statements, observation dates and calculation evidence under `raw/`
+with ordinary attachment references. `valuation_source` identifies evidence;
+attachment contents are not hashed or authenticated by this package. An already
+reviewed JPY-only valuation remains supported by omitting the optional
+`valuation` map.
+
+Put identical evidence on both share and salary lines:
+
+```yaml
+lines:
+  - account: Assets:AMZN
+    debit: null
+    quantity: 100
+    unit: AMZN
+    jp_rsu: &vesting
+      event_id: amazon-2026-05
+      grant_id: grant-1
+      payer: Amazon.com Inc.
+      recognition_date: '2026-05-01'
+      valuation_source: raw/vesting-2026-05.pdf
+      valuation:
+        quantity: 100
+        quantity_scale: 0
+        price_coefficient: 10025
+        price_scale: 2
+        fx_coefficient: 1501250
+        fx_scale: 4
+        rounding: truncate
+  - account: Income:RSU
+    credit: null
+    jp_rsu: *vesting
+```
+
+The journal date must match `recognition_date`. Run `iris journal complete` to
+preview both posting amounts; review/apply it using the normal revision guard.
+The host checks the coordinated proposal and preserves recorded values.
+When `valuation` is recorded, validation recomputes it with the same Overlay
+functions and checks the quantity, both postings and any separately recorded gross amount. Incomplete or
+out-of-range calculation metadata is an explicit validation error. It
+supports two missing amounts and refuses a conflicting recorded amount.
+It creates no cash, withholding or sale line. Validate the complete Book with
+`iris validate` and resolve all issues before posting and preparing figures.
+Posting is a separate owner decision.
+
+Run `jp-rsu.salary` with `scope_confirmed=true`, the configured `income_account`
+and a full calendar period (`from=2026-01-01`, `to=2026-12-31`). CLI syntax:
+
+```sh
+iris overlay recipe jp-rsu.salary --set scope_confirmed=true \
+  --set income_account=Income:RSU --set from=2026-01-01 --set to=2026-12-31
+```
+
+CLI `--apply --out filings/rsu-salary-2026.md` saves a reviewed result with normal
+recipe provenance. Local MCP uses `complete_journal` for completion and
+`run_recipe` with `recipe: jp-rsu.salary` and the same parameters. Both CLI and
+MCP preview by default. Remote MCP does not execute these operations.
+
+The recipe sums posted salary only and requires matching share/salary evidence,
+unique event IDs, positive evidenced gross amounts and complete dedicated-account
+metadata. It refuses duplicates, missing/orphan evidence, inconsistent amounts,
+wrong accounts, reversals and partial/cross-year periods. The complete local snapshot checks each posted journal's structure, actual
+date and quantity before interpreting receipts. Normal Book validation is still
+required; neither the snapshot nor a source path authenticates attachments. Reconcile the complete event list against
+broker/employer records; an entirely missing vest cannot be inferred.
+
+The output is additional **gross salary receipts** for the declared profile,
+not separately calculated taxable salary or tax payable. Combine it with other
+salary receipts before the applicable salary-income deduction. Saved figures
+record `inputs_sha256` and the versioned source contract. They replay against
+the retained package and unchanged source facts; changed source facts invalidate
+the result. Securities/FX policy snapshots and basis continuation belong to the
+separately selected packages.
+
+Sources checked 2026-10-26:
+
+- [NTA salary income](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1400.htm)
+- [National Tax Tribunal RSU decision](https://www.kfs.go.jp/service/JP/88/02/index.html)
+
+## Continue through disposal, cash realization and year-end
+
+Select `jp-securities-basis` independently when preparing share disposal figures.
+Its complete eligible pool includes both ordinary purchases and vested shares.
+Select `jp-foreign-currency` for ordinary USD cash after a sale: that policy
+preserves cost through paired own-account transfers and calculates later currency
+realization separately from salary and securities results. Each package needs its
+own confirmed scope and complete account mappings; none is activated implicitly.
+
+With the qualified packages installed and selected, the existing root-Book
+year-end operation retains quantity, native carrying value and separate rounded
+allocation basis. For a local successor, use `iris yearend --local --to
+../book-2027 ./book-2026`; the retained sources let that successor run independently.
+Rollover does not recognize salary again. Confirm the complete source facts and
+the same-day chronology recorded in journal paths before carrying state forward.
+
+The complete-ledger helper accepts at most 4096 input journals in one Book fiscal
+year, subject to the engine's data and execution budgets. Unsupported/incomplete
+sources and exhausted limits fail explicitly. Named-view filings/rollover and
+accepted financial generations are separate unfinished host work; these packages
+produce filing aids rather than submitted returns.
+
+### Follow the numeric example
+
+A vest of 100 shares at USD 100 and JPY 150/USD creates JPY 1,500,000 of
+share cost and additional gross salary. Selling 40 shares for USD 4,800 valued
+at JPY 696,000 gives JPY 600,000 basis and JPY 96,000 securities gain, with
+60 shares and JPY 900,000 basis remaining. Transferring that USD 4,800 between
+declared own accounts preserves its JPY 696,000 cash basis. A later conversion
+to JPY 744,000 produces JPY 48,000 of separate currency gain.
+
+The [securities guide](../../jp-securities-basis/guides/shares.md) and
+[cash guide](../../jp-foreign-currency/guides/cash.md) describe their separate
+settings. Their task examples exercise the sale, transfer and realization, plus
+successor-state cases. Reconcile each step to actual source evidence. The exact
+amounts above illustrate the declared no-fee case; separately recorded eligible
+fees change the supported net figures as those guides describe.
