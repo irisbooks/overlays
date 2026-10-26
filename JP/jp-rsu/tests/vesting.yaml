@@ -555,3 +555,55 @@ cases:
       units: [{"symbol": "AMZN", "scale": 0}]
       jp_rsu: {"scope_confirmed": true, "included_in_salary_statement": false, "japan_withholding": true, "tax_funding": "self-assessment", "income_account": "Income:RSU", "share_account": "Assets:AMZN", "share_unit": "AMZN"}
     error: "RSU scope, period or vesting evidence"
+  - name: "ordinary balancing remains available with RSU scope True"
+    book:
+      schema_version: 1
+      region: "JP"
+      currency: "JPY"
+      scale: 0
+      fiscal_year: 2026
+      fiscal_start_month: 1
+      units: [{"symbol": "AMZN", "scale": 0}]
+      jp_rsu: {"scope_confirmed": true, "included_in_salary_statement": false, "japan_withholding": false, "tax_funding": "self-assessment", "income_account": "Income:RSU", "share_account": "Assets:AMZN", "share_unit": "AMZN"}
+    autocomplete:
+      chart: {"accounts": [{"path": "Expenses:Software", "type": "expense"}, {"path": "Assets:JPY", "type": "asset"}]}
+      journal:
+        schema_version: 1
+        date: "2026-05-01"
+        status: "draft"
+        lines:
+          - account: "Expenses:Software"
+            debit: 500
+          - account: "Assets:JPY"
+            credit: null
+    lines:
+      - account: "Expenses:Software"
+        debit: 500
+      - account: "Assets:JPY"
+        credit: 500
+  - name: "ordinary balancing remains available with RSU scope False"
+    book:
+      schema_version: 1
+      region: "JP"
+      currency: "JPY"
+      scale: 0
+      fiscal_year: 2026
+      fiscal_start_month: 1
+      units: [{"symbol": "AMZN", "scale": 0}]
+      jp_rsu: {"scope_confirmed": false, "included_in_salary_statement": false, "japan_withholding": false, "tax_funding": "self-assessment", "income_account": "Income:RSU", "share_account": "Assets:AMZN", "share_unit": "AMZN"}
+    autocomplete:
+      chart: {"accounts": [{"path": "Expenses:Software", "type": "expense"}, {"path": "Assets:JPY", "type": "asset"}]}
+      journal:
+        schema_version: 1
+        date: "2026-05-01"
+        status: "draft"
+        lines:
+          - account: "Expenses:Software"
+            debit: 500
+          - account: "Assets:JPY"
+            credit: null
+    lines:
+      - account: "Expenses:Software"
+        debit: 500
+      - account: "Assets:JPY"
+        credit: 500
