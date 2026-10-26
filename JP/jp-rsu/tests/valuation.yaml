@@ -1,0 +1,341 @@
+book:
+  schema_version: 1
+  region: "JP"
+  currency: "JPY"
+  scale: 0
+  fiscal_year: 2026
+  fiscal_start_month: 1
+  units: [{"symbol": "AMZN", "scale": 0}]
+  jp_rsu: {"scope_confirmed": true, "included_in_salary_statement": false, "japan_withholding": false, "tax_funding": "self-assessment", "income_account": "Income:RSU", "share_account": "Assets:AMZN", "share_unit": "AMZN"}
+cases:
+  - name: "exact price and FX with final truncation"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate"}
+    figures: {"gross_jpy": 1505003, "unrounded_floor_jpy": 1505003, "fraction_numerator": 125000, "fraction_denominator": 1000000}
+  - name: "explicit half-up"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "half-up"}
+    figures: {"gross_jpy": 1505003, "unrounded_floor_jpy": 1505003, "fraction_numerator": 125000, "fraction_denominator": 1000000}
+  - name: "price fraction survives until FX conversion"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 1, "price_coefficient": 5, "price_scale": 1, "fx_coefficient": 2, "fx_scale": 0, "rounding": "truncate"}
+    figures: {"gross_jpy": 1, "unrounded_floor_jpy": 1, "fraction_numerator": 0, "fraction_denominator": 10}
+  - name: "half yen truncates"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 1, "price_coefficient": 5, "price_scale": 1, "fx_coefficient": 1, "fx_scale": 0, "rounding": "truncate"}
+    error: "rounds to zero"
+  - name: "half yen rounds up"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 1, "price_coefficient": 5, "price_scale": 1, "fx_coefficient": 1, "fx_scale": 0, "rounding": "half-up"}
+    figures: {"gross_jpy": 1, "unrounded_floor_jpy": 0, "fraction_numerator": 5, "fraction_denominator": 10}
+  - name: "below half stays zero"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 1, "price_coefficient": 49, "price_scale": 2, "fx_coefficient": 1, "fx_scale": 0, "rounding": "half-up"}
+    error: "rounds to zero"
+  - name: "above half rounds once at the end"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 1, "price_coefficient": 49, "price_scale": 2, "fx_coefficient": 2, "fx_scale": 0, "rounding": "half-up"}
+    figures: {"gross_jpy": 1, "unrounded_floor_jpy": 0, "fraction_numerator": 98, "fraction_denominator": 100}
+  - name: "raw multiplication overflows int64 but exact result fits"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 1000000, "price_coefficient": 99999999999999, "price_scale": 8, "fx_coefficient": 99999999999999, "fx_scale": 8, "rounding": "truncate"}
+    figures: {"gross_jpy": 999999999999980000, "unrounded_floor_jpy": 999999999999980000, "fraction_numerator": 1000000, "fraction_denominator": 10000000000000000}
+  - name: "maximum supported values remain exact"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 1000000, "price_coefficient": 100000000000000, "price_scale": 8, "fx_coefficient": 100000000000000, "fx_scale": 8, "rounding": "truncate"}
+    figures: {"gross_jpy": 1000000000000000000, "unrounded_floor_jpy": 1000000000000000000, "fraction_numerator": 0, "fraction_denominator": 10000000000000000}
+  - name: "eight digit precision retains near-one fraction"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 1, "price_coefficient": 33333333, "price_scale": 8, "fx_coefficient": 3, "fx_scale": 0, "rounding": "half-up"}
+    figures: {"gross_jpy": 1, "unrounded_floor_jpy": 0, "fraction_numerator": 99999999, "fraction_denominator": 100000000}
+  - name: "zero quantity"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 0, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate"}
+    error: "supported positive"
+  - name: "negative price"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 100, "price_coefficient": -1, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate"}
+    error: "supported positive"
+  - name: "zero FX"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 0, "fx_scale": 4, "rounding": "truncate"}
+    error: "supported positive"
+  - name: "quantity outside explicit range"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 1000001, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate"}
+    error: "supported positive"
+  - name: "price outside explicit range"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 100, "price_coefficient": 100000001, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate"}
+    error: "supported positive"
+  - name: "int64 maximum coefficient is refused before arithmetic"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 100, "price_coefficient": 9223372036854775807, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate"}
+    error: "supported positive"
+  - name: "unsupported ninth decimal"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 100, "price_coefficient": 10025, "price_scale": 9, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate"}
+    error: "must be one of"
+  - name: "negative decimal scale"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": -1, "rounding": "truncate"}
+    error: "must be one of"
+  - name: "unknown rounding mode"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "bankers"}
+    error: "must be one of"
+  - name: "unconfirmed valuation scope"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": false, "quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate"}
+    error: "must be one of"
+  - name: "rounding has no implicit default"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4}
+    error: "param rounding is required"
+  - name: "floating point price input is refused"
+    recipe:
+      id: "jp-rsu.vesting-value"
+      params: {"scope_confirmed": true, "quantity": 100, "price_coefficient": 100.25, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate"}
+    error: "param price_coefficient"
+  - name: "calculated valuation validates on both posting lines"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1505003
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+        - account: "Income:RSU"
+          credit: 1505003
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+  - name: "calculated amount cannot be replaced by a different balanced amount"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1505004
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505004, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+        - account: "Income:RSU"
+          credit: 1505004
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505004, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+    expect: [{"rule": "rsu.calculation"}]
+  - name: "mismatched share quantity"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1505003
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 101, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+        - account: "Income:RSU"
+          credit: 1505003
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 101, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+    expect: [{"rule": "rsu.calculation"}]
+  - name: "overflowing recorded coefficient"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1505003
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 9223372036854775807, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+        - account: "Income:RSU"
+          credit: 1505003
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 9223372036854775807, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+    expect: [{"rule": "rsu.calculation"}]
+  - name: "noninteger coefficient"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1505003
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": "100.25", "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+        - account: "Income:RSU"
+          credit: 1505003
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": "100.25", "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+    expect: [{"rule": "rsu.calculation"}]
+  - name: "invalid recorded precision"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1505003
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 9, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+        - account: "Income:RSU"
+          credit: 1505003
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 9, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+    expect: [{"rule": "rsu.calculation"}]
+  - name: "recorded fractional quantity scale"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1505003
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 1}}
+        - account: "Income:RSU"
+          credit: 1505003
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 1}}
+    expect: [{"rule": "rsu.calculation"}]
+  - name: "recorded unknown rounding"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1505003
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "bankers", "quantity_scale": 0}}
+        - account: "Income:RSU"
+          credit: 1505003
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "bankers", "quantity_scale": 0}}
+    expect: [{"rule": "rsu.calculation"}]
+  - name: "recorded zero calculation"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1505003
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 1, "price_coefficient": 1, "price_scale": 8, "fx_coefficient": 1, "fx_scale": 8, "rounding": "truncate", "quantity_scale": 0}}
+        - account: "Income:RSU"
+          credit: 1505003
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 1, "price_coefficient": 1, "price_scale": 8, "fx_coefficient": 1, "fx_scale": 8, "rounding": "truncate", "quantity_scale": 0}}
+    expect: [{"rule": "rsu.calculation"}]
+  - name: "non-map recorded calculation fails explicitly"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1505003
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": "invalid"}
+        - account: "Income:RSU"
+          credit: 1505003
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": "invalid"}
+    expect: [{"rule": "rsu.calculation"}]
+  - name: "missing recorded FX coefficient fails explicitly"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1505003
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+        - account: "Income:RSU"
+          credit: 1505003
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+    expect: [{"rule": "rsu.calculation"}]
+  - name: "calculation metadata cannot be present on only one line"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - account: "Assets:AMZN"
+          debit: 1505003
+          quantity: 100
+          unit: "AMZN"
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+        - account: "Income:RSU"
+          credit: 1505003
+          jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf"}
+    expect: [{"rule": "rsu.valuation"}, {"rule": "rsu.calculation"}]
+  - name: "calculated share debit completes the matching salary credit"
+    autocomplete:
+      chart: {"accounts": [{"path": "Assets:AMZN", "type": "asset"}, {"path": "Income:RSU", "type": "income"}]}
+      journal:
+        schema_version: 1
+        date: "2026-05-01"
+        status: "draft"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1505003
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+          - account: "Income:RSU"
+            credit: null
+            jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+    lines:
+      - account: "Assets:AMZN"
+        debit: 1505003
+        quantity: 100
+        unit: "AMZN"
+        jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+      - account: "Income:RSU"
+        credit: 1505003
+        jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505003, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+  - name: "completion refuses a balanced value that conflicts with calculation"
+    autocomplete:
+      chart: {"accounts": [{"path": "Assets:AMZN", "type": "asset"}, {"path": "Income:RSU", "type": "income"}]}
+      journal:
+        schema_version: 1
+        date: "2026-05-01"
+        status: "draft"
+        lines:
+          - account: "Assets:AMZN"
+            debit: 1505004
+            quantity: 100
+            unit: "AMZN"
+            jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505004, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+          - account: "Income:RSU"
+            credit: null
+            jp_rsu: {"event_id": "vest-calculated", "grant_id": "grant-1", "payer": "Employer", "recognition_date": "2026-05-01", "gross_jpy": 1505004, "valuation_source": "raw/vesting-and-fx.pdf", "valuation": {"quantity": 100, "price_coefficient": 10025, "price_scale": 2, "fx_coefficient": 1501250, "fx_scale": 4, "rounding": "truncate", "quantity_scale": 0}}
+    error: "completed journal: Recorded RSU valuation inputs"

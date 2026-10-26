@@ -7,5 +7,5 @@ fields:
   line.jp_rsu:
     type: map
     description:
-      en: Put identical event_id, grant_id, payer, recognition_date, reviewed positive integer gross_jpy and valuation_source on both vesting lines. Keep the original valuation evidence.
-      ja: 権利確定の両明細に同じevent_id・grant_id・payer・recognition_date・確認済みの正の整数gross_jpy・valuation_sourceを記録し、評価の原資料を保存します。
+      en: Put identical event_id, grant_id, payer, recognition_date, reviewed positive integer gross_jpy and valuation_source on both vesting lines. Optional valuation records the vesting-value recipe inputs for recomputation. Keep the original price/FX evidence.
+      ja: 権利確定の両明細に同じevent_id・grant_id・payer・recognition_date・確認済みの正の整数gross_jpy・valuation_sourceを記録し、valuationには任意でvesting-valueの計算入力を記録して再計算できます。株価と為替の原資料を保存します。

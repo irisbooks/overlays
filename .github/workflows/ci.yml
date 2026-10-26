@@ -33,6 +33,8 @@ jobs:
         run: .github/scripts/fetch-iris.sh
       - name: Run every overlay's golden tests
         run: .github/scripts/run-goldens.sh
+      - name: Compare RSU valuation with exact rational arithmetic
+        run: python3 .github/scripts/check-rsu-valuation.py
 
   dco:
     name: dco
