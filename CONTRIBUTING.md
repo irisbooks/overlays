@@ -82,7 +82,8 @@ python3 .github/scripts/check-engine.py
   for a native primitive. Complexity or reuse alone does not make a function core.
 - **Keep core guarantees universal.** Book structure, double-entry integrity,
   exact native types, execution budgets and guarded host operations must hold
-  with every optional package disabled. Core may expose a typed fact snapshot,
+  with every optional package disabled. Universal ledger aggregates and host
+  workflow state remain core/host responsibilities. Core may expose a typed fact snapshot,
   general arithmetic/recurrence primitive or checked posting proposal; the layer
   chooses the regional method and treatment.
 - **Separate policy from facts and local adaptations.** Observed prices/rates,
