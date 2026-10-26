@@ -25,3 +25,20 @@ rules:
     message:
       en: Record one share debit and equal gross-salary credit with identical event/grant/payer/date, positive gross_jpy and valuation_source evidence. Review the JPY valuation before recording it; no tax sale or withholding is inferred.
       ja: 株式の借方と同額の給与の貸方に、同じイベント・付与番号・支払者・日付・正のgross_jpy・valuation_sourceを記録してください。円換算額は事前に確認し、税金のための売却や源泉徴収は推定しません。
+  - id: rsu.calculation
+    target: journal
+    severity: error
+    when: >-
+      rsu_scope(book) && journal.lines.exists(l,
+        has(l.jp_rsu) && type(l.jp_rsu) == map && has(l.jp_rsu.valuation))
+    assert: >-
+      journal.lines.all(l, has(l.jp_rsu) && type(l.jp_rsu) == map
+        && has(l.jp_rsu.valuation) && type(l.jp_rsu.valuation) == map
+        && rsu_valuation_valid(l.jp_rsu.valuation)
+        && has(l.jp_rsu.gross_jpy) && type(l.jp_rsu.gross_jpy) == int
+        && l.jp_rsu.gross_jpy == rsu_recorded_value(l.jp_rsu.valuation))
+      && journal.lines.exists(s, s.account == book.jp_rsu.share_account
+        && s.quantity == s.jp_rsu.valuation.quantity && s.unit == book.jp_rsu.share_unit)
+    message:
+      en: Recorded RSU valuation inputs must be complete, within supported bounds and identical on both lines; use whole shares with Book unit scale 0. The Overlay-calculated JPY amount must match gross_jpy and the postings. Choose truncation or half-up explicitly.
+      ja: 計算入力を両明細に同じ内容で記録し、対応範囲内の値・整数株数・帳簿の単位scale 0を使ってください。オーバーレイで計算した円換算額をgross_jpyと仕訳金額に一致させ、切捨てか四捨五入を明示してください。

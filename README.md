@@ -35,11 +35,11 @@ category names only help you find them.
 
 ## Unreleased candidate
 
-[`jp-rsu@2026.10.2`](JP/jp-rsu/README.md) adds recorded-JPY vesting validation,
-salary-credit completion and annual gross salary figures. It runs on the same
+[`jp-rsu@2026.10.2`](JP/jp-rsu/README.md) adds exact whole-share JPY vesting
+calculation, recorded-amount validation, salary-credit completion and annual gross salary figures. It runs on the same
 published v0.2.18 engine with bindings 5 and has no unpublished package dependency.
-It is not yet signed or installable from a release. Automated valuation and
-securities/FX basis remain separate future capabilities.
+It is not yet signed or installable from a release. Valuation uses integer Overlay functions with explicit rounding; the share debit
+requires review/entry before salary completion. Securities/FX basis remains separate.
 
 ## Use packages in a Book
 

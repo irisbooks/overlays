@@ -16,7 +16,7 @@ functions:
   - name: rsu_evidence
     params: [{name: e, type: map}]
     returns: bool
-    doc: A reviewed, already calculated JPY gross valuation and its evidence; this package does not calculate price times FX.
+    doc: A reviewed JPY gross valuation and its evidence; optional valuation inputs are recomputed separately with the Overlay helpers.
     expr: >-
       has(e.event_id) && type(e.event_id) == string && e.event_id != ''
       && has(e.grant_id) && type(e.grant_id) == string && e.grant_id != ''
@@ -30,3 +30,73 @@ functions:
     returns: int
     doc: Refuse an unsupported scope, non-calendar-year period, duplicate event or incomplete/mismatched vesting evidence instead of returning partial salary figures.
     expr: "ok ? 0 : {}['RSU scope, period or vesting evidence is incomplete or inconsistent']"
+  - name: rsu_pow10
+    params: [{name: scale, type: int}]
+    returns: int
+    doc: Exact decimal scale 0..8. Bounded powers keep remainder products within int64; unsupported precision fails.
+    expr: "scale >= 0 && scale <= 8 ? [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000][scale] : {}['RSU decimal scale must be 0..8']"
+  - name: rsu_mul_div
+    params: [{name: a, type: int}, {name: b, type: int}, {name: d, type: int}]
+    returns: map
+    doc: Exact nonnegative a*b divmod d for 1<=d<=10^8. Splitting both operands avoids overflowing the unreduced product when the quotient fits; CEL rejects any remaining int64 overflow.
+    expr: >-
+      a >= 0 && b >= 0 && d >= 1 && d <= 100000000
+      ? {'whole': (a / d) * b + (a % d) * (b / d) + ((a % d) * (b % d)) / d,
+         'remainder': ((a % d) * (b % d)) % d}
+      : {}['RSU valuation requires nonnegative coefficients and a supported divisor']
+  - name: rsu_finish_value
+    params: [{name: main, type: map}, {name: fraction, type: map}, {name: price_den, type: int}, {name: fx_den, type: int}]
+    returns: map
+    doc: Combine exact divmod terms without dropping the fractional price before FX conversion; denominator<=10^16 and remainder products stay within int64.
+    expr: >-
+      {'whole': main.whole + fraction.whole / fx_den + (main.remainder + fraction.whole % fx_den) / fx_den,
+       'remainder': ((main.remainder + fraction.whole % fx_den) % fx_den) * price_den + fraction.remainder,
+       'denominator': price_den * fx_den}
+  - name: rsu_fx_value
+    params: [{name: price, type: map}, {name: fx, type: int}, {name: price_den, type: int}, {name: fx_den, type: int}]
+    returns: map
+    doc: Convert both the integral and fractional USD price terms to an exact JPY value.
+    expr: rsu_finish_value(rsu_mul_div(price.whole, fx, fx_den), rsu_mul_div(price.remainder, fx, price_den), price_den, fx_den)
+  - name: rsu_value_inputs
+    params: [{name: quantity, type: int}, {name: price, type: int}, {name: price_scale, type: int}, {name: fx, type: int}, {name: fx_scale, type: int}]
+    returns: bool
+    doc: Supported calculation range is 1..1000000 whole shares and positive price/rate up to 1000000 each, with 0..8 decimal digits. This bounds the USD quotient to 10^12 and JPY result to 10^18, including all divmod intermediates.
+    expr: >-
+      price_scale >= 0 && price_scale <= 8 && fx_scale >= 0 && fx_scale <= 8
+      ? quantity > 0 && quantity <= 1000000 && price > 0 && price <= 1000000 * rsu_pow10(price_scale)
+        && fx > 0 && fx <= 1000000 * rsu_pow10(fx_scale)
+      : false
+  - name: rsu_value_parts
+    params: [{name: quantity, type: int}, {name: price, type: int}, {name: price_scale, type: int}, {name: fx, type: int}, {name: fx_scale, type: int}]
+    returns: map
+    doc: Exact whole-share quantity * USD price * JPY/USD rate from positive integer coefficients and decimal scales. The explicit input range keeps all intermediates within int64. No floating point or engine valuation primitive is used.
+    expr: >-
+      rsu_value_inputs(quantity, price, price_scale, fx, fx_scale)
+      ? rsu_fx_value(rsu_mul_div(quantity, price, rsu_pow10(price_scale)), fx, rsu_pow10(price_scale), rsu_pow10(fx_scale))
+      : {}['RSU valuation inputs exceed supported positive quantity, price, rate or precision bounds']
+  - name: rsu_round_value
+    params: [{name: value, type: map}, {name: rounding, type: string}]
+    returns: int
+    doc: Explicit positive-amount truncation or half-up to whole JPY. The caller confirms the applicable convention; this function does not select a statutory rounding rule.
+    expr: >-
+      rounding == 'truncate' ? value.whole
+      : rounding == 'half-up' ? value.whole + (value.remainder * 2 >= value.denominator ? 1 : 0)
+      : {}['RSU rounding must be truncate or half-up']
+  - name: rsu_valuation_valid
+    params: [{name: v, type: map}]
+    returns: bool
+    doc: Validate optional recorded valuation inputs before arithmetic, so unsupported values produce an explicit validation failure rather than an overflowing CEL rule warning.
+    expr: >-
+      has(v.quantity) && type(v.quantity) == int
+      && has(v.quantity_scale) && type(v.quantity_scale) == int && v.quantity_scale == 0
+      && has(v.price_coefficient) && type(v.price_coefficient) == int
+      && has(v.price_scale) && type(v.price_scale) == int
+      && has(v.fx_coefficient) && type(v.fx_coefficient) == int
+      && has(v.fx_scale) && type(v.fx_scale) == int
+      && has(v.rounding) && type(v.rounding) == string && v.rounding in ['truncate', 'half-up']
+      && rsu_value_inputs(v.quantity, v.price_coefficient, v.price_scale, v.fx_coefficient, v.fx_scale)
+  - name: rsu_recorded_value
+    params: [{name: v, type: map}]
+    returns: int
+    doc: Recompute recorded valuation with the same helpers as the preview recipe. Call only after rsu_valuation_valid; no independent arithmetic implementation.
+    expr: rsu_round_value(rsu_value_parts(v.quantity, v.price_coefficient, v.price_scale, v.fx_coefficient, v.fx_scale), v.rounding)
