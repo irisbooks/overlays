@@ -1,0 +1,11 @@
+tasks:
+  - id: jp-rsu.vesting
+    title: Record RSU vesting and additional salary
+    summary: Validate reviewed JPY share/salary postings, complete a missing salary credit and summarize additional salary with the published core.
+    target: journal
+    fields: [book.jp_rsu, line.jp_rsu, journal.lines]
+    operations: [{kind: completion, id: journal.balance}, {kind: recipe, id: jp-rsu.salary}]
+    guide: jp-rsu.vesting
+    examples: ['tests/vesting.yaml#vest without a tax sale']
+    coverage: [Recorded JPY employee stock-settled RSU compensation; Japan-resident self-assessment profile with no domestic payroll inclusion or withholding.]
+    judgment: [Review recognition date and JPY valuation independently. Automatic valuation, securities/FX basis, net settlement, international service and tax calculations are outside this package.]

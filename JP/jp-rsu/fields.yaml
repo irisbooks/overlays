@@ -1,0 +1,11 @@
+fields:
+  book.jp_rsu:
+    type: map
+    description:
+      en: Confirm the resident employee self-assessment profile, dedicated income_account/share_account and share_unit. Salary-statement inclusion and Japanese withholding must both be false.
+      ja: 日本居住・勤務の従業員の自己申告納税、専用のincome_account・share_account・share_unitを確認します。国内源泉徴収票への算入と日本の源泉徴収は、どちらもfalseにします。
+  line.jp_rsu:
+    type: map
+    description:
+      en: Put identical event_id, grant_id, payer, recognition_date, reviewed positive integer gross_jpy and valuation_source on both vesting lines. Keep the original valuation evidence.
+      ja: 権利確定の両明細に同じevent_id・grant_id・payer・recognition_date・確認済みの正の整数gross_jpy・valuation_sourceを記録し、評価の原資料を保存します。
