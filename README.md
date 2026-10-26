@@ -33,6 +33,14 @@ behavior are unchanged.
 dependency explicitly when selecting packages. The other packages are independent;
 category names only help you find them.
 
+## Unreleased candidate
+
+[`jp-rsu@2026.10.2`](JP/jp-rsu/README.md) adds recorded-JPY vesting validation,
+salary-credit completion and annual gross salary figures. It runs on the same
+published v0.2.18 engine with bindings 5 and has no unpublished package dependency.
+It is not yet signed or installable from a release. Automated valuation and
+securities/FX basis remain separate future capabilities.
+
 ## Use packages in a Book
 
 Start with the [CLI installation and Book setup guide](https://irisbooks.io/docs/en/getting-started/).

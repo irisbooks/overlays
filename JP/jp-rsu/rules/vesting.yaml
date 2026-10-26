@@ -1,0 +1,27 @@
+rules:
+  - id: rsu.scope
+    target: journal
+    severity: error
+    when: "journal.lines.exists(l, has(l.jp_rsu))"
+    assert: rsu_scope(book)
+    message:
+      en: Confirm Japan-resident employee scope, salary-statement exclusion, no Japanese withholding, self-assessment and dedicated salary/share accounts before using RSU records.
+      ja: 日本居住・勤務の従業員、国内源泉徴収票への未算入、日本の源泉徴収なし、自己申告納税、給与と株式の専用科目を確認してください。
+  - id: rsu.valuation
+    target: journal
+    severity: error
+    when: >-
+      rsu_scope(book) && (journal.lines.exists(l, has(l.jp_rsu))
+        || journal.lines.exists(l, l.account == book.jp_rsu.income_account))
+    assert: >-
+      journal.lines.size() == 2
+      && journal.lines.all(l, has(l.jp_rsu) && type(l.jp_rsu) == map && rsu_evidence(l.jp_rsu)
+        && string(journal.date) == l.jp_rsu.recognition_date + 'T00:00:00Z')
+      && journal.lines.exists(s, s.account == book.jp_rsu.share_account
+        && s.unit == book.jp_rsu.share_unit && s.quantity > 0
+        && s.credit == 0 && s.debit == s.jp_rsu.gross_jpy
+        && journal.lines.exists(i, i.account == book.jp_rsu.income_account && i.unit == ''
+          && i.debit == 0 && i.credit == s.debit && i.jp_rsu == s.jp_rsu))
+    message:
+      en: Record one share debit and equal gross-salary credit with identical event/grant/payer/date, positive gross_jpy and valuation_source evidence. Review the JPY valuation before recording it; no tax sale or withholding is inferred.
+      ja: 株式の借方と同額の給与の貸方に、同じイベント・付与番号・支払者・日付・正のgross_jpy・valuation_sourceを記録してください。円換算額は事前に確認し、税金のための売却や源泉徴収は推定しません。

@@ -1,0 +1,34 @@
+id: salary
+output: figures
+description:
+  en: Sum recorded posted RSU salary for the declared self-assessment profile. Requires a full calendar year and matching unique vesting evidence; validate journals first. No separate salary deduction or tax amount is computed.
+  ja: 確認済みの自己申告納税の運用について、記帳済みRSU給与を暦年で集計します。一意の権利確定の根拠と対応する明細が必要です。先に仕訳を検証してください。給与所得控除や税額は計算しません。
+params:
+  - {name: scope_confirmed, type: bool, enum: [true], doc: Confirm the supported resident employee profile, reviewed JPY valuations and complete validated vesting records.}
+  - {name: income_account, type: string, doc: The exact dedicated RSU salary account configured in book.jp_rsu.}
+  - {name: from, type: string, doc: Calendar tax-year start YYYY-01-01.}
+  - {name: to, type: string, doc: Same calendar tax-year end YYYY-12-31.}
+let:
+  grouped: sums(journals, ['account', 'unit', 'jp_rsu.event_id', 'jp_rsu.grant_id', 'jp_rsu.payer', 'jp_rsu.recognition_date', 'jp_rsu.valuation_source', 'jp_rsu.gross_jpy'], date(from), date(to))
+  income: grouped.rows.filter(r, r.keys[0] == income_account)
+  marked: grouped.rows.filter(r, r.keys[2] != '' || r.keys[3] != '' || r.keys[4] != '' || r.keys[5] != '' || r.keys[6] != '' || r.keys[7] != '')
+  guard: >-
+    rsu_require(scope_confirmed && rsu_scope(book) && income_account == book.jp_rsu.income_account
+      && from.matches('^[0-9]{4}-01-01$') && to.matches('^[0-9]{4}-12-31$')
+      && date(from).getFullYear() == date(to).getFullYear()
+      && marked.size() == income.size() * 2
+      && income.all(r, r.keys[1] == '' && r.keys[2] != '' && r.keys[3] != '' && r.keys[4] != ''
+        && date(r.keys[5]) >= date(from) && date(r.keys[5]) <= date(to) && r.keys[6] != '' && r.keys[7] == string(r.credit)
+        && r.lines == 1 && r.debit == 0 && r.credit > 0
+        && income.filter(other, other.keys[2] == r.keys[2]).size() == 1
+        && marked.filter(other, other.keys[2] == r.keys[2]).size() == 2
+        && marked.exists(s, s.keys[0] == book.jp_rsu.share_account && s.keys[1] == book.jp_rsu.share_unit
+          && s.keys[2] == r.keys[2] && s.keys[3] == r.keys[3] && s.keys[4] == r.keys[4]
+          && s.keys[5] == r.keys[5] && s.keys[6] == r.keys[6] && s.keys[7] == r.keys[7]
+          && s.lines == 1 && s.credit == 0 && s.debit == r.credit)))
+result: >-
+  {'period_from': from, 'period_to': to, 'income_category': 'salary',
+   'additional_salary_receipts': sum(income.map(r, r.credit)) + guard,
+   'japan_withholding': 0, 'included_in_salary_statement': false,
+   'records': income.map(r, {'event_id': r.keys[2], 'grant_id': r.keys[3], 'payer': r.keys[4],
+     'recognition_date': r.keys[5], 'valuation_source': r.keys[6], 'gross_receipts': r.credit})}

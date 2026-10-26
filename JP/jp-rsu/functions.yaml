@@ -1,0 +1,32 @@
+functions:
+  - name: rsu_scope
+    params: [{name: b, type: map}]
+    returns: bool
+    doc: Explicit Japan-resident employee stock-settled RSU profile; employer identity does not determine tax treatment. NTA No.1400 and KFS 88/02, checked 2026-10-26.
+    expr: >-
+      b.region == 'JP' && b.currency == 'JPY' && b.scale == 0 && b.fiscal_start_month == 1
+      && has(b.jp_rsu) && type(b.jp_rsu) == map
+      && has(b.jp_rsu.scope_confirmed) && b.jp_rsu.scope_confirmed == true
+      && has(b.jp_rsu.included_in_salary_statement) && b.jp_rsu.included_in_salary_statement == false
+      && has(b.jp_rsu.japan_withholding) && b.jp_rsu.japan_withholding == false
+      && has(b.jp_rsu.tax_funding) && b.jp_rsu.tax_funding == 'self-assessment'
+      && has(b.jp_rsu.income_account) && type(b.jp_rsu.income_account) == string && b.jp_rsu.income_account != ''
+      && has(b.jp_rsu.share_account) && type(b.jp_rsu.share_account) == string && b.jp_rsu.share_account != b.jp_rsu.income_account && b.jp_rsu.share_account != ''
+      && has(b.jp_rsu.share_unit) && type(b.jp_rsu.share_unit) == string && b.jp_rsu.share_unit != ''
+  - name: rsu_evidence
+    params: [{name: e, type: map}]
+    returns: bool
+    doc: A reviewed, already calculated JPY gross valuation and its evidence; this package does not calculate price times FX.
+    expr: >-
+      has(e.event_id) && type(e.event_id) == string && e.event_id != ''
+      && has(e.grant_id) && type(e.grant_id) == string && e.grant_id != ''
+      && has(e.payer) && type(e.payer) == string && e.payer != ''
+      && has(e.recognition_date) && type(e.recognition_date) == string
+      && e.recognition_date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+      && has(e.gross_jpy) && type(e.gross_jpy) == int && e.gross_jpy > 0
+      && has(e.valuation_source) && type(e.valuation_source) == string && e.valuation_source != ''
+  - name: rsu_require
+    params: [{name: ok, type: bool}]
+    returns: int
+    doc: Refuse an unsupported scope, non-calendar-year period, duplicate event or incomplete/mismatched vesting evidence instead of returning partial salary figures.
+    expr: "ok ? 0 : {}['RSU scope, period or vesting evidence is incomplete or inconsistent']"

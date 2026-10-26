@@ -1,0 +1,6 @@
+id: journal.balance
+call: balance
+when: "rsu_scope(book) && journal.lines.exists(l, has(l.jp_rsu))"
+description:
+  en: Fill the salary credit from an already recorded JPY share debit. Stock valuation must be supplied and reviewed first; no price, FX, cash, withholding or sale is calculated.
+  ja: 確認済みの円建て株式取得額から給与の貸方金額を補完します。株価・為替による評価、現金、源泉徴収、売却の計算は行いません。
