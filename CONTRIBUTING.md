@@ -44,6 +44,36 @@ iris overlay test --dir JP/jp-tax-classification
 Repeat for each changed package. No Book folder or engine source checkout is
 needed for `--dir` tests.
 
+## Published-engine dependency policy
+
+Every package must work with the already published, signed, stable engine pinned
+in `.github/engine.txt`. An engine source tag, PR build, staging candidate, draft
+release or prerelease does not satisfy this dependency. There is no candidate
+engine or `--bindings` override for the merge gate.
+
+CI checks the pin and every package's `requires_bindings`, confirms the GitHub
+release is published and stable, verifies its signature and checksums, and runs
+all package golden tests with that exact binary. Lowering `requires_bindings`
+without adapting the implementation is not a compatibility fix; package loading
+and real execution must pass too.
+
+If a package needs a new core primitive, release that engine capability first
+with the existing compatible catalog. After publication, update the engine pin
+and add the package change. The core release must not wait for the dependent
+unpublished package. Merge and tag package source only after this published-engine
+gate passes; vendor the tag into the application afterwards. The final application
+candidate may repeat tests with its new engine as an additional compatibility
+check, but cannot replace the published-engine baseline.
+
+Run the same checks locally:
+
+```sh
+python3 .github/scripts/check-engine.py
+# In CI, fetch-iris.sh downloads/verifies the pin and puts it on GITHUB_PATH.
+# Locally, install that exact signed version and put it on PATH first.
+.github/scripts/run-goldens.sh
+```
+
 ## Keep each package focused
 
 An overlay provides one independently useful accounting function. Keep its

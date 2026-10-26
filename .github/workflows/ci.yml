@@ -16,6 +16,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+      - name: Check package requirements against the published-engine pin
+        run: python3 .github/scripts/check-engine.py
       - run: .github/scripts/check-versions.sh
 
   golden:
@@ -25,6 +27,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install minisign
         run: sudo apt-get update -qq && sudo apt-get install -y -qq minisign
+      - name: Published-engine policy regressions
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
       - name: Download and verify the pinned iris
         run: .github/scripts/fetch-iris.sh
       - name: Run every overlay's golden tests
