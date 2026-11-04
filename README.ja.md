@@ -18,7 +18,7 @@
 | 日本の固定資産 | [jp-small-asset-deduction](JP/jp-small-asset-deduction/README.ja.md) | 少額資産特例の取得日別の金額基準と年間限度額を検証 | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-small-asset-deduction%402026.10.1) |
 | 日本の固定資産 | [jp-declining-balance](JP/jp-declining-balance/README.ja.md) | 12か月分の定率法による償却表を計算 | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-declining-balance%402026.10.1) |
 
-`JP/` に日本向けのパッケージをまとめ、共通パッケージはリポジトリのルートに置きます。フォルダーはソースを整理するためのもので、パッケージ ID、固定バージョンの指定、有効化の方法は変わりません。
+`JP/` に日本向けのパッケージをまとめ、共通パッケージはリポジトリのルートに置きます。どのパッケージを選ぶか、パッケージに含まれない作業は何かは、[日本向けの概要](JP/README.ja.md)を参照してください。フォルダーはソースを整理するためのもので、パッケージ ID、固定バージョンの指定、有効化の方法は変わりません。
 
 `jp-tax-amount` と `jp-tax-filing` は、それぞれ `jp-tax-classification@2026.10.1` も有効にする必要があります。両者は互いには依存しません。依存先も明示的に選択してください。ほかのパッケージは個別に使えます。分類名は、パッケージを探しやすくするためのものです。
 
