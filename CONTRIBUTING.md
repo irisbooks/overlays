@@ -117,9 +117,10 @@ code-review criteria and do not add another release approval.
 ## Keep each package focused
 
 An overlay provides one independently useful accounting function. Keep its
-fields, checks, calculations, guide and examples together. Declare exact
-`requires_overlays` versions for necessary dependencies; users must select those
-dependencies explicitly. Shared helper code alone does not justify enabling
+fields, checks, calculations, guide and examples together. Declare the lowest
+version of each necessary dependency in `requires_overlays`; engines that apply
+the release rule below accept any later release of it, and older engines accept
+only a listed version. Users must select those dependencies explicitly. Shared helper code alone does not justify enabling
 unrelated behavior.
 
 - **Date and cite statutory figures.** Put rates or thresholds in named
@@ -149,7 +150,7 @@ The paths below are relative to a package directory. Use that directory with
 
 | File | Purpose |
 |---|---|
-| `overlay.yaml` | Package ID, version, required bindings and exact dependencies |
+| `overlay.yaml` | Package ID, version, required bindings, minimum dependency versions and declared fixes |
 | `fields.yaml` | Input types, requiredness, choices and descriptions |
 | `functions.yaml` | Named CEL helpers and source citations |
 | `rules/*.yaml` | Validation conditions, assertions and localized messages |
@@ -167,10 +168,49 @@ see the [format reference](https://irisbooks.io/docs/en/book-format-reference/).
 English guide names remain the task's canonical reference; a sibling `*.ja.md`
 guide is discoverable with a `.ja` suffix, such as `journal-balance.journal.ja`.
 
+## Releases add, never change
+
+Books carry results across releases. Next year's Book continues a position that
+an earlier release calculated, and saved filings and schedules keep the release
+that produced them. A new release may therefore add behavior (new cases, wider
+support, figures for new dates, documentation), but it must not change a result
+an earlier release produced. An exact version identifies a release for replaying
+a saved result; Iris continues carried state and checks dependencies by
+package ID.
+
+- **A reform adds dates.** Keep earlier dates' figures and add the new ones from
+  the date the law specifies.
+- **CI holds each new release to the last one.**
+  [`check-continuity.py`](.github/scripts/check-continuity.py) runs the last
+  release's `tests/` against your candidate, with the package's own
+  `<id>@<version>` in recorded labels updated, and every earlier case must still
+  pass. Add cases for new behavior; never edit an earlier release's expected
+  results to make a change pass.
+- **A correction is declared.** If a change corrects a wrong earlier result,
+  declare it in `overlay.yaml`. Books holding results from the listed releases
+  are told to review them, and CI accepts changes only in the named cases.
+  Explain the correction in the PR and the release notes too.
+
+```yaml
+fixes:
+  - versions: ['2026.10.1']   # earlier releases whose results this one corrects
+    cases: ['rounds the carried unit cost']   # their cases whose expected results change
+    message:
+      en: Corrects the rounding of the carried unit cost.
+      ja: 引き継ぐ単価の端数処理を訂正します。
+```
+
+Run the check locally with the pinned engine and the release tags fetched
+(PyYAML required):
+
+```sh
+python3 .github/scripts/check-continuity.py
+```
+
 ## Before opening a pull request
 
-1. **Run golden tests.** Add or update cases for each changed rule, recipe,
-   derivation or completion, then run `iris overlay test --dir <package-dir>` with the
+1. **Run golden tests.** Add cases for each changed rule, recipe, derivation or
+   completion (an earlier release's expected results stay as released), then run `iris overlay test --dir <package-dir>` with the
    compatible engine described above. For documentation changes, check links and
    run the suite too: guides and task references are loaded as package data.
 2. **Check the version.** If files outside `<package-dir>/tests/` changed since the last
