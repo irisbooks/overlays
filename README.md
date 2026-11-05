@@ -24,7 +24,8 @@ See [engine requirements](CONTRIBUTING.md#use-a-compatible-engine) for testing t
 | Japanese fixed assets | [jp-small-asset-deduction](JP/jp-small-asset-deduction/README.md) | Checks acquisition-date limits and the annual small-asset deduction cap | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-small-asset-deduction%402026.10.1) |
 | Japanese fixed assets | [jp-declining-balance](JP/jp-declining-balance/README.md) | Calculates full-year declining-balance depreciation schedules | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-declining-balance%402026.10.1) |
 
-The `JP/` folder groups packages for Japan. Common packages stay at the repository
+The `JP/` folder groups packages for Japan; its [overview](JP/README.md) says which
+to select and what they leave to you. Common packages stay at the repository
 root. Folder names organize the source; package IDs, version pins and selection
 behavior are unchanged.
 
