@@ -23,7 +23,7 @@ jp-declining-balance を選択します。当てはまらないものは `iris o
 | 消費税申告の計算資料を作る | [jp-tax-filing](jp-tax-filing/README.ja.md) を追加 |
 | 定率法で償却する | [jp-declining-balance](jp-declining-balance/README.ja.md) |
 | 少額減価償却資産の即時償却 | [jp-small-asset-deduction](jp-small-asset-deduction/README.ja.md) |
-| RSU の権利確定、上場株式、米ドル現金 | [jp-rsu](jp-rsu/README.ja.md)、[jp-securities-basis](jp-securities-basis/README.ja.md)、[jp-foreign-currency](jp-foreign-currency/README.ja.md)（未公開の候補版） |
+| RSU の権利確定、上場株式、米ドル現金 | [jp-rsu](jp-rsu/README.ja.md)、[jp-securities-basis](jp-securities-basis/README.ja.md)、[jp-foreign-currency](jp-foreign-currency/README.ja.md) |
 
 依存するパッケージもすべて明示的に選択してください。手順は[帳簿で使う](../README.ja.md#帳簿で使う)を参照してください。各パッケージの README から使い方のガイドに進めます。
 
@@ -45,7 +45,7 @@ jp-declining-balance を選択します。当てはまらないものは `iris o
 
 ## 申告書を作る
 
-IrisBooks は集計し、申告書はあなたか AI が作ります。エンジンの数値と記録した計算資料、その年の公式様式をもとに作業し、作成した様式は帳簿の `compiled/jp/<様式>/` に保存します。
+IrisBooks は集計し、申告書はあなたか AI が作り、提出はあなたが行います。エンジンの数値と記録した計算資料、その年の公式様式をもとに作業し、作成した様式は帳簿の `compiled/jp/<様式>/` に保存します。
 
 - **消費税**：課税期間は、個人は暦年、法人は事業年度です。jp-tax-filing の数値には、国税と地方税の内訳、課税標準額の千円未満切り捨てを含めていません。記録した数値から計算してください。税抜経理の帳簿では、jp-tax-amount が提案した税額を仮払消費税・仮受消費税に計上します。
 - **固定資産台帳と別表16**：資産ファイルと、`iris export assets --year`、`iris asset schedule --year` の出力を使います。`opening_nbv`、`period_dep`、`closing_nbv`、`accumulated`、`disposal_nbv` は CSV の値をそのまま使い、計算し直さないでください。

@@ -30,7 +30,7 @@ with `iris overlay select`.
 | Prepare the 消費税 return figures | Add [jp-tax-filing](jp-tax-filing/README.md) |
 | 定率法 depreciation | [jp-declining-balance](jp-declining-balance/README.md) |
 | 少額減価償却資産 immediate deduction | [jp-small-asset-deduction](jp-small-asset-deduction/README.md) |
-| RSU vesting, listed shares, USD cash | [jp-rsu](jp-rsu/README.md), [jp-securities-basis](jp-securities-basis/README.md), [jp-foreign-currency](jp-foreign-currency/README.md) (unreleased candidates) |
+| RSU vesting, listed shares, USD cash | [jp-rsu](jp-rsu/README.md), [jp-securities-basis](jp-securities-basis/README.md), [jp-foreign-currency](jp-foreign-currency/README.md) |
 
 Select every dependency explicitly; see
 [Use packages in a Book](../README.md#use-packages-in-a-book). Each package's
@@ -81,7 +81,7 @@ your 税理士 can check it:
 
 ## File the returns
 
-IrisBooks sums; you or your AI file. Work from the engine's figures and the
+IrisBooks sums; you or your AI prepare the forms, and you file them. Work from the engine's figures and the
 recorded filings plus this year's official form, and keep prepared forms in the
 Book under `compiled/jp/<form>/`.
 

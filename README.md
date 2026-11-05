@@ -9,9 +9,12 @@ packages to enable in your Book.
 
 ## Choose a package
 
-The seven packages below are signed `2026.10.1` releases, tested with
-[Iris v0.2.18](https://github.com/irisbooks/iris/releases/tag/v0.2.18), which supports
-**bindings 5**. Each release contains its exact package bundle and signature.
+The packages below are signed releases. The seven `2026.10.1` packages need
+**bindings 5** and were tested with
+[Iris v0.2.18](https://github.com/irisbooks/iris/releases/tag/v0.2.18); the three
+`2026.11.1` packages need **bindings 6** and were tested with
+[Iris v0.2.23](https://github.com/irisbooks/iris/releases/tag/v0.2.23). Each
+release contains its exact package bundle and signature.
 See [engine requirements](CONTRIBUTING.md#use-a-compatible-engine) for testing the source checkout.
 
 | Category | Package | What it does | Signed release |
@@ -23,6 +26,9 @@ See [engine requirements](CONTRIBUTING.md#use-a-compatible-engine) for testing t
 | Japanese consumption tax | [jp-tax-filing](JP/jp-tax-filing/README.md) | Calculates supporting figures for general or simplified taxation | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-tax-filing%402026.10.1) |
 | Japanese fixed assets | [jp-small-asset-deduction](JP/jp-small-asset-deduction/README.md) | Checks acquisition-date limits and the annual small-asset deduction cap | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-small-asset-deduction%402026.10.1) |
 | Japanese fixed assets | [jp-declining-balance](JP/jp-declining-balance/README.md) | Calculates full-year declining-balance depreciation schedules | [2026.10.1](https://github.com/irisbooks/overlays/releases/tag/jp-declining-balance%402026.10.1) |
+| Japanese share compensation | [jp-rsu](JP/jp-rsu/README.md) | Calculates RSU vesting value, completes the vesting journal and prepares annual additional salary | [2026.11.1](https://github.com/irisbooks/overlays/releases/tag/jp-rsu%402026.11.1) |
+| Japanese securities | [jp-securities-basis](JP/jp-securities-basis/README.md) | Calculates the rounded acquisition basis of listed shares, kept apart from carrying value | [2026.11.1](https://github.com/irisbooks/overlays/releases/tag/jp-securities-basis%402026.11.1) |
+| Japanese foreign currency | [jp-foreign-currency](JP/jp-foreign-currency/README.md) | Keeps the basis of ordinary USD cash and calculates realized currency gains | [2026.11.1](https://github.com/irisbooks/overlays/releases/tag/jp-foreign-currency%402026.11.1) |
 
 The `JP/` folder groups packages for Japan; its [overview](JP/README.md) says which
 to select and what they leave to you. Common packages stay at the repository
@@ -34,31 +40,11 @@ behavior are unchanged.
 dependency explicitly when selecting packages. The other packages are independent;
 category names only help you find them.
 
-## Unreleased candidates
-
-Three independently selectable `2026.10.2` source candidates restore the supported
-RSU lifecycle with bindings 6. They must pass against the published signed stable
-engine pinned in CI before merge/release:
-
-- [`jp-rsu`](JP/jp-rsu/README.md): exact valuation, coordinated gross vesting,
-  complete-local-ledger receipt checks and annual additional salary.
-- [`jp-securities-basis`](JP/jp-securities-basis/README.md): the declared eligible
-  share pool, disposal figures and rounded basis distinct from carrying value.
-- [`jp-foreign-currency`](JP/jp-foreign-currency/README.md): ordinary USD cost,
-  paired own transfers and subsequent realized currency figures.
-
-Local qualification with signed published Iris v0.2.23 / bindings 6 passes all
-160 catalog goldens (80 RSU, 12 securities, 9 cash and 59 existing cases) and
-162 independent rational comparisons. CI repeats these checks on the pinned Linux binary.
-
-Salary has no mandatory securities/FX dependency. Existing released packages stay
-unchanged; these candidates are not yet signed public package releases.
-
 ## Use packages in a Book
 
 Start with the [CLI installation and Book setup guide](https://irisbooks.io/docs/en/getting-started/).
-The commands below run from an existing Book folder with Iris v0.2.18 or a
-compatible engine supporting bindings 5 and the current CLI commands.
+The commands below run from an existing Book folder with an engine supporting
+the package's bindings and the current CLI commands.
 
 Installation copies a package into `config/overlay-packages/`; selection enables
 it. The example below selects only journal balancing. Since `select` replaces the
@@ -79,13 +65,13 @@ for every dependency too; `select --dry-run --json` previews a proposed selectio
 Use `select --off` to disable all optional packages. Disabling a package preserves recorded fields, results and the sources needed to reproduce
 past calculations. Core structural and double-entry checks remain active.
 
-New Japanese business Books select all seven packages by default; personal Books
+New Japanese business Books select the seven `2026.10.1` packages by default; personal Books
 and business Books outside Japan select the two journal completion packages.
 Existing Books keep their selections until you change them.
 
 ## CLI command conventions
 
-Use an engine with the current CLI command surface as well as bindings 5. Check
+Use an engine with the current CLI command surface as well as the package's bindings. Check
 `iris journal complete --help`, `iris validate --help` and `iris overlay recipe
 --help` before using these packages. The former CLI names
 `autocomplete`, `show` and `attention` are removed; local MCP uses

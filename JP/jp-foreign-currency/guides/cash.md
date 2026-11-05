@@ -16,7 +16,7 @@ A same-currency transfer between declared accounts of the same owner uses one ba
 - Reinvestment: https://www.nta.go.jp/law/shitsugi/shotoku/02/43.htm
 - Method discussion (research, not binding guidance): https://www.nta.go.jp/about/organization/ntc/kenkyu/ronsou/114/01/index.htm
 
-Candidate source; not a signed publication. Tax-return preparation only.
+Tax-return preparation only.
 
 ## Settlement and eligible realization fees
 

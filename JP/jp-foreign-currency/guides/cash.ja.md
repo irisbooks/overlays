@@ -12,7 +12,7 @@ RSU専用ではない、通常のドル現金の独立した計算部品です�
 
 初期版は暦年・円建て個人Bookの通常のドル現金に対応します。MMFへの自動振替、証拠金取引、利息・配当の課税区分、未解決の受渡時差は対象外です。年度末の時価評価や給与の再計上はしません。
 
-[同一通貨の移動](https://www.nta.go.jp/law/shitsugi/shotoku/02/39.htm)、[別資産への再投資](https://www.nta.go.jp/law/shitsugi/shotoku/02/43.htm)、[方法に関する税務大学校の研究（法的拘束力のある通達ではありません）](https://www.nta.go.jp/about/organization/ntc/kenkyu/ronsou/114/01/index.htm)。署名済み公開版ではない候補版です。
+[同一通貨の移動](https://www.nta.go.jp/law/shitsugi/shotoku/02/39.htm)、[別資産への再投資](https://www.nta.go.jp/law/shitsugi/shotoku/02/43.htm)、[方法に関する税務大学校の研究（法的拘束力のある通達ではありません）](https://www.nta.go.jp/about/organization/ntc/kenkyu/ronsou/114/01/index.htm)。出力は申告準備資料です。
 
 ## 決済と実現取引に対応する費用
 

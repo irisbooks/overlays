@@ -1,5 +1,5 @@
 id: jp-rsu
-version: 2026.10.2
+version: 2026.11.1
 requires_bindings: 6
 region: JP
 description: Calculate and complete evidenced gross RSU vesting and prepare additional salary with complete local source checks. Securities and foreign-cash policies remain independently selectable.
