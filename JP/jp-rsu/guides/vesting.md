@@ -1,7 +1,6 @@
 # RSU vesting and recorded salary
 
-This source candidate requires bindings 6 and must pass qualification with the
-published signed stable engine pinned by CI. It calculates whole-share JPY
+This package requires an engine supporting bindings 6. It calculates whole-share JPY
 vesting in Overlay functions, fills both missing native posting amounts, checks
 matched receipt evidence and prepares calendar-year salary figures from complete
 local journals. Salary has no securities/foreign-currency package dependency.

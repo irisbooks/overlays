@@ -10,7 +10,7 @@
 
 `iris yearend`は株数、帳簿価額、別の`allocation_cost_minor`と正確な`allocation_policy`を引き継ぎます。期首残高には取得費の根拠が必要です。時価への置換はしません。初期版は暦年・円建ての個人Book、通常の上場株式に対応します。NISA・特殊口座、端数株、空売り、デリバティブ、未解決の約定・受渡時差は対象外です。
 
-[国税庁No.1466](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1466.htm)、[外国株式の為替換算](https://www.nta.go.jp/law/shitsugi/shotoku/02/02.htm)。候補版であり、署名済み公開版ではありません。出力は申告準備資料です。
+[国税庁No.1466](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1466.htm)、[外国株式の為替換算](https://www.nta.go.jp/law/shitsugi/shotoku/02/02.htm)。出力は申告準備資料です。
 
 ## 売却代金・手数料・残存取得費
 

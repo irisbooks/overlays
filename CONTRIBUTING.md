@@ -10,7 +10,7 @@ result. For questions or proposed engine changes, open a
 ## Use a compatible engine
 
 The seven published `2026.10.1` packages declare `requires_bindings: 5`.
-The unreleased RSU, securities-basis and USD-cash `2026.10.2` candidates require 6.
+The RSU, securities-basis and USD-cash `2026.11.1` packages require 6.
 Bindings are the functions and values the Iris engine makes available to package
 expressions written in CEL. The engine is distributed separately; start with the
 [CLI installation guide](https://irisbooks.io/docs/en/getting-started/) and

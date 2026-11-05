@@ -30,7 +30,7 @@ with `iris overlay select`.
 | Prepare the 消費税 return figures | Add [jp-tax-filing](jp-tax-filing/README.md) |
 | 定率法 depreciation | [jp-declining-balance](jp-declining-balance/README.md) |
 | 少額減価償却資産 immediate deduction | [jp-small-asset-deduction](jp-small-asset-deduction/README.md) |
-| RSU vesting, listed shares, USD cash | [jp-rsu](jp-rsu/README.md), [jp-securities-basis](jp-securities-basis/README.md), [jp-foreign-currency](jp-foreign-currency/README.md) (unreleased candidates) |
+| RSU vesting, listed shares, USD cash | [jp-rsu](jp-rsu/README.md), [jp-securities-basis](jp-securities-basis/README.md), [jp-foreign-currency](jp-foreign-currency/README.md) |
 
 Select every dependency explicitly; see
 [Use packages in a Book](../README.md#use-packages-in-a-book). Each package's

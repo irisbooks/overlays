@@ -1,7 +1,33 @@
-# jp-foreign-currency
+# Track ordinary USD cash realization
 
-Unreleased 2026.10.2 source candidate, requires Iris bindings 6.
+**English** | [日本語](README.ja.md)
 
-[English guide](guides/cash.md) | [日本語](README.ja.md) | [Executable examples](tests/)
+Keeps the historical JPY basis of ordinary USD cash, including share-sale
+proceeds, through own-account transfers, and calculates realized currency gains
+separately from share gains and salary. Uses an explicitly confirmed
+moving-average pool.
 
-Canonical public package source. Qualification must use the already published signed stable engine pinned in `.github/engine.txt`; development fixtures and source builds cannot satisfy that gate. Existing released package bytes remain unchanged.
+## Before use
+
+Confirm the cost method and that the declared accounts hold every relevant
+ordinary USD balance. Automatic MMF sweeps, margin FX, foreign tax credits and
+unresolved settlement timing are excluded. The outputs are filing aids; the
+package does not submit a return. It requires an engine supporting bindings 6.
+
+See [availability and engine requirements](../../README.md#choose-a-package) and
+[package installation and selection](../../README.md#use-packages-in-a-book).
+
+## Follow the task
+
+Task ID: `jp-foreign-currency.cash`. From the Book folder:
+
+```sh
+iris context --task jp-foreign-currency.cash
+iris overlay guide jp-foreign-currency.cash
+```
+
+Read the [workflow guide](guides/cash.md) for inputs, commands and coverage.
+The [task definition](tasks.yaml) links these executable examples:
+
+- [Cash examples](tests/cash.yaml)
+- [Lifecycle examples](tests/lifecycle.yaml)
