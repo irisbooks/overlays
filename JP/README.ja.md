@@ -45,7 +45,7 @@ jp-declining-balance を選択します。当てはまらないものは `iris o
 
 ## 申告書を作る
 
-IrisBooks は集計し、申告書はあなたか AI が作ります。エンジンの数値と記録した計算資料、その年の公式様式をもとに作業し、作成した様式は帳簿の `compiled/jp/<様式>/` に保存します。
+IrisBooks は集計し、申告書はあなたか AI が作り、提出はあなたが行います。エンジンの数値と記録した計算資料、その年の公式様式をもとに作業し、作成した様式は帳簿の `compiled/jp/<様式>/` に保存します。
 
 - **消費税**：課税期間は、個人は暦年、法人は事業年度です。jp-tax-filing の数値には、国税と地方税の内訳、課税標準額の千円未満切り捨てを含めていません。記録した数値から計算してください。税抜経理の帳簿では、jp-tax-amount が提案した税額を仮払消費税・仮受消費税に計上します。
 - **固定資産台帳と別表16**：資産ファイルと、`iris export assets --year`、`iris asset schedule --year` の出力を使います。`opening_nbv`、`period_dep`、`closing_nbv`、`accumulated`、`disposal_nbv` は CSV の値をそのまま使い、計算し直さないでください。

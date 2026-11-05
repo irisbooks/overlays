@@ -81,7 +81,7 @@ your 税理士 can check it:
 
 ## File the returns
 
-IrisBooks sums; you or your AI file. Work from the engine's figures and the
+IrisBooks sums; you or your AI prepare the forms, and you file them. Work from the engine's figures and the
 recorded filings plus this year's official form, and keep prepared forms in the
 Book under `compiled/jp/<form>/`.
 
