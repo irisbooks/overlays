@@ -5,7 +5,8 @@ tasks:
       target: journal
       fields: [book.consumption_tax, book.consumption_tax.status, book.consumption_tax.method, book.consumption_tax.accounting, book.consumption_tax.business_class, journal.lines]
       rules: [tax.settings, tax.status-required, tax.block-type, tax.invoice-type, tax.category-required, tax.category-unknown, tax.export-rate-zero, tax.rate-required, tax.rate-unknown, tax.rate-positive, tax.rate-not-allowed, tax.business-class-required]
+      operations: [{kind: derivation, id: tax.category-default}]
       guide: jp-tax-classification.classification
-      examples: ["tests/classification.yaml#classified purchase", "tests/classification.yaml#missing tax status", "tests/classification.yaml#unknown category"]
-      coverage: [Recorded tax blocks, category and rate vocabulary, simplified business class and explicit Book tax settings. Untagged lines are not classified automatically.]
-      judgment: [Confirm tax status, election, transaction category, invoice evidence, rounding and amount basis. Package selection establishes none of these facts.]
+      examples: ["tests/classification.yaml#classified purchase", "tests/classification.yaml#missing tax status", "tests/classification.yaml#unknown category", "tests/category-default.yaml#an untagged line on a configured account gets its default"]
+      coverage: [Recorded tax blocks, category and rate vocabulary, simplified business class and explicit Book tax settings. An untagged line gets its account's configured default category as a proposal; otherwise it stays unclassified.]
+      judgment: [Confirm tax status, election, transaction category, invoice evidence, rounding and amount basis. Package selection establishes none of these facts. A default category is the account's usual case; confirm it fits each transaction.]

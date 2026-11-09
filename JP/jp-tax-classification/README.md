@@ -8,8 +8,9 @@ including category, rate and simplified-taxation business class.
 ## Before use
 
 Confirm taxpayer status, the taxation method and tax-inclusive or tax-exclusive
-accounting before recording settings. This package does not classify untagged
-lines or calculate missing amounts. It supplies the settings used by
+accounting before recording settings. This package does not calculate missing
+amounts. It classifies an untagged line only as a proposal, from the default
+category the Book sets for that line's account. It supplies the settings used by
 [jp-tax-amount](../jp-tax-amount/README.md) and [jp-tax-filing](../jp-tax-filing/README.md).
 
 See [availability and engine requirements](../../README.md#choose-a-package) and
@@ -29,3 +30,4 @@ The [task definition](tasks.yaml) links these executable examples:
 
 - [Settings and classification examples](tests/classification.yaml)
 - [Category and rate examples](tests/tax-lines.yaml)
+- [Per-account default category examples](tests/category-default.yaml)

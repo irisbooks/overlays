@@ -1,0 +1,18 @@
+# A per-account default 税区分, the way accounting software sets one on each
+# account: the Book lists its accounts' usual categories, and a line on one of
+# them that has no category yet gets that category as a proposal. Nothing is
+# set until the Book configures it, so earlier results are unchanged.
+derivations:
+  - id: tax.category-default
+    target: line
+    params:
+      - {name: accounts, type: map, default: {}}
+    when: >-
+      manages_tax(book) && line.account in params.accounts
+      && type(params.accounts[line.account]) == string
+      && (!has(line.tax) || (type(line.tax) == map && category(line) == ''))
+    field: tax.category
+    expr: params.accounts[line.account]
+    message:
+      en: "lines[{{.line}}].tax: proposed category {{.value}}, this account's default. Confirm it fits this transaction and add the rate for a taxable category before applying with iris validate --apply."
+      ja: "lines[{{.line}}].tax: この科目の既定の税区分 {{.value}} を候補にしました。この取引に合うかを確認し、課税取引なら税率も付けてから iris validate --apply で適用してください。"

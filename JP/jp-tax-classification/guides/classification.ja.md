@@ -31,9 +31,29 @@ iris context --task jp-tax-classification.classify --record journals/2026-10/pur
 iris validate
 ```
 
-ローカル MCP では `get_book_context` で入力を確認し、`validate` で検証します。税情報のない明細は未分類のままです。税区分や税額の補完も行いません。未入力の税額を提案する場合は [jp-tax-amount](../../jp-tax-amount/README.ja.md)、申告資料の計算には [jp-tax-filing](../../jp-tax-filing/README.ja.md) を選択します。
+ローカル MCP では `get_book_context` で入力を確認し、`validate` で検証します。
 
-[設定と税区分の例](../tests/classification.yaml)、[税区分と税率のテスト](../tests/tax-lines.yaml)も参照できます。
+## 科目ごとの既定の税区分
+
+たいていの科目は、いつも同じ税区分になります。消耗品費は課税仕入、給料賃金は不課税です。会計ソフトで科目ごとに既定の税区分を設定するように、そうした科目と通常の税区分を `config/book.yaml` に書きます。
+
+```yaml
+overlay_settings:
+  jp-tax-classification:
+    derivations:
+      tax.category-default:
+        params:
+          accounts:
+            '費用:消耗品費': taxable_purchase
+            '費用:給料賃金': out_of_scope
+            '収益:売上高': taxable_sale
+```
+
+キーは勘定科目表にある科目のパスそのもの、値は上の表の税区分です。地代家賃（事業用か居住用か）や雑費のように、取引によって税区分が変わる科目は書かないでください。
+
+書いた科目の明細にまだ税区分がなければ、既定の税区分を候補として示します。`iris validate` が表示し、`iris validate --apply` で記録します。記録済みの税区分は置き換えません。既定値が決めるのは税区分だけです。税率は品目と取引日によるので、課税取引には税率も付けてください。この設定がなければ候補は出ず、税情報のない明細は未分類のままです。税額の補完は行いません。未入力の税額を提案する場合は [jp-tax-amount](../../jp-tax-amount/README.ja.md)、申告資料の計算には [jp-tax-filing](../../jp-tax-filing/README.ja.md) を選択します。
+
+[設定と税区分の例](../tests/classification.yaml)、[税区分と税率のテスト](../tests/tax-lines.yaml)、[既定の税区分のテスト](../tests/category-default.yaml)も参照できます。
 
 ## 根拠資料
 

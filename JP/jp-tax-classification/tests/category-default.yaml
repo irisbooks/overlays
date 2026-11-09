@@ -1,0 +1,80 @@
+# Golden cases for the per-account default category. The suite book sets
+# defaults for two accounts in overlay_settings.
+book: &configured
+  region: JP
+  currency: JPY
+  scale: 0
+  fiscal_start_month: 1
+  consumption_tax: {status: taxable, accounting: tax_included, method: general}
+  overlay_settings:
+    jp-tax-classification:
+      derivations:
+        tax.category-default:
+          params:
+            accounts: {'費用:消耗品費': taxable_purchase, '費用:給料賃金': out_of_scope}
+
+cases:
+  - name: an untagged line on a configured account gets its default
+    journal:
+      lines:
+        - {account: '費用:消耗品費', debit: 1100}
+        - {account: '資産:現金', credit: 1100}
+    expect: []
+    propose:
+      - {id: tax.category-default, line: 0, field: tax.category, value: taxable_purchase}
+
+  - name: a tax block without a category gets the default beside the category rule
+    journal:
+      lines:
+        - {account: '費用:給料賃金', debit: 200000, tax: {invoice: false}}
+        - {account: '資産:普通預金', credit: 200000}
+    expect:
+      - rule: tax.category-required
+        en: "lines[0].tax: category is required when a tax block is present"
+        ja: "lines[0].tax: tax ブロックがある場合 category は必須です"
+    propose:
+      - {id: tax.category-default, line: 0, field: tax.category, value: out_of_scope}
+
+  - name: a recorded category is kept
+    journal:
+      lines:
+        - {account: '費用:消耗品費', debit: 1080, tax: {category: taxable_purchase, rate: "8r"}}
+        - {account: '資産:現金', credit: 1080}
+    expect: []
+    propose: []
+
+  - name: an account without a default stays unclassified
+    journal:
+      lines:
+        - {account: '費用:会議費', debit: 3300}
+        - {account: '資産:現金', credit: 3300}
+    expect: []
+    propose: []
+
+  - name: an exempt business gets no proposal
+    book:
+      region: JP
+      currency: JPY
+      scale: 0
+      consumption_tax: {status: exempt}
+      overlay_settings:
+        jp-tax-classification:
+          derivations:
+            tax.category-default:
+              params:
+                accounts: {'費用:消耗品費': taxable_purchase}
+    journal:
+      lines:
+        - {account: '費用:消耗品費', debit: 1100}
+        - {account: '資産:現金', credit: 1100}
+    expect: []
+    propose: []
+
+  - name: without settings nothing is proposed
+    book: {region: JP, currency: JPY, scale: 0, consumption_tax: {status: taxable, accounting: tax_included, method: general}}
+    journal:
+      lines:
+        - {account: '費用:消耗品費', debit: 1100}
+        - {account: '資産:現金', credit: 1100}
+    expect: []
+    propose: []

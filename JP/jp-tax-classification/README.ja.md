@@ -6,7 +6,7 @@
 
 ## 利用前に確認すること
 
-課税事業者か免税事業者か、課税方式、税込・税抜の経理方式を確認してから設定します。税情報がない明細の自動分類や、未入力金額の計算は行いません。[jp-tax-amount](../jp-tax-amount/README.ja.md) と [jp-tax-filing](../jp-tax-filing/README.ja.md) も、この設定を使います。
+課税事業者か免税事業者か、課税方式、税込・税抜の経理方式を確認してから設定します。未入力金額の計算は行いません。税情報がない明細には、帳簿が科目ごとに設定した既定の税区分を候補として示すだけです。[jp-tax-amount](../jp-tax-amount/README.ja.md) と [jp-tax-filing](../jp-tax-filing/README.ja.md) も、この設定を使います。
 
 [公開状況とエンジンの要件](../../README.ja.md#使いたいパッケージを選ぶ)、[導入と有効化の手順](../../README.ja.md#帳簿で使う)も確認してください。
 
@@ -23,3 +23,4 @@ iris overlay guide jp-tax-classification.classification.ja
 
 - [設定と税区分の例](tests/classification.yaml)
 - [税区分と税率の例](tests/tax-lines.yaml)
+- [科目ごとの既定の税区分の例](tests/category-default.yaml)
