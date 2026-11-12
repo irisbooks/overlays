@@ -1,29 +1,104 @@
-# Japanese listed-share basis / 日本の上場株式の取得費
+# Japanese listed-share basis
 
-This independent package pools ordinary purchases and vested RSU shares of the same declared commodity across the declared accounts. Confirm that the pool includes all relevant holdings. It implements the unit-cost ceiling and remaining-basis example in NTA No.1466. Native postings keep their recorded carrying value; filing figures use the separate statutory basis. No RSU metadata is required for ordinary purchases.
+**English** | [日本語](shares.ja.md)
 
-同じ銘柄の通常購入とRSUを、明示した本人名義口座の全体で集計します。「総平均法に準ずる方法」の1株当たり取得価額を円単位で切り上げ、売却後もその単価で残存取得費を計算します。帳簿価額と税務上の取得費を別々に保存します。購入手数料は株式取得額に含めて記録してください。
+This package calculates ordinary purchases and vested RSU shares of the same
+commodity in one pool, the range over which acquisition cost is averaged. It is
+not RSU-specific and works on its own. Ordinary purchases need no RSU metadata.
 
-Configure `book.jp_securities_basis` with `scope_confirmed: true`, `account_regime: ordinary-listed-shares`, `acquisition_fees_capitalized: true`, `accounts`, `commodities`, `settlement_accounts`, `fee_accounts`, and `gain_account`. Use full canonical chart paths consistently in settings and journals. All commodities must be declared whole-share units (scale 0). Record the gross JPY settlement value and any sale fees explicitly. Leave the share credit amount absent for `iris journal complete`; omit an empty gain line for a zero-gain transfer. A completion fills recorded carrying cost; the `jp-securities-basis.basis` recipe computes tax figures separately.
+The calculation follows the method in NTA No.1466 (総平均法に準ずる方法). The
+unit cost is rounded up to whole yen, and the basis of the shares remaining
+after a sale uses that unit cost too. Journal amounts keep their recorded
+carrying value; filing figures use the separately calculated statutory basis.
 
-This package supports a January–December JPY personal Book. It excludes NISA/special accounts, fractional shares, derivatives, short sales, and unresolved trade/settlement timing. Source journals replay by date then path; same-day source filenames must preserve actual transaction order. Mark both legs of an own-account same-commodity transfer with identical `inventory: {transfer: unique-id}` in one journal. Do not mark a sale or currency conversion as a transfer.
+## Configure the Book
 
-`iris yearend` carries quantity, recorded carrying value and the distinct `allocation_cost_minor` with exact `allocation_policy`. Opening holdings require documented basis; values are never reset to market. Save figures under `filings/` using `iris overlay recipe jp-securities-basis.basis --help` for the command syntax. This is preparation evidence, not a submitted return or an accepted financial view.
+Configure `book.jp_securities_basis` as below. Include every account that holds
+the commodity for the owner in `accounts`. The account names and the commodity
+are examples.
 
-- NTA No.1466: https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1466.htm
-- Foreign-stock gains: https://www.nta.go.jp/law/shitsugi/shotoku/02/02.htm
+```yaml
+jp_securities_basis:
+  scope_confirmed: true
+  account_regime: ordinary-listed-shares
+  acquisition_fees_capitalized: true
+  accounts: ['Assets:AMZN']
+  commodities: [AMZN]
+  settlement_accounts: ['Assets:JPY']
+  fee_accounts: ['Expenses:ShareFees']
+  gain_account: 'Income:Shares'
+```
 
-## Proceeds, fees and retained basis
+Use full account paths consistently in settings and journals. Declare every
+commodity as a whole-share unit (scale 0, no decimal places). Record purchase
+fees as part of the share cost, and record the gross JPY settlement value and
+any sale fees explicitly.
 
-Map only confirmed eligible sale fees to `fee_accounts`. The recipe derives net
-settlement from the declared settlement accounts, adds the separately recorded
-fees once to show gross proceeds, and subtracts allocation cost from net
-settlement for the gain. It does not add fees to an income credit that already
-balances a separate fee-expense line. [NTA acquisition costs and sale fees](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1464.htm).
+## Complete a sale and calculate the tax basis
 
-`remaining_allocation_cost` and `remaining_carrying_value` summarize the distinct
-remaining values; `basis.positions` retains per-account/unit detail. Keep all
-eligible custody accounts in the declared pool. Unknown units in those accounts
-and mixed acquisitions/disposals refuse; record paired own transfers separately.
-Reconcile observations and fees against source statements. Missing external
-events cannot be inferred from ledger totals.
+Leave the share credit amount absent and run `iris journal complete`; it fills
+the recorded carrying cost and the gain. For an own-account transfer with no
+gain, omit the empty gain line.
+
+The `jp-securities-basis.basis` recipe computes the tax basis separately. Its
+arguments are `scope_confirmed: true`, `from` and `to`. The result contains
+proceeds, basis, fees, the gain and the remaining basis. Save reviewed figures
+under `filings/`; see `iris overlay recipe jp-securities-basis.basis --help` for
+the command syntax.
+
+The result fields are:
+
+- `remaining_allocation_cost`: total allocation cost (tax basis) of the shares
+  remaining after the sale
+- `remaining_carrying_value`: total carrying value of the same shares, a
+  separate value from allocation cost
+- `basis.positions`: detail per account and unit
+
+## Proceeds and fees
+
+In `fee_accounts`, name only accounts confirmed as eligible sale fees. The
+recipe derives net settlement from the settlement accounts and adds the
+separately recorded fees once to show gross proceeds. The gain is net settlement
+minus allocation cost.
+
+When fees are recorded on a separate expense line, the gain credit already
+balances the journal, so fees are not added to it again.
+
+## Own-account transfers
+
+For a transfer of the same commodity between the owner's accounts, put the same
+`inventory: {transfer: unique-id}` on both lines of one journal; their quantity
+and carrying amount must match. Keep a transfer journal separate from
+acquisitions and sales. Do not mark a sale or currency conversion with
+`transfer`.
+
+Journals replay by date, then by file path within a day. When several
+transactions share a date, name the journal files so that path order matches
+the actual transaction order.
+
+## Carry forward to the next year
+
+`iris yearend` carries quantity and carrying value forward. It also carries,
+unchanged, the allocation cost kept apart from carrying value
+(`allocation_cost_minor`) and its calculation policy (`allocation_policy`).
+Opening holdings require documented basis. Values are never reset to market.
+
+## Coverage and exclusions
+
+The initial release supports ordinary listed shares in a calendar-year JPY
+personal Book. It excludes NISA/special accounts, fractional shares, short
+sales, derivatives, and unresolved trade/settlement timing.
+
+Keep all eligible custody accounts named in the settings. Unknown units in
+those accounts and mixed acquisitions and sales fail. Reconcile recorded prices,
+rates and fees against source statements. Transactions missing from the Book
+cannot be inferred from ledger totals.
+
+The output is a filing aid, neither a submitted return nor an accepted
+financial view.
+
+## Sources
+
+NTA [No.1466](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1466.htm),
+[foreign-stock gains](https://www.nta.go.jp/law/shitsugi/shotoku/02/02.htm) and
+[acquisition costs and sale fees](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1464.htm).

@@ -8,10 +8,11 @@
 
 `iris init --region JP` で作った帳簿は、日付を日本時間で扱い、通貨の既定は JPY です。
 日本向けの勘定科目表は `--chart general`・`it`・`food` から選べます。事業主貸と事業主借には
-`owner: true` が付いているので、貸借対照表は青色申告決算書の並びのまま出て、純資産の
-集計には含まれません。事業用の設定（`--preset` の既定）では、共通のパッケージに加えて
-jp-tax-classification、jp-tax-amount、jp-tax-filing、jp-small-asset-deduction、
-jp-declining-balance を選択します。当てはまらないものは `iris overlay select` で外してください。
+`owner: true` が付いています。そのため、この二つの科目は、貸借対照表では青色申告決算書と
+同じ並びで表示され、純資産の集計には含まれません。事業用の設定（`--preset` の既定）では、
+共通のパッケージに加えて jp-tax-classification、jp-tax-amount、jp-tax-filing、
+jp-small-asset-deduction、jp-declining-balance が選択されます。当てはまらないものは
+`iris overlay select` で外してください。
 
 ## パッケージを選ぶ
 
@@ -23,7 +24,7 @@ jp-declining-balance を選択します。当てはまらないものは `iris o
 | 消費税申告の計算資料を作る | [jp-tax-filing](jp-tax-filing/README.ja.md) を追加 |
 | 定率法で償却する | [jp-declining-balance](jp-declining-balance/README.ja.md) |
 | 少額減価償却資産の即時償却 | [jp-small-asset-deduction](jp-small-asset-deduction/README.ja.md) |
-| RSU の権利確定、上場株式、米ドル現金 | [jp-rsu](jp-rsu/README.ja.md)、[jp-securities-basis](jp-securities-basis/README.ja.md)、[jp-foreign-currency](jp-foreign-currency/README.ja.md) |
+| RSU の権利確定、上場株式、米ドル現預金 | [jp-rsu](jp-rsu/README.ja.md)、[jp-securities-basis](jp-securities-basis/README.ja.md)、[jp-foreign-currency](jp-foreign-currency/README.ja.md) |
 
 依存するパッケージもすべて明示的に選択してください。手順は[帳簿で使う](../README.ja.md#帳簿で使う)を参照してください。各パッケージの README から使い方のガイドに進めます。
 
@@ -48,9 +49,9 @@ jp-declining-balance を選択します。当てはまらないものは `iris o
 IrisBooks は集計し、申告書はあなたか AI が作り、提出はあなたが行います。エンジンの数値と記録した計算資料、その年の公式様式をもとに作業し、作成した様式は帳簿の `compiled/jp/<様式>/` に保存します。
 
 - **消費税**：課税期間は、個人は暦年、法人は事業年度です。jp-tax-filing の数値には、国税と地方税の内訳、課税標準額の千円未満切り捨てを含めていません。記録した数値から計算してください。税抜経理の帳簿では、jp-tax-amount が提案した税額を仮払消費税・仮受消費税に計上します。
-- **固定資産台帳と別表16**：資産ファイルと、`iris export assets --year`、`iris asset schedule --year` の出力を使います。`opening_nbv`、`period_dep`、`closing_nbv`、`accumulated`、`disposal_nbv` は CSV の値をそのまま使い、計算し直さないでください。
+- **固定資産台帳と別表16**：資産ファイルと、`iris export assets --year`、`iris asset schedule --year` の出力を使います。`opening_nbv`、`period_dep`、`closing_nbv`、`accumulated`、`disposal_nbv` は CSV の値をそのまま使います。自分で計算し直した値に置き換えないでください。
 - **償却資産税（市区町村ごと）**：事業年度にかかわらず暦年で申告します。賦課期日は1月1日、申告期限は1月31日です。評価額は取得価額と減価残存率の表から求め、`closing_nbv` は使いません。`toku_rei: shoutoku_300k` で即時償却した資産も申告の対象です。
 
 ## 帳簿を保存する
 
-帳簿は法定の保存期間（7年、法人の一部は最長10年）保存してください。IrisBooks は認証（JIIMA 認証など）を受けておらず、IrisBooks で付けた帳簿が優良電子帳簿の要件を満たすとは主張しません。要件を満たすかどうか、税務署への届出が必要かどうかは、あなたと税理士で判断してください。
+サーバーが保持する訂正・削除の記録が、日本のルールでいう「訂正・削除の履歴」に当たります。帳簿は法定の保存期間（7年、法人の一部は最長10年）保存してください。IrisBooks は認証（JIIMA 認証など）を受けておらず、IrisBooks で付けた帳簿が優良電子帳簿の要件を満たすとは主張しません。要件を満たすかどうか、税務署への届出が必要かどうかは、あなたと税理士で判断してください。

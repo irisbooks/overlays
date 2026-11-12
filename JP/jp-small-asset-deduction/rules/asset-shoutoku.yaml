@@ -17,7 +17,7 @@ rules:
       until: "'2029-03-31'"
     message:
       en: "toku_rei={{.regime}}: the 少額減価償却特例 covers assets acquired through {{.until}} — this asset was acquired later"
-      ja: "toku_rei={{.regime}}: 少額減価償却特例の対象は {{.until}} までに取得した資産です(この資産の取得日はその後です)"
+      ja: "toku_rei={{.regime}}: 少額減価償却資産の特例の対象は {{.until}} までに取得した資産です(この資産の取得日はその後です)"
 
   - id: asset.shoutoku-cost-max
     target: asset
@@ -66,4 +66,4 @@ rules:
       count: size(peers)
     message:
       en: "toku_rei={{.regime}}: FY{{.fy}} total ¥{{.total}} exceeds the 青色 SMB ¥{{.cap}}/yr cap (sum across {{.count}} asset(s))"
-      ja: "toku_rei={{.regime}}: FY{{.fy}} の合計 ¥{{.total}} が青色申告の特例上限 ¥{{.cap}}/年 を超えています({{.count}} 件の合計)"
+      ja: "toku_rei={{.regime}}: {{.fy}}年度の合計 ¥{{.total}} が、青色申告の特例の年間限度額 ¥{{.cap}} を超えています({{.count}} 件の合計)"

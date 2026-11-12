@@ -511,7 +511,7 @@
             "carrying_value_minor": 696000,
             "acquisition_cost_minor": 696000,
             "allocation_cost_minor": 696000,
-            "allocation_policy": "jp-foreign-currency@2026.11.1#jp-foreign-currency.cash"
+            "allocation_policy": "jp-foreign-currency@2026.11.2#jp-foreign-currency.cash"
           }
         ]
       },

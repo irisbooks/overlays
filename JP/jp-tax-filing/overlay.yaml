@@ -1,5 +1,5 @@
 id: jp-tax-filing
-version: 2026.10.1
+version: 2026.11.1
 requires_bindings: 5
 region: JP
 requires_overlays: {jp-tax-classification: ['2026.10.1']}

@@ -2,7 +2,7 @@ id: salary
 output: figures
 description:
   en: Prepare posted RSU salary from complete local journals for the declared self-assessment profile. Requires a full calendar year, valid journal structure and matching unique vesting evidence. No separate salary deduction or tax amount is computed.
-  ja: 確認済みの自己申告納税の運用について、完全なローカル台帳から記帳済みRSU給与を暦年で集計します。仕訳の構造、一意の権利確定の根拠、対応する明細を確認します。給与所得控除や税額は計算しません。
+  ja: 確認済みの条件（確定申告で納税するRSU）について、ローカルの帳簿の全仕訳から、記帳済みのRSU給与を暦年で集計します。暦年1年分の期間、正しい仕訳構造、重複がなく両明細で一致する権利確定の根拠が必要です。給与所得控除や税額は計算しません。
 params:
   - {name: scope_confirmed, type: bool, enum: [true], doc: Confirm the supported resident employee profile, reviewed JPY valuations and complete validated vesting records.}
   - {name: income_account, type: string, doc: The exact dedicated RSU salary account configured in book.jp_rsu.}

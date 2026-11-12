@@ -2,7 +2,7 @@ id: vesting-value
 output: figures
 description:
   en: Calculate whole-share gross JPY vesting from exact scaled-integer USD price and JPY/USD FX inputs. Choose truncation or half-up explicitly and review the valuation evidence; no journal is written by this calculation.
-  ja: 整数株数・係数と小数桁数で記録したドル株価・円／ドル為替から円建ての権利確定額を正確に計算します。切捨てか四捨五入を明示し、評価根拠を確認してください。この計算では仕訳を書き込みません。
+  ja: 整数株数と、係数・小数桁数で指定したドル建ての株価および円／ドルの為替レートから、円建ての権利確定額を正確に計算します。切り捨てか四捨五入を明示し、評価根拠を確認してください。この計算では仕訳を書き込みません。
 params:
   - {name: scope_confirmed, type: bool, enum: [true], doc: Confirm the resident employee profile, whole shares, price/rate observations and rounding convention.}
   - {name: quantity, type: int, doc: 1..1000000 whole vested shares; configure the Book stock unit with scale 0.}

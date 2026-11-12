@@ -12,14 +12,14 @@ rules:
     assert: manages_tax(book)
     message:
       en: "A tax classification requires an explicitly taxable Book; missing settings do not establish exemption."
-      ja: "税区分の記録には課税事業者であることの明示が必要です。設定の省略は免税を意味しません。"
+      ja: "税区分を記録するには、consumption_tax.status: taxable の設定が必要です。設定の省略は免税を意味しません。"
   - id: tax.block-type
     target: line
     when: has(line.tax)
     assert: type(line.tax) == map
     message:
       en: "line.tax must be a mapping."
-      ja: "line.tax はマッピングで指定してください。"
+      ja: "line.tax は、category などのキーと値の組（マッピング）で指定してください。"
   - id: tax.invoice-type
     target: line
     when: classified(book, line) && has(line.tax.invoice)

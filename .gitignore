@@ -1,1 +1,2 @@
 .DS_Store
+.github/scripts/__pycache__/*

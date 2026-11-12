@@ -10,4 +10,4 @@ with: >-
   : {'amounts': []}
 description:
   en: Fill both missing share-debit and salary-credit amounts from reviewed JPY or exact valuation facts. Ordinary monetary journals retain balancing. No cash, withholding or tax sale is invented.
-  ja: 確認済みの円換算額、または正確な評価入力から、株式の借方と給与の貸方を同時に補完します。通常の貸借補完も継続します。現金、源泉徴収、納税目的の売却は推定しません。
+  ja: 未入力の株式の借方金額と給与の貸方金額を、確認済みの円換算額または正確なvaluation入力から同時に補完します。金額だけの通常の仕訳では、貸借補完がそのまま働きます。現金、源泉徴収、納税のための売却の明細は作りません。

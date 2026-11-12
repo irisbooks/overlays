@@ -2,7 +2,7 @@ id: basis
 output: figures
 description:
   en: Prepare Japanese listed-share disposal figures and rounded remaining basis from the complete declared pool. These are filing aids, not an accepted financial view or submitted return.
-  ja: 明示した対象口座全体から、上場株式の譲渡損益と端数処理後の残存取得費を計算します。申告準備資料であり、承認済み財務ビューや提出済み申告書ではありません。
+  ja: 設定した対象口座の全体から、上場株式の譲渡損益と端数処理後の残存取得費を計算します。出力は申告準備資料であり、承認済みの会計ビューでも提出済みの申告書でもありません。
 params:
   - {name: scope_confirmed, type: bool, enum: [true], doc: Confirm complete ordinary listed-share holdings and the guide's supported scope.}
   - {name: from, type: string, doc: Period start YYYY-MM-DD.}

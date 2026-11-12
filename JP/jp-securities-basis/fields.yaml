@@ -3,4 +3,4 @@ fields:
     type: map
     description:
       en: Confirm ordinary listed shares, complete own-account scope, capitalized acquisition costs, account mappings and commodities.
-      ja: 通常の上場株式、本人名義の対象口座全体、取得時費用の資産計上、勘定科目、銘柄を明示します。
+      ja: 通常の上場株式であること、本人名義の対象口座をすべて含むこと、取得時費用を資産計上することを確認し、勘定科目と銘柄を指定します。
