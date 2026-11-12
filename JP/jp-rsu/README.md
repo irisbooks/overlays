@@ -11,6 +11,10 @@ Overlay functions.
 
 ## Before use
 
+The package covers ordinary employee RSUs settled in shares, for a Japanese
+resident working in Japan with no Japanese withholding. See the
+[workflow guide](guides/vesting.md) for the full conditions.
+
 Salary stands alone. Select `jp-securities-basis` for share disposals and rounded
 remaining basis, and `jp-foreign-currency` for ordinary USD cash realization.
 Each package has its own explicit scope and account mappings. `iris yearend`

@@ -492,7 +492,7 @@
             "carrying_value_minor": 3257143,
             "acquisition_cost_minor": 3257143,
             "allocation_cost_minor": 3260000,
-            "allocation_policy": "jp-securities-basis@2026.11.1#jp-securities-basis.shares"
+            "allocation_policy": "jp-securities-basis@2026.11.2#jp-securities-basis.shares"
           }
         ]
       },

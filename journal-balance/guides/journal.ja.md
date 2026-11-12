@@ -16,6 +16,6 @@ iris journal complete --apply --revision REVISION_FROM_PREVIEW journals/2026-10/
 iris validate
 ```
 
-ローカル MCP では `complete_journal(path)` で候補を確認し、同じツールに `apply: true` と返された `revision` を渡して適用します。適用しても仕訳は下書きのままで、転記や同期は行いません。別途転記するときは、取引と証憑を確認してください。貸借が一致するだけでは、仕訳の正しさは判断できません。
+ローカル MCP では `complete_journal(path)` で候補を確認し、同じツールに `apply: true` と返された `revision` を渡して適用します。適用しても仕訳は下書きのままで、記帳や同期は行いません。別途記帳するときは、取引と証憑を確認してください。貸借が一致するだけでは、仕訳の正しさは判断できません。
 
 [実行可能な貸借補完の例](../tests/autocomplete.yaml)の `money-only balance needs no extra journal fields` を参照できます。数量を伴う売却は[売却原価の補完手順](../../inventory-disposal/guides/inventory.ja.md)を使います。

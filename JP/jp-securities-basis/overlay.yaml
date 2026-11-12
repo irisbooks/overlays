@@ -1,5 +1,5 @@
 id: jp-securities-basis
-version: 2026.11.1
+version: 2026.11.2
 requires_bindings: 6
 region: JP
 description: Japanese ordinary listed-share acquisition basis, reusable for purchased and compensation shares.

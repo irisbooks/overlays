@@ -5,14 +5,14 @@ rules:
     assert: regime(asset) in ['shoutoku_300k', 'ikkatsu_3yr']
     message:
       en: "Unknown JP asset regime; select a documented regime or omit it."
-      ja: "不明な資産の特例区分です。対応する区分を指定するか省略してください。"
+      ja: "不明な資産の特例区分です。対応している区分を指定するか、省略してください。"
   - id: asset.ikkatsu-unsupported
     target: asset
     when: regime(asset) == 'ikkatsu_3yr'
     assert: 'false'
     message:
       en: "Three-year pooled depreciation is unsupported. Ordinary monthly straight-line depreciation is not the pooled annual deduction."
-      ja: "一括償却資産には未対応です。通常の月次定額償却を年間の一括償却額として扱えません。"
+      ja: "一括償却資産（3年均等償却）には未対応です。通常の月次の定額償却は、一括償却資産の年間償却額の代わりになりません。"
   - id: asset.regime-method
     target: asset
     when: regime(asset) == 'shoutoku_300k'

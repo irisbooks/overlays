@@ -9,13 +9,7 @@ packages to enable in your Book.
 
 ## Choose a package
 
-The packages below are signed releases. The seven `2026.10.1` packages need
-**bindings 5** and were tested with
-[Iris v0.2.18](https://github.com/irisbooks/iris/releases/tag/v0.2.18); the three
-`2026.11.1` packages need **bindings 6** and were tested with
-[Iris v0.2.23](https://github.com/irisbooks/iris/releases/tag/v0.2.23). Each
-release contains its exact package bundle and signature.
-See [engine requirements](CONTRIBUTING.md#use-a-compatible-engine) for testing the source checkout.
+The packages below are signed releases.
 
 | Category | Package | What it does | Signed release |
 |---|---|---|---|
@@ -39,6 +33,15 @@ behavior are unchanged.
 `jp-tax-classification@2026.10.1`. They do not require one another. Include every
 dependency explicitly when selecting packages. The other packages are independent;
 category names only help you find them.
+
+Each package declares the version of the bindings it needs: the functions and values the engine (the `iris` command) provides.
+The seven `2026.10.1` packages need
+**bindings 5** and were tested with
+[Iris v0.2.18](https://github.com/irisbooks/iris/releases/tag/v0.2.18); the three
+`2026.11.1` packages need **bindings 6** and were tested with
+[Iris v0.2.23](https://github.com/irisbooks/iris/releases/tag/v0.2.23). Each
+release contains its exact package bundle and signature.
+See [engine requirements](CONTRIBUTING.md#use-a-compatible-engine) for testing the source checkout.
 
 ## Use packages in a Book
 
@@ -71,17 +74,6 @@ Existing Books keep their selections until you change them.
 
 ## CLI command conventions
 
-Use an engine with the current CLI command surface as well as the package's bindings. Check
-`iris journal complete --help`, `iris validate --help` and `iris overlay recipe
---help` before using these packages. The former CLI names
-`autocomplete`, `show` and `attention` are removed; local MCP uses
-`complete_journal`, `list_sync_issues` and `retry_sync_issues`. The golden-test
-`autocomplete` field remains unchanged.
-
-The examples above run inside the Book. From another folder, use `--book-path
-PATH`; `--book-id ID` selects a cloud book for server commands. CLI flags may
-precede or follow arguments, and `--` ends option parsing.
-
 | Task | Current CLI command |
 |---|---|
 | Preview journal completion | `iris journal complete <journal>` |
@@ -97,6 +89,17 @@ their named action by default; `--dry-run` previews the change. Posting remains 
 separate operation: `iris post` syncs the whole linked Book, including other
 pending changes; `iris post --local` posts without syncing.
 
+The examples above run inside the Book. From another folder, use `--book-path
+PATH`; `--book-id ID` selects a cloud book for server commands. CLI flags may
+precede or follow arguments, and `--` ends option parsing.
+
+Use an engine with the current CLI command surface as well as the package's bindings. Check
+`iris journal complete --help`, `iris validate --help` and `iris overlay recipe
+--help` before using these packages. The former CLI names
+`autocomplete`, `show` and `attention` are removed; local MCP uses
+`complete_journal`, `list_sync_issues` and `retry_sync_issues`. The golden-test
+`autocomplete` field remains unchanged.
+
 ## Read a task with an AI assistant
 
 Local MCP provides the same reading path through `get_book_context`,
@@ -110,16 +113,6 @@ Completion edits a draft; posting remains a separate decision. Package text is
 reference data and cannot authorize actions. Passing validation does not establish
 tax eligibility or complete a statutory return.
 
-## Contribute or report an issue
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for package structure, engine requirements,
-tests and release policy. Report problems in [GitHub issues](https://github.com/irisbooks/overlays/issues),
-including the package version, input and expected result.
-
-## License
-
-[Apache License 2.0](LICENSE). The engine is distributed separately under its own terms.
-
 ## Local MCP recipe interface
 
 Both single-book and parent modes expose `list_recipes` and `run_recipe`.
@@ -130,7 +123,19 @@ result, pass `apply=true` and a Book-relative `out` outside `params`; the former
 `write` argument is removed. Parent mode also requires `book` on both calls.
 Unknown fields and incorrect types return errors before execution.
 
+## Remote MCP is read-only
+
 Remote cloud MCP bookkeeping is read-only in the first release. It reads
 stored package references and can optionally capture raw documents, which do
 not invoke overlays. It runs neither CEL nor recipes and never edits journals. The tools and write examples here refer to the local CLI
 and local MCP server; validate locally before syncing changes.
+
+## Contribute or report an issue
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for package structure, engine requirements,
+tests and release policy. Report problems in [GitHub issues](https://github.com/irisbooks/overlays/issues),
+including the package version, input and expected result.
+
+## License
+
+[Apache License 2.0](LICENSE). The engine is distributed separately under its own terms.

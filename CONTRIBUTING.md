@@ -7,6 +7,8 @@ Explain which inputs or figures change and why, so a reviewer can reproduce the
 result. For questions or proposed engine changes, open a
 [GitHub issue](https://github.com/irisbooks/overlays/issues).
 
+To change a rule, a test or documentation, reading [Find the file to change](#find-the-file-to-change), [Use a compatible engine](#use-a-compatible-engine) and [Before opening a pull request](#before-opening-a-pull-request) in that order is enough. Read the dependency policy and the Overlay-or-core section only when a change needs a new engine capability.
+
 ## Use a compatible engine
 
 The seven published `2026.10.1` packages declare `requires_bindings: 5`.
@@ -15,25 +17,6 @@ Bindings are the functions and values the Iris engine makes available to package
 expressions written in CEL. The engine is distributed separately; start with the
 [CLI installation guide](https://irisbooks.io/docs/en/getting-started/) and
 [signed engine releases](https://github.com/irisbooks/iris/releases).
-
-[Iris v0.2.23](https://github.com/irisbooks/iris/releases/tag/v0.2.23) is the
-published signed baseline for this source checkout (bindings 6). All 160 catalog
-goldens and 162 independent RSU rational comparisons pass locally with that
-binary; CI repeats the full checks with its signed Linux build. CI uses
-[`.github/engine.txt`](.github/engine.txt), so another engine release does not
-change an unchanged commit's result. Raise the pin in the PR that needs a newer
-engine, after publication. Unsupported bindings and tests fail rather than skip.
-The unchanged `2026.10.1` bundles retain their earlier v0.2.18 / bindings-5
-qualification. Signed bundles are linked from the [catalog](README.md#choose-a-package).
-
-The guides also require the current command surface: journal completion is
-`iris journal complete`, applying derived fields uses `iris validate --apply`,
-and recipe writes use `--apply --out PATH`. Verify examples with that engine's
-`--help` and update English/Japanese guides plus user-visible YAML descriptions
-and messages together. Keep MCP names and examples aligned too: use `complete_journal`, and the shared
-`list_recipes` / `run_recipe` interface in both modes. Recipe IDs match the CLI;
-`params` contains only recipe inputs. Preview is the default; `apply=true` plus
-`out` records a result. Golden-test field names such as `autocomplete` stay unchanged.
 
 From this repository's root, test a package with:
 
@@ -44,6 +27,16 @@ iris overlay test --dir JP/jp-tax-classification
 
 Repeat for each changed package. No Book folder or engine source checkout is
 needed for `--dir` tests.
+
+[Iris v0.2.23](https://github.com/irisbooks/iris/releases/tag/v0.2.23) is the
+published signed baseline for this source checkout (bindings 6). All 160 catalog
+goldens and 162 independent RSU rational comparisons pass locally with that
+binary; CI repeats the full checks with its signed Linux build. CI uses
+[`.github/engine.txt`](.github/engine.txt), so another engine release does not
+change an unchanged commit's result. Raise the pin in the PR that needs a newer
+engine, after publication. Unsupported bindings and tests fail rather than skip.
+The unchanged `2026.10.1` bundles retain their earlier v0.2.18 / bindings-5
+qualification. Signed bundles are linked from the [catalog](README.md#choose-a-package).
 
 ## Published-engine dependency policy
 
@@ -75,7 +68,9 @@ python3 .github/scripts/check-engine.py
 .github/scripts/run-goldens.sh
 ```
 
-## Decide what belongs in a layer or core
+## Decide what belongs in an Overlay or core
+
+These are ordinary code-review criteria and do not add another release approval.
 
 - **Put policy and supported calculations in Overlays.** Regional eligibility,
   dated legal values, classifications, rounding choices and recipes belong here.
@@ -106,23 +101,24 @@ python3 .github/scripts/check-engine.py
   the core capability release must work with existing compatible packages and
   must not wait for its unpublished consumer.
 
-The [RSU valuation functions](JP/jp-rsu/functions.yaml) initially qualified
+For example, the [RSU valuation functions](JP/jp-rsu/functions.yaml) initially qualified
 on published v0.2.18 / bindings 5, with [goldens](JP/jp-rsu/tests/valuation.yaml)
 and an [independent rational oracle](.github/scripts/check-rsu-valuation.py).
 The [restored workflow](JP/jp-rsu/guides/vesting.md) uses general bindings-6 host
 capabilities for coordinated posting proposals and complete local facts/state.
-The arithmetic and regional treatment remain in the Overlays. These are ordinary
-code-review criteria and do not add another release approval.
+The arithmetic and regional treatment remain in the Overlays.
 
 ## Keep each package focused
 
 An overlay provides one independently useful accounting function. Keep its
-fields, checks, calculations, guide and examples together. Declare the lowest
-version of each necessary dependency in `requires_overlays`; engines that apply
-the release rule below accept any later release of it, and older engines accept
-only a listed version. Users must select those dependencies explicitly. Shared helper code alone does not justify enabling
-unrelated behavior.
+fields, checks, calculations, guide and examples together. Shared helper code
+alone does not justify enabling unrelated behavior.
 
+- **Declare the lowest dependency version.** Declare the lowest version of each
+  necessary dependency in `requires_overlays`. Engines that apply the
+  [release rule below](#releases-add-never-change) accept any later release of
+  it; older engines accept only a listed version. Users must select those
+  dependencies explicitly.
 - **Date and cite statutory figures.** Put rates or thresholds in named
   `functions.yaml` functions when appropriate. Use the date specified by the law,
   cite the provision or NTA page in `doc`, and encode what applies after expiry.
@@ -135,6 +131,17 @@ unrelated behavior.
 - **Keep both reading paths usable.** Provide `en` and `ja` messages and recipe
   or completion descriptions. Update the English and Japanese README and guide
   together when behavior, inputs or coverage change.
+
+## Keep guides and messages on the current commands
+
+The guides require the current command surface: journal completion is
+`iris journal complete`, applying derived fields uses `iris validate --apply`,
+and recipe writes use `--apply --out PATH`. Verify examples with that engine's
+`--help` and update English/Japanese guides plus user-visible YAML descriptions
+and messages together. Keep MCP names and examples aligned too: use `complete_journal`, and the shared
+`list_recipes` / `run_recipe` interface in both modes. Recipe IDs match the CLI;
+`params` contains only recipe inputs. Preview is the default; `apply=true` plus
+`out` records a result. Golden-test field names such as `autocomplete` stay unchanged.
 
 ## Find the file to change
 

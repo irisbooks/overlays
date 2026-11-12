@@ -1,36 +1,102 @@
-# Ordinary USD cash / 通常のドル現金
+# Ordinary USD cash and currency gains
 
-This independent package handles ordinary USD cash after an evidenced acquisition, including share-sale proceeds. Configure `book.jp_foreign_currency` with `scope_confirmed: true`, `method_confirmed: true`, `method: moving-average`, `account_regime: ordinary-cash`, `currencies: [USD]`, `accounts`, `settlement_accounts`, `fee_accounts`, and `gain_account`. Confirm the chosen cost methodology and that all relevant ordinary USD holdings are included. It is not a general statement that Japanese law mandates this method for every foreign-currency asset.
+**English** | [日本語](cash.ja.md)
 
-株式の売却益と、売却代金として受け取ったドルの保有後の為替差損益を分けます。通常のドル現金に対応し、取得費の移動平均法を確認した口座だけを対象にします。外貨預金等のすべてに同じ方法が必須である、という意味ではありません。
+This package handles ordinary USD cash after an evidenced acquisition, including
+share-sale proceeds. It is not RSU-specific and works on its own. It separates
+the gain on a share sale from the currency gain or loss that arises while the
+proceeds are held in USD.
 
-Record the JPY acquisition value and USD quantity explicitly. Native USD quantity uses scale 2: YAML `quantity: 4800` represents USD 4,800 (480000 internally). A share sale receiving USD 4,800 valued at JPY 696,000 creates that cash basis. A later conversion to JPY 744,000 realizes JPY 48,000 FX gain. Use the actual dated valuation and preserve rate kind, date and statements in evidence; the package does not guess quote sources or fetch live rates.
+Cost is calculated by the moving-average method. This is not a general statement
+that Japanese law mandates this method for every foreign-currency asset. Before
+use, confirm that the method applies and that all relevant ordinary USD holdings
+are included.
 
-Run `iris journal complete` for an outgoing USD draft and `jp-foreign-currency.realized` with `scope_confirmed: true`, `from`, `to` for filing figures. `realized_fx_gain` is an ordinary-cash miscellaneous-income preparation figure, separate from RSU salary and listed-stock gains. Further tax-category adjustments are outside this package.
+## Configure the Book
 
-A same-currency transfer between declared accounts of the same owner uses one balanced journal with the same `inventory: {transfer: unique-id}` on both legs; quantity and carrying amount must match. It carries basis and creates no realization. Currency conversion, third-party payment and purchasing another asset are disposals, not transfers. Record fees separately; unsupported settlement accounts fail.
+Configure `book.jp_foreign_currency` as below. Include every account that holds
+the owner's ordinary USD balance in `accounts`. The account names are examples.
 
-証券口座から本人名義の銀行口座へドルのまま移すだけなら、取得費を引き継ぎ、為替差損益を作りません。円転や他の資産への支出は別取引です。MMFへの自動振替、証拠金取引、利息・配当の課税区分、未解決の受渡時差はこの初期版の対象外です。年度末の時価評価や給与の再計上は行いません。
+```yaml
+jp_foreign_currency:
+  scope_confirmed: true
+  method_confirmed: true
+  method: moving-average
+  account_regime: ordinary-cash
+  currencies: [USD]
+  accounts: ['Assets:USD']
+  settlement_accounts: ['Assets:JPY']
+  fee_accounts: ['Expenses:FXFees']
+  gain_account: 'Income:FX'
+```
 
-- Same-currency transfers: https://www.nta.go.jp/law/shitsugi/shotoku/02/39.htm
-- Reinvestment: https://www.nta.go.jp/law/shitsugi/shotoku/02/43.htm
-- Method discussion (research, not binding guidance): https://www.nta.go.jp/about/organization/ntc/kenkyu/ronsou/114/01/index.htm
+## Record USD receipts
 
-Tax-return preparation only.
+Record the JPY acquisition value and USD quantity explicitly on the receiving
+line. USD quantity uses scale 2 (two decimal places): YAML `quantity: 4800`
+represents USD 4,800, held internally in cents as 480000.
 
-## Settlement and eligible realization fees
+A share sale receiving USD 4,800 valued at JPY 696,000 gives that cash a basis
+of JPY 696,000. A later conversion to JPY 744,000 realizes a JPY 48,000 currency
+gain. Use the valuation of the actual date, and keep the rate kind, date and
+statements as evidence. The package does not guess quote sources or fetch live
+rates.
 
-Declare only confirmed directly attributable realization expenses in the fee
-mapping. Net settlement minus currency allocation cost gives the supported
-realized figure; separately recorded fees are deducted once, not added to an
-already balanced gain credit. This does not classify arbitrary personal fees as
-deductible. [NTA miscellaneous-income calculation](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1500.htm),
-[directly attributable expenses](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2210.htm).
+## Complete outgoing USD and prepare realized gains
 
-The selected USD accounts must use the declared currency and quantities. Matched
-own-account transfers carry basis without creating disposal figures. Use a
-declared USD clearing account for an evidenced transfer in transit; do not infer
-an unpaired receipt or silently absorb a fee into a mismatched transfer.
-Other currency pools, fund sweeps and margin-FX treatments are not computed by
-this USD policy. Retained root-Book openings preserve carrying and allocation
-values independently; the result remains a filing aid.
+Run `iris journal complete` on the draft journal of a transaction in which USD
+leaves an account. For filing figures, run the `jp-foreign-currency.realized`
+recipe with `scope_confirmed: true`, `from` and `to`.
+
+`realized_fx_gain` is a preparation figure for reporting ordinary-cash currency
+gains as miscellaneous income. It is separate from RSU salary and listed-stock
+gains. Further tax-category adjustments are outside this package.
+
+## Own-account transfers carry basis
+
+A transfer of USD, kept as USD, between the owner's accounts named in the
+settings uses one balanced journal. Put the same
+`inventory: {transfer: unique-id}` on both the outgoing and the incoming line;
+their quantity and carrying amount must match. For a transfer recorded this way,
+the package carries the basis forward and creates no realization.
+
+Currency conversion, third-party payment and purchasing another asset are
+disposals, not transfers: do not mark them with `transfer`. Record fees on a
+separate line. A journal using an unsupported settlement account fails.
+
+For an evidenced transfer still in transit, use the USD clearing account named
+in the settings. Do not treat a receipt without a matching outgoing line as a
+transfer, and do not absorb a fee into a transfer whose quantities do not match.
+
+## Name only confirmed fee accounts
+
+In `fee_accounts`, name only accounts confirmed to hold expenses directly
+attributable to the realizing transaction. The realized figure is net settlement
+minus the allocation cost of that USD.
+
+Separately recorded fees are deducted once. The gain credit already balances the
+journal, so fees are not added to it again. This setting does not classify
+arbitrary personal fees as deductible.
+
+## Coverage and exclusions
+
+The initial release supports ordinary USD cash in a calendar-year JPY personal
+Book. Lines on the selected USD accounts must record the declared currency (USD)
+and a quantity.
+
+Sweeps into funds such as MMFs, margin trading, the tax category of interest and
+dividends, and unresolved trade/settlement timing are excluded. Currencies other
+than USD are not computed either. The package does not revalue at year-end or
+recognize salary again.
+
+A successor Book created with `iris yearend` carries carrying value and
+allocation cost (the tax basis kept apart from carrying value) forward as
+separate values.
+
+The output is a filing aid, not a tax return.
+
+## Sources
+
+- NTA: [same-currency transfers](https://www.nta.go.jp/law/shitsugi/shotoku/02/39.htm), [reinvestment](https://www.nta.go.jp/law/shitsugi/shotoku/02/43.htm)
+- NTA: [miscellaneous-income calculation](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1500.htm), [directly attributable expenses](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2210.htm)
+- [National Tax College research on the method](https://www.nta.go.jp/about/organization/ntc/kenkyu/ronsou/114/01/index.htm) (research, not binding guidance)
