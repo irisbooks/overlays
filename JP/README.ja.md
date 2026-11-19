@@ -41,7 +41,7 @@ jp-small-asset-deduction、jp-declining-balance が選択されます。当て�
 - **領収書**：領収書ごとに明細を残すのは作業方針です。白色申告の記帳では、日々の合計を記載する方法も国税庁が説明しています（[No.2080](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2080.htm)）。
 - **家事按分**：家事関連費は、事業分を区分できる記録が必要です（[No.2210](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2210.htm)）。`iris allocation` は、確認した割合で費用を分けます。
 - **投資信託**：複数回購入した場合の取得費には法令上の計算方法があります（[No.1464](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1464.htm)）。帳簿の FIFO・移動平均は管理上の選択で、税務上の判断ではありません。基準価額は 10,000 口当たりで表示されます。NISA 口座の場合は、証券会社が示す口座区分、[金融庁の制度説明](https://www.fsa.go.jp/policy/nisa2/know/index.html)、[最新の対象商品](https://www.fsa.go.jp/policy/nisa2/products/)を確認してください。
-- **即時償却する少額資産**：購入は資産の勘定科目に計上し、`iris asset depreciate` で償却します。費用にも計上すると二重になります。少額の品目に資産ファイルを作るかどうかは帳簿の持ち主が決めます。一括償却資産（`toku_rei: ikkatsu_3yr`）には未対応です。証憑を残し、処理を `notes/open-questions.md` に記録してください。
+- **即時償却する少額資産**：購入は資産の勘定科目に計上し、`iris asset depreciate --apply` で償却します。費用にも計上すると二重になります。少額の品目に資産ファイルを作るかどうかは帳簿の持ち主が決めます。一括償却資産（`toku_rei: ikkatsu_3yr`）には未対応です。証憑を残し、処理を `notes/open-questions.md` に記録してください。
 - **除却・売却**：記録した償却表の除却年度の行は、保有月数分（月割）に書き換えます。売却代金と帳簿価額の差額は、固定資産売却益、固定資産売却損、除却損に計上します。
 
 ## 申告書を作る
@@ -49,7 +49,7 @@ jp-small-asset-deduction、jp-declining-balance が選択されます。当て�
 IrisBooks は集計し、申告書はあなたか AI が作り、提出はあなたが行います。エンジンの数値と記録した計算資料、その年の公式様式をもとに作業し、作成した様式は帳簿の `compiled/jp/<様式>/` に保存します。
 
 - **消費税**：課税期間は、個人は暦年、法人は事業年度です。jp-tax-filing の数値には、国税と地方税の内訳、課税標準額の千円未満切り捨てを含めていません。記録した数値から計算してください。税抜経理の帳簿では、jp-tax-amount が提案した税額を仮払消費税・仮受消費税に計上します。
-- **固定資産台帳と別表16**：資産ファイルと、`iris export assets --year`、`iris asset schedule --year` の出力を使います。`opening_nbv`、`period_dep`、`closing_nbv`、`accumulated`、`disposal_nbv` は CSV の値をそのまま使います。自分で計算し直した値に置き換えないでください。
+- **固定資産台帳と別表16**：資産ファイルと、その年度の帳簿で実行した `iris export assets`、`iris asset schedule` の出力を使います。`opening_nbv`、`period_dep`、`closing_nbv`、`accumulated`、`disposal_nbv` は CSV の値をそのまま使います。自分で計算し直した値に置き換えないでください。
 - **償却資産税（市区町村ごと）**：事業年度にかかわらず暦年で申告します。賦課期日は1月1日、申告期限は1月31日です。評価額は取得価額と減価残存率の表から求め、`closing_nbv` は使いません。`toku_rei: shoutoku_300k` で即時償却した資産も申告の対象です。
 
 ## 帳簿を保存する
