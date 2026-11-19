@@ -71,7 +71,7 @@ your 税理士 can check it:
   [FSA's NISA rules](https://www.fsa.go.jp/policy/nisa2/know/index.html) and the
   [current eligible products](https://www.fsa.go.jp/policy/nisa2/products/).
 - **Small assets written off at once.** Book the purchase to the asset account
-  and let `iris asset depreciate` write it off; booking it as an expense too
+  and let `iris asset depreciate --apply` write it off; booking it as an expense too
   counts it twice. Whether a small item gets an asset file at all is the owner's
   call. 一括償却資産 (`toku_rei: ikkatsu_3yr`) is unsupported: keep the evidence
   and record the treatment in `notes/open-questions.md`.
@@ -90,8 +90,8 @@ Book under `compiled/jp/<form>/`.
   (国税/地方税) split and the rounding of the 課税標準額 down to ¥1,000; apply
   them from the recorded figures. On a 税抜経理 Book, book the amount
   jp-tax-amount proposes on 仮払消費税 / 仮受消費税.
-- **固定資産台帳 and 別表16.** Use the asset files with `iris export assets --year`
-  and `iris asset schedule --year`. Take `opening_nbv`, `period_dep`,
+- **固定資産台帳 and 別表16.** Use the asset files with `iris export assets` and
+  `iris asset schedule`, run in that year's book. Take `opening_nbv`, `period_dep`,
   `closing_nbv`, `accumulated` and `disposal_nbv` from the CSV rather than
   recomputing them.
 - **償却資産税 (per municipality).** A calendar-year return for every fiscal
