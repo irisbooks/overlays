@@ -13,10 +13,10 @@ rules:
     when: >-
       rsu_scope(book) && (journal.lines.exists(l, has(l.jp_rsu))
         || journal.lines.exists(l, l.account == book.jp_rsu.income_account))
-    assert: rsu_journal_valid(book, journal)
+    assert: "rsu_recorded_form(book, journal) ? rsu_recorded_journal_valid(book, journal) : rsu_journal_valid(book, journal)"
     message:
-      en: Record one share debit and equal gross-salary credit with identical event/grant/payer/date, a reviewed positive gross_jpy or complete exact valuation inputs, and valuation_source evidence. Confirm the valuation facts; no tax sale or withholding is inferred.
-      ja: 株式の借方と、同額の給与の貸方に、同じevent_id・grant_id・payer・recognition_date・valuation_sourceを記録してください。金額は、確認済みの正のgross_jpyか、すべてそろったvaluation入力で示します。評価の根拠を確認してください。納税のための売却や源泉徴収は推定しません。
+      en: Record one share debit and an equal gross-salary credit. Either put event_id, payer and valuation_source on the salary line only, with both yen amounts recorded, or put identical event/grant/payer/date, a reviewed positive gross_jpy or complete exact valuation inputs, and valuation_source on both lines. Confirm the valuation facts; no tax sale or withholding is inferred.
+      ja: 株式の借方と、同額の給与の貸方を記録してください。根拠は、給与の明細だけにevent_id・payer・valuation_sourceを書き、両方の円の金額を記録するか、両方の明細に同じevent_id・grant_id・payer・recognition_date・valuation_sourceと、確認済みの正のgross_jpyまたはすべてそろったvaluation入力を書きます。評価の根拠を確認してください。納税のための売却や源泉徴収は推定しません。
   - id: rsu.calculation
     target: journal
     severity: error

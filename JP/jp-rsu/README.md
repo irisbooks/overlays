@@ -41,3 +41,18 @@ The [task definition](tasks.yaml) links these executable examples:
 - [Valuation examples](tests/valuation.yaml)
 - [Vesting examples](tests/vesting.yaml)
 - [Full workflow](tests/full-workflow.yaml)
+
+## Follow a vest through sale and wire
+
+Task ID: `jp-rsu.lifecycle`. Record the yen on both postings with the evidence on
+the salary line, and prepare salary by payer here, the share gain with
+`jp-securities-basis` and the currency gain with `jp-foreign-currency`:
+
+```sh
+iris context --task jp-rsu.lifecycle
+iris overlay guide jp-rsu.lifecycle
+```
+
+The [lifecycle guide](guides/lifecycle.md) maps each figure to its package and
+works through a year. [Recorded-form examples](tests/recorded.yaml) cover the
+vest itself.

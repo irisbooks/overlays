@@ -30,3 +30,14 @@ iris overlay guide jp-rsu.vesting.ja
 - [評価計算例](tests/valuation.yaml)
 - [権利確定の記帳例](tests/vesting.yaml)
 - [一連のワークフロー](tests/full-workflow.yaml)
+
+## 権利確定から売却・送金までを記録する
+
+タスク ID は `jp-rsu.lifecycle` です。両方の明細に円の金額を書き、根拠を給与の明細に書いて記録します。給与の支払者別の集計はこのパッケージで、譲渡損益は `jp-securities-basis` で、為替差損益は `jp-foreign-currency` で出します。
+
+```sh
+iris context --task jp-rsu.lifecycle
+iris overlay guide jp-rsu.lifecycle.ja
+```
+
+[一連の取引のガイド](guides/lifecycle.ja.md)に、数値ごとのパッケージと1年分の数値例を記載しています。権利確定の記録例は[こちらのテスト](tests/recorded.yaml)にあります。

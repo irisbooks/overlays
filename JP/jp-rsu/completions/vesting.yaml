@@ -4,7 +4,7 @@ when: >-
   !journal.lines.exists(l, l.unit != '' && l.side == 'credit')
   && (!journal.lines.exists(l, has(l.jp_rsu)) || rsu_scope(book))
 with: >-
-  journal.lines.exists(l, has(l.jp_rsu))
+  journal.lines.exists(l, has(l.jp_rsu)) && !rsu_recorded_form(book, journal)
   ? rsu_posting_proposal(book, journal,
       ledger_snapshot_v1(journals, date(string(book.fiscal_year) + '-01-01'), date(string(book.fiscal_year) + '-12-31')))
   : {'amounts': []}

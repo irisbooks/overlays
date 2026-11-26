@@ -1,0 +1,150 @@
+# The recorded-yen form: the person records both yen amounts, and only the
+# salary line carries the vest's evidence (event_id, payer, valuation_source).
+# Payer names are examples.
+book:
+  schema_version: 1
+  region: "JP"
+  currency: "JPY"
+  scale: 0
+  fiscal_year: 2026
+  fiscal_start_month: 1
+  units: [{"symbol": "EXMP", "scale": 0}]
+  jp_rsu: {"scope_confirmed": true, "included_in_salary_statement": false, "japan_withholding": false, "tax_funding": "self-assessment", "income_account": "Income:RSU", "share_account": "Assets:EXMP", "share_unit": "EXMP"}
+cases:
+  - name: "recorded yen with evidence on the salary line validates"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - {account: "Assets:EXMP", debit: 1505003, quantity: 100, unit: "EXMP"}
+        - {account: "Income:RSU", credit: 1505003, jp_rsu: {event_id: "vest-2026-05", payer: "Example Corp.", valuation_source: "raw/vest-2026-05.pdf"}}
+  - name: "recorded salary must equal the share debit"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - {account: "Assets:EXMP", debit: 1505003, quantity: 100, unit: "EXMP"}
+        - {account: "Income:RSU", credit: 1500000, jp_rsu: {event_id: "vest-2026-05", payer: "Example Corp.", valuation_source: "raw/vest-2026-05.pdf"}}
+        - {account: "Assets:JPY", credit: 5003}
+    expect: [{"rule": "rsu.valuation"}]
+  - name: "recorded form needs a payer"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - {account: "Assets:EXMP", debit: 1505003, quantity: 100, unit: "EXMP"}
+        - {account: "Income:RSU", credit: 1505003, jp_rsu: {event_id: "vest-2026-05", valuation_source: "raw/vest-2026-05.pdf"}}
+    expect: [{"rule": "rsu.valuation"}]
+  - name: "recorded form takes its amount from the postings, not gross_jpy"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - {account: "Assets:EXMP", debit: 1505003, quantity: 100, unit: "EXMP"}
+        - {account: "Income:RSU", credit: 1505003, jp_rsu: {event_id: "vest-2026-05", payer: "Example Corp.", valuation_source: "raw/vest-2026-05.pdf", gross_jpy: 1505003}}
+    expect: [{"rule": "rsu.valuation"}]
+  - name: "recorded form needs whole shares on the share account"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - {account: "Assets:EXMP", debit: 1505003}
+        - {account: "Income:RSU", credit: 1505003, jp_rsu: {event_id: "vest-2026-05", payer: "Example Corp.", valuation_source: "raw/vest-2026-05.pdf"}}
+    expect: [{"rule": "rsu.valuation"}]
+  - name: "recorded recognition date must be the journal date"
+    journal:
+      schema_version: 1
+      date: "2026-05-01"
+      status: "posted"
+      lines:
+        - {account: "Assets:EXMP", debit: 1505003, quantity: 100, unit: "EXMP"}
+        - {account: "Income:RSU", credit: 1505003, jp_rsu: {event_id: "vest-2026-05", payer: "Example Corp.", recognition_date: "2026-04-30", valuation_source: "raw/vest-2026-05.pdf"}}
+    expect: [{"rule": "rsu.valuation"}]
+  - name: "recorded form leaves the salary credit to ordinary balancing"
+    autocomplete:
+      chart: {"accounts": [{"path": "Assets:EXMP", "type": "asset"}, {"path": "Income:RSU", "type": "income"}]}
+      journal:
+        schema_version: 1
+        date: "2026-05-01"
+        status: "draft"
+        lines:
+          - {account: "Assets:EXMP", debit: 1505003, quantity: 100, unit: "EXMP"}
+          - {account: "Income:RSU", credit: null, jp_rsu: {event_id: "vest-2026-05", payer: "Example Corp.", valuation_source: "raw/vest-2026-05.pdf"}}
+    lines:
+      - {account: "Assets:EXMP", debit: 1505003, quantity: 100, unit: "EXMP"}
+      - {account: "Income:RSU", credit: 1505003, jp_rsu: {event_id: "vest-2026-05", payer: "Example Corp.", valuation_source: "raw/vest-2026-05.pdf"}}
+  - name: "salary by payer from recorded vests"
+    journals: &two-payers
+      - schema_version: 1
+        date: "2026-05-15"
+        status: "posted"
+        lines:
+          - {account: "Assets:EXMP", debit: 250005, quantity: 10, unit: "EXMP"}
+          - {account: "Income:RSU", credit: 250005, jp_rsu: {event_id: "vest-2026-05", payer: "Example Corp.", valuation_source: "raw/vest-2026-05.pdf"}}
+      - schema_version: 1
+        date: "2026-08-15"
+        status: "posted"
+        lines:
+          - {account: "Assets:EXMP", debit: 190003, quantity: 7, unit: "EXMP"}
+          - {account: "Income:RSU", credit: 190003, jp_rsu: {event_id: "vest-2026-08", payer: "Example Corp.", valuation_source: "raw/vest-2026-08.pdf"}}
+      - schema_version: 1
+        date: "2026-11-02"
+        status: "posted"
+        lines:
+          - {account: "Assets:EXMP", debit: 60000, quantity: 2, unit: "EXMP"}
+          - {account: "Income:RSU", credit: 60000, jp_rsu: {event_id: "vest-2026-11", payer: "Example Holdings", grant_id: "grant-7", recognition_date: "2026-11-02", valuation_source: "raw/vest-2026-11.pdf"}}
+    recipe: {id: "jp-rsu.salary", params: {scope_confirmed: true, income_account: "Income:RSU", from: "2026-01-01", to: "2026-12-31"}}
+    figures:
+      additional_salary_receipts: 500008
+      by_payer: [{payer: "Example Corp.", salary: 440008}, {payer: "Example Holdings", salary: 60000}]
+  - name: "recorded vest records fall back to the journal date"
+    journals:
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - {account: "Assets:EXMP", debit: 1505003, quantity: 100, unit: "EXMP"}
+          - {account: "Income:RSU", credit: 1505003, jp_rsu: {event_id: "vest-2026-05", payer: "Example Corp.", valuation_source: "raw/vest-2026-05.pdf"}}
+    recipe: {id: "jp-rsu.salary", params: {scope_confirmed: true, income_account: "Income:RSU", from: "2026-01-01", to: "2026-12-31"}}
+    figures:
+      additional_salary_receipts: 1505003
+      records: [{source: "journals/source-0000.md", event_id: "vest-2026-05", grant_id: "", payer: "Example Corp.", recognition_date: "2026-05-01", valuation_source: "raw/vest-2026-05.pdf", gross_receipts: 1505003}]
+  - name: "salary adds recorded and two-line vests"
+    journals: &mixed
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - {account: "Assets:EXMP", debit: 1505003, quantity: 100, unit: "EXMP"}
+          - {account: "Income:RSU", credit: 1505003, jp_rsu: {event_id: "vest-2026-05", payer: "Example Corp.", valuation_source: "raw/vest-2026-05.pdf"}}
+      - schema_version: 1
+        date: "2026-08-01"
+        status: "posted"
+        lines:
+          - {account: "Assets:EXMP", debit: 1500000, quantity: 100, unit: "EXMP", jp_rsu: {event_id: "vest-2026-08", grant_id: "grant-1", payer: "Example Corp.", recognition_date: "2026-08-01", gross_jpy: 1500000, valuation_source: "raw/vest-2026-08.pdf"}}
+          - {account: "Income:RSU", credit: 1500000, jp_rsu: {event_id: "vest-2026-08", grant_id: "grant-1", payer: "Example Corp.", recognition_date: "2026-08-01", gross_jpy: 1500000, valuation_source: "raw/vest-2026-08.pdf"}}
+    recipe: {id: "jp-rsu.salary", params: {scope_confirmed: true, income_account: "Income:RSU", from: "2026-01-01", to: "2026-12-31"}}
+    figures:
+      additional_salary_receipts: 3005003
+      by_payer: [{payer: "Example Corp.", salary: 3005003}]
+  - name: "an event recorded in both forms is refused"
+    journals:
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - {account: "Assets:EXMP", debit: 1505003, quantity: 100, unit: "EXMP"}
+          - {account: "Income:RSU", credit: 1505003, jp_rsu: {event_id: "vest-2026-05", payer: "Example Corp.", valuation_source: "raw/vest-2026-05.pdf"}}
+      - schema_version: 1
+        date: "2026-05-01"
+        status: "posted"
+        lines:
+          - {account: "Assets:EXMP", debit: 1505003, quantity: 100, unit: "EXMP", jp_rsu: {event_id: "vest-2026-05", grant_id: "grant-1", payer: "Example Corp.", recognition_date: "2026-05-01", gross_jpy: 1505003, valuation_source: "raw/vest-2026-05.pdf"}}
+          - {account: "Income:RSU", credit: 1505003, jp_rsu: {event_id: "vest-2026-05", grant_id: "grant-1", payer: "Example Corp.", recognition_date: "2026-05-01", gross_jpy: 1505003, valuation_source: "raw/vest-2026-05.pdf"}}
+    recipe: {id: "jp-rsu.salary", params: {scope_confirmed: true, income_account: "Income:RSU", from: "2026-01-01", to: "2026-12-31"}}
+    error: "RSU scope, period or vesting evidence"

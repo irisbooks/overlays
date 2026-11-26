@@ -17,16 +17,25 @@ let:
     snapshot.entries.filter(j, j.lines.exists(l, has(l.jp_rsu))
       || (!('opening-balance' in j.tags) && j.lines.exists(l, l.account == income_account)))
   checked: >-
-    rsu_require(receipts.all(j, rsu_journal_valid(book, j) && rsu_calculation_valid(book, j))
+    rsu_require(receipts.all(j, rsu_vest_valid(book, j))
       && receipts.all(j, receipts.filter(other,
-        other.lines[0].jp_rsu.event_id == j.lines[0].jp_rsu.event_id).size() == 1))
+        rsu_event(book, other).event_id == rsu_event(book, j).event_id).size() == 1))
 result: >-
   {'period_from': from, 'period_to': to, 'income_category': 'salary',
-   'additional_salary_receipts': sum(receipts.map(j, rsu_gross(j.lines[0].jp_rsu))) + guard + checked,
+   'additional_salary_receipts': sum(receipts.map(j, rsu_salary(book, j))) + guard + checked,
+   'by_payer': sums(journals, ['account', 'jp_rsu.payer'], date(from), date(to)).rows
+     .filter(r, r.keys[0] == income_account).map(r, {'payer': r.keys[1], 'salary': r.credit}),
    'japan_withholding': 0, 'included_in_salary_statement': false,
    'inputs_sha256': snapshot.inputs_sha256,
-   'records': receipts.map(j, {'source': j.path, 'event_id': j.lines[0].jp_rsu.event_id,
-     'grant_id': j.lines[0].jp_rsu.grant_id, 'payer': j.lines[0].jp_rsu.payer,
-     'recognition_date': j.lines[0].jp_rsu.recognition_date,
-     'valuation_source': j.lines[0].jp_rsu.valuation_source,
-     'gross_receipts': rsu_gross(j.lines[0].jp_rsu)})}
+   'records': receipts.map(j, rsu_recorded_form(book, j)
+     ? {'source': j.path, 'event_id': rsu_event(book, j).event_id,
+       'grant_id': has(rsu_event(book, j).grant_id) ? rsu_event(book, j).grant_id : '',
+       'payer': rsu_event(book, j).payer,
+       'recognition_date': has(rsu_event(book, j).recognition_date) ? rsu_event(book, j).recognition_date : rsu_day(j.date),
+       'valuation_source': rsu_event(book, j).valuation_source,
+       'gross_receipts': rsu_salary(book, j)}
+     : {'source': j.path, 'event_id': j.lines[0].jp_rsu.event_id,
+       'grant_id': j.lines[0].jp_rsu.grant_id, 'payer': j.lines[0].jp_rsu.payer,
+       'recognition_date': j.lines[0].jp_rsu.recognition_date,
+       'valuation_source': j.lines[0].jp_rsu.valuation_source,
+       'gross_receipts': rsu_gross(j.lines[0].jp_rsu)})}
