@@ -9,3 +9,15 @@ tasks:
     examples: ['tests/valuation.yaml#exact price and FX with final truncation', 'tests/vesting.yaml#vest without a tax sale', 'tests/full-workflow.yaml#complete both missing amounts: exact inputs without redundant gross']
     coverage: [Recorded JPY employee stock-settled RSU compensation; Japan-resident self-assessment profile with no domestic payroll inclusion or withholding.]
     judgment: [Review recognition date and JPY valuation independently. Review price/FX observations and choose rounding explicitly. Whole-share valuation is supported within declared bounds; securities/FX basis, net settlement, international service and tax calculations remain outside this package.]
+  - id: jp-rsu.lifecycle
+    title: Record RSU vests, sales and wires, and prepare each figure
+    summary: Record vest yen on both postings with evidence on the salary line, then prepare salary by payer here, the share gain with jp-securities-basis and the currency gain with jp-foreign-currency.
+    target: journal
+    fields: [book.jp_rsu, line.jp_rsu, journal.lines]
+    rules: [rsu.scope, rsu.valuation]
+    operations:
+      - {kind: recipe, id: jp-rsu.salary}
+    guide: jp-rsu.lifecycle
+    examples: ['tests/recorded.yaml#recorded yen with evidence on the salary line validates', 'tests/recorded.yaml#salary by payer from recorded vests']
+    coverage: [Recorded JPY employee stock-settled RSU compensation by payer; whole listed shares pooled with other holdings of the same stock; ordinary USD cash from their sale.]
+    judgment: [Confirm the valuation convention and each date's rate. Reconcile every vest, sale and wire with broker and employer records. Sell-to-cover, net settlement, fractional shares, special accounts and unresolved trade timing are outside these packages; so are deductions, tax and the return.]

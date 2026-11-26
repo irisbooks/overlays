@@ -157,3 +157,60 @@ functions:
           'side': j.lines[i].account == b.jp_rsu.share_account ? 'debit' : 'credit',
           'amount': rsu_gross(j.lines[i].jp_rsu)})})
       : {}['RSU scope, period or vesting evidence is incomplete or inconsistent']
+  - name: rsu_recorded_form
+    params: [{name: b, type: map}, {name: j, type: map}]
+    returns: bool
+    doc: The recorded-yen form puts the vest's evidence on the salary line only, and the person records both yen amounts. The two-line forms keep their own checks unchanged.
+    expr: >-
+      j.lines.exists(l, has(l.jp_rsu))
+      && j.lines.all(l, !has(l.jp_rsu) || l.account == b.jp_rsu.income_account)
+  - name: rsu_salary_evidence
+    params: [{name: e, type: map}]
+    returns: bool
+    doc: Who paid, which vest, and the source document. The amount is on the postings, so gross_jpy and valuation belong to the two-line form instead.
+    expr: >-
+      has(e.event_id) && type(e.event_id) == string && e.event_id != ''
+      && has(e.payer) && type(e.payer) == string && e.payer != ''
+      && has(e.valuation_source) && type(e.valuation_source) == string && e.valuation_source != ''
+      && !has(e.gross_jpy) && !has(e.valuation)
+      && (!has(e.grant_id) || (type(e.grant_id) == string && e.grant_id != ''))
+      && (!has(e.recognition_date) || (type(e.recognition_date) == string
+        && e.recognition_date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')))
+  - name: rsu_recorded_journal_valid
+    params: [{name: b, type: map}, {name: j, type: map}]
+    returns: bool
+    doc: One whole-share acquisition debit and a salary credit of the same yen. Equal amounts make the shares' starting cost the recognized salary (Income Tax Act Enforcement Order arts. 109 and 118).
+    expr: >-
+      j.lines.size() == 2
+      && j.lines.exists(i, i.account == b.jp_rsu.income_account && i.unit == ''
+        && i.debit == 0 && i.credit > 0
+        && has(i.jp_rsu) && type(i.jp_rsu) == map && rsu_salary_evidence(i.jp_rsu)
+        && (!has(i.jp_rsu.recognition_date) || string(j.date) == i.jp_rsu.recognition_date + 'T00:00:00Z')
+        && j.lines.exists(s, s.account == b.jp_rsu.share_account && !has(s.jp_rsu)
+          && s.unit == b.jp_rsu.share_unit && s.quantity > 0 && s.credit == 0 && s.debit == i.credit))
+  - name: rsu_vest_valid
+    params: [{name: b, type: map}, {name: j, type: map}]
+    returns: bool
+    doc: A vest in either form, with the two-line form's recorded valuation inputs checked as before.
+    expr: >-
+      rsu_recorded_form(b, j) ? rsu_recorded_journal_valid(b, j)
+      : rsu_journal_valid(b, j) && rsu_calculation_valid(b, j)
+  - name: rsu_event
+    params: [{name: b, type: map}, {name: j, type: map}]
+    returns: map
+    doc: The vest's evidence. The two-line form carries the same evidence on both lines, so its first line is used, as before.
+    expr: >-
+      rsu_recorded_form(b, j) ? j.lines.filter(l, has(l.jp_rsu))[0].jp_rsu : j.lines[0].jp_rsu
+  - name: rsu_salary
+    params: [{name: b, type: map}, {name: j, type: map}]
+    returns: int
+    doc: The vest's salary. The recorded form's is its salary credit; the two-line form's is its reviewed or calculated gross, as before.
+    expr: >-
+      rsu_recorded_form(b, j) ? j.lines.filter(l, has(l.jp_rsu))[0].credit : rsu_gross(j.lines[0].jp_rsu)
+  - name: rsu_day
+    params: [{name: d, type: timestamp}]
+    returns: string
+    doc: YYYY-MM-DD of a journal date, for records whose evidence omits recognition_date.
+    expr: >-
+      string(d.getFullYear()) + '-' + (d.getMonth() < 9 ? '0' : '') + string(d.getMonth() + 1)
+      + '-' + (d.getDate() < 10 ? '0' : '') + string(d.getDate())
