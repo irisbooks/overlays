@@ -1,5 +1,5 @@
 id: jp-rsu
-version: 2026.11.3
-requires_bindings: 6
+version: 2026.11.4
+requires_bindings: 7
 region: JP
 description: Record evidenced gross RSU vesting, with the yen recorded on the postings or calculated from exact inputs, and prepare additional salary by payer with complete local source checks. Securities and foreign-cash policies remain independently selectable.

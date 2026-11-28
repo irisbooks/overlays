@@ -12,6 +12,11 @@ functions:
       && has(b.jp_foreign_currency.account_regime) && b.jp_foreign_currency.account_regime == 'ordinary-cash'
       && has(b.jp_foreign_currency.currencies) && type(b.jp_foreign_currency.currencies) == list
       && b.jp_foreign_currency.currencies.size() == 1 && b.jp_foreign_currency.currencies[0] == 'USD'
+  - name: currency_fee_accounts
+    params: [{name: p, type: map}]
+    returns: list
+    doc: The fee accounts the settings name; none when fee_accounts is omitted.
+    expr: "has(p.fee_accounts) ? p.fee_accounts : []"
   - name: currency_mapping_valid
     params: [{name: p, type: map}]
     returns: bool
@@ -19,18 +24,18 @@ functions:
     expr: >-
       has(p.accounts) && type(p.accounts) == list && p.accounts.size() > 0 && p.accounts.size() <= 64
       && has(p.settlement_accounts) && type(p.settlement_accounts) == list && p.settlement_accounts.size() > 0 && p.settlement_accounts.size() <= 64
-      && has(p.fee_accounts) && type(p.fee_accounts) == list && p.fee_accounts.size() <= 64
+      && (!has(p.fee_accounts) || type(p.fee_accounts) == list && p.fee_accounts.size() <= 64)
       && has(p.gain_account) && type(p.gain_account) == string && p.gain_account != ''
-      && (p.accounts + p.settlement_accounts + p.fee_accounts + [p.gain_account]).all(a,
+      && (p.accounts + p.settlement_accounts + currency_fee_accounts(p) + [p.gain_account]).all(a,
         type(a) == string && a != ''
-        && (p.accounts + p.settlement_accounts + p.fee_accounts + [p.gain_account]).filter(other, other == a).size() == 1)
+        && (p.accounts + p.settlement_accounts + currency_fee_accounts(p) + [p.gain_account]).filter(other, other == a).size() == 1)
   - name: currency_journal_scope
     params: [{name: p, type: map}, {name: j, type: map}]
     returns: bool
     doc: Refuse unrelated disposal lines; the core does not decide regional settlement/fee/gain scope.
     expr: >-
       currency_mapping_valid(p) && j.lines.all(l,
-        l.account in p.accounts || l.account in p.settlement_accounts || l.account in p.fee_accounts || l.account == p.gain_account)
+        l.account in p.accounts || l.account in p.settlement_accounts || l.account in currency_fee_accounts(p) || l.account == p.gain_account)
   - name: currency_source_scope
     params: [{name: f, type: map}, {name: j, type: map}]
     returns: bool

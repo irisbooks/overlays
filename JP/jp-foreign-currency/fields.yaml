@@ -4,3 +4,72 @@ fields:
     description:
       en: Confirm ordinary USD cash, complete own-account scope, moving-average methodology and separate FX gain/settlement/fee accounts.
       ja: 通常の米ドル現預金であること、本人名義の対象口座をすべて含むこと、移動平均法で計算することを確認し、為替差損益・決済・手数料の科目を指定します。
+  book.jp_foreign_currency.scope_confirmed:
+    type: bool
+    when: has(book.jp_foreign_currency) && type(book.jp_foreign_currency) == map
+    required: true
+    description:
+      en: Confirmed that this is ordinary USD cash in the owner's own name and that every such account is included. Securities and margin FX are out of scope.
+      ja: 本人名義の通常の米ドル現預金であり、該当する口座をすべて含めたことを確認しました。株式や証拠金FXは対象外です。
+  book.jp_foreign_currency.method_confirmed:
+    type: bool
+    when: has(book.jp_foreign_currency) && type(book.jp_foreign_currency) == map
+    required: true
+    description:
+      en: Confirmed that the moving-average method applies to these holdings.
+      ja: この米ドルに移動平均法を使えることを確認しました。
+  book.jp_foreign_currency.method:
+    type: string
+    when: has(book.jp_foreign_currency) && type(book.jp_foreign_currency) == map
+    required: true
+    description:
+      en: How the cost of USD is calculated.
+      ja: 米ドルの取得費の計算方法です。
+    enum:
+      - {value: moving-average, label: {en: Moving average, ja: 移動平均法}}
+  book.jp_foreign_currency.account_regime:
+    type: string
+    when: has(book.jp_foreign_currency) && type(book.jp_foreign_currency) == map
+    required: true
+    description:
+      en: The kind of USD holding.
+      ja: 米ドルの保有形態です。
+    enum:
+      - {value: ordinary-cash, label: {en: Ordinary cash and deposits, ja: 通常の現預金}}
+  book.jp_foreign_currency.currencies:
+    type: units
+    when: has(book.jp_foreign_currency) && type(book.jp_foreign_currency) == map
+    required: true
+    description:
+      en: The currency the package calculates. Only USD is supported.
+      ja: 計算の対象とする通貨です。USD（米ドル）だけに対応しています。
+  book.jp_foreign_currency.accounts:
+    type: accounts
+    account_types: [asset]
+    when: has(book.jp_foreign_currency) && type(book.jp_foreign_currency) == map
+    required: true
+    description:
+      en: Every account that holds the owner's ordinary USD.
+      ja: 本人名義の米ドルを保有する科目です。該当する科目をすべて指定します。
+  book.jp_foreign_currency.settlement_accounts:
+    type: accounts
+    when: has(book.jp_foreign_currency) && type(book.jp_foreign_currency) == map
+    required: true
+    description:
+      en: Accounts on the other side when USD is converted or spent, such as the yen account a conversion pays into.
+      ja: 米ドルを円転・支払いに使ったときの相手科目です。円転なら、円を受け取る預金の科目です。
+  book.jp_foreign_currency.fee_accounts:
+    type: accounts
+    account_types: [expense]
+    when: has(book.jp_foreign_currency) && type(book.jp_foreign_currency) == map
+    description:
+      en: Accounts confirmed to hold fees charged directly on a conversion or payment. Leave empty when there are none.
+      ja: 円転や支払いに直接かかったと確認できた手数料の科目です。なければ空のままにします。
+  book.jp_foreign_currency.gain_account:
+    type: account
+    account_types: [income, expense]
+    when: has(book.jp_foreign_currency) && type(book.jp_foreign_currency) == map
+    required: true
+    description:
+      en: The account for realized currency gains and losses.
+      ja: 実現した為替差損益を記録する科目です。

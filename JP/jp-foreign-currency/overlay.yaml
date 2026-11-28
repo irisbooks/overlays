@@ -1,5 +1,5 @@
 id: jp-foreign-currency
-version: 2026.11.2
-requires_bindings: 6
+version: 2026.11.3
+requires_bindings: 7
 region: JP
 description: Prepare ordinary USD cash realization figures using an explicitly confirmed moving-average basis and own-account transfers.

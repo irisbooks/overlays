@@ -4,6 +4,59 @@ fields:
     description:
       en: Confirm the resident employee self-assessment profile, dedicated income_account/share_account and share_unit. Salary-statement inclusion and Japanese withholding must both be false.
       ja: 日本に居住・勤務する従業員が確定申告で納税する場合であることを確認し、専用のincome_account・share_account・share_unitを指定します。源泉徴収票への算入（included_in_salary_statement）と日本の源泉徴収（japan_withholding）は、どちらもfalseにします。
+  book.jp_rsu.scope_confirmed:
+    type: bool
+    when: has(book.jp_rsu) && type(book.jp_rsu) == map
+    required: true
+    description:
+      en: Confirmed that the owner is an employee living and working in Japan who pays the tax on these RSUs through a self-assessed return.
+      ja: 日本に居住・勤務する従業員で、このRSUの税金を確定申告で納めることを確認しました。
+  book.jp_rsu.included_in_salary_statement:
+    type: bool
+    when: has(book.jp_rsu) && type(book.jp_rsu) == map
+    required: true
+    description:
+      en: The vesting value is included in the employer's Japanese salary statement. The package supports only "No".
+      ja: 権利確定時の価額が、勤務先の源泉徴収票に含まれています。このパッケージは「いいえ」の場合だけに対応しています。
+  book.jp_rsu.japan_withholding:
+    type: bool
+    when: has(book.jp_rsu) && type(book.jp_rsu) == map
+    required: true
+    description:
+      en: Japanese income tax is withheld on the vesting. The package supports only "No".
+      ja: 権利確定について日本の所得税が源泉徴収されています。このパッケージは「いいえ」の場合だけに対応しています。
+  book.jp_rsu.tax_funding:
+    type: string
+    when: has(book.jp_rsu) && type(book.jp_rsu) == map
+    required: true
+    description:
+      en: How the tax on the vesting is paid.
+      ja: 権利確定にかかる税金の納め方です。
+    enum:
+      - {value: self-assessment, label: {en: Self-assessed return, ja: 確定申告}}
+  book.jp_rsu.income_account:
+    type: account
+    account_types: [income]
+    when: has(book.jp_rsu) && type(book.jp_rsu) == map
+    required: true
+    description:
+      en: The income account used only for RSU salary. Ordinary salary uses a different account.
+      ja: RSUの給与だけに使う収益の科目です。通常の給与とは別の科目にします。
+  book.jp_rsu.share_account:
+    type: account
+    account_types: [asset]
+    when: has(book.jp_rsu) && type(book.jp_rsu) == map
+    required: true
+    description:
+      en: The account that holds the vested shares.
+      ja: 権利確定した株式を保有する科目です。
+  book.jp_rsu.share_unit:
+    type: unit
+    when: has(book.jp_rsu) && type(book.jp_rsu) == map
+    required: true
+    description:
+      en: The unit of the shares, declared as a whole-share unit (scale 0).
+      ja: 株式の単位です。1株単位（scale 0）の単位として定義します。
   line.jp_rsu:
     type: map
     description:

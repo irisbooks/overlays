@@ -10,7 +10,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 version="$(python3 "$SCRIPT_DIR/check-engine.py" --version)"
 [ "$(iris version)" = "iris $version" ] || { echo "::error::run golden tests with the verified published engine $version"; exit 1; }
 
-if ! iris overlay test -h 2>&1 | grep -q 'overlay-dir'; then
+if ! iris overlay test -h 2>&1 | grep -q -- '--dir'; then
   echo "::error::$(iris version) lacks overlay test --dir; pin a compatible signed engine"
   exit 1
 fi
