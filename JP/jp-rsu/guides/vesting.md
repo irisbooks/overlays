@@ -92,7 +92,8 @@ package neither hashes attachment contents nor authenticates them.
 ## Record the vest and complete the amounts
 
 Put identical vesting evidence on the share debit line and the salary credit
-line. As the basis for the amount, record either the exact `valuation` inputs
+line, written out in full on each (journals do not accept YAML anchors or
+aliases). As the basis for the amount, record either the exact `valuation` inputs
 used in the calculation or the reviewed positive `gross_jpy`. A record with only
 an already reviewed JPY amount remains supported: omit the optional `valuation`
 map.
@@ -103,7 +104,7 @@ lines:
     debit: null
     quantity: 100
     unit: AMZN
-    jp_rsu: &vesting
+    jp_rsu:
       event_id: amazon-2026-05
       grant_id: grant-1
       payer: Amazon.com Inc.
@@ -119,7 +120,20 @@ lines:
         rounding: truncate
   - account: Income:RSU
     credit: null
-    jp_rsu: *vesting
+    jp_rsu:
+      event_id: amazon-2026-05
+      grant_id: grant-1
+      payer: Amazon.com Inc.
+      recognition_date: '2026-05-01'
+      valuation_source: raw/vesting-2026-05.pdf
+      valuation:
+        quantity: 100
+        quantity_scale: 0
+        price_coefficient: 10025
+        price_scale: 2
+        fx_coefficient: 1501250
+        fx_scale: 4
+        rounding: truncate
 ```
 
 The journal date must match `recognition_date`. Run `iris journal complete` to
