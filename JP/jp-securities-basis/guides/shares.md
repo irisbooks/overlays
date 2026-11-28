@@ -56,7 +56,8 @@ The result fields are:
 
 ## Proceeds and fees
 
-In `fee_accounts`, name only accounts confirmed as eligible sale fees. The
+In `fee_accounts`, name only accounts confirmed as eligible sale fees; omit it
+when there are none, and then a sale journal can't carry a fee line. The
 recipe derives net settlement from the settlement accounts and adds the
 separately recorded fees once to show gross proceeds. The gain is net settlement
 minus allocation cost.

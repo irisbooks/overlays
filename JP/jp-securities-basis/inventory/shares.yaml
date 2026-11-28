@@ -5,5 +5,5 @@ with: >-
    'accounts': book.jp_securities_basis.accounts,
    'commodities': book.jp_securities_basis.commodities,
    'facts': {'commodities': book.jp_securities_basis.commodities, 'inventory_accounts': book.jp_securities_basis.accounts, 'settlement_accounts': book.jp_securities_basis.settlement_accounts,
-   'fee_accounts': book.jp_securities_basis.fee_accounts,
+   'fee_accounts': securities_fee_accounts(book.jp_securities_basis),
    'gain_account': book.jp_securities_basis.gain_account}}

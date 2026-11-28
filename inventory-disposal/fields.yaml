@@ -4,3 +4,31 @@ fields:
     description:
       en: Inventory completion settings. Configure params.gain_account and an optional supported allocation method; quantities and settlement remain explicit.
       ja: 売却原価の補完設定です。params.gain_account に損益科目を指定し、先入先出法以外を使う場合は、対応している原価配分方法を設定します。数量と決済額は明示的に記録してください。
+  book.inventory.params:
+    type: map
+    when: has(book.inventory) && type(book.inventory) == map
+    description:
+      en: How disposal costs are completed.
+      ja: 売却原価の補完方法です。
+  book.inventory.params.gain_account:
+    type: account
+    account_types: [income, expense]
+    when: >-
+      has(book.inventory) && type(book.inventory) == map
+      && has(book.inventory.params) && type(book.inventory.params) == map
+    required: true
+    description:
+      en: The account for the gain or loss on a disposal.
+      ja: 売却損益を記録する科目です。
+  book.inventory.params.method:
+    type: string
+    when: >-
+      has(book.inventory) && type(book.inventory) == map
+      && has(book.inventory.params) && type(book.inventory.params) == map
+    description:
+      en: How cost is allocated to a disposal. FIFO when not set.
+      ja: 売却原価の配分方法です。設定しなければ先入先出法です。
+    enum:
+      - {value: fifo, label: {en: First in, first out, ja: 先入先出法}}
+      - {value: moving-average, label: {en: Moving average, ja: 移動平均法}}
+      - {value: specific, label: {en: Specific identification (lot on each line), ja: 個別法（明細ごとにロットを指定）}}

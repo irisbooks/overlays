@@ -13,6 +13,8 @@ To change a rule, a test or documentation, reading [Find the file to change](#fi
 
 The seven published `2026.10.1` packages declare `requires_bindings: 5`.
 The RSU, securities-basis and USD-cash `2026.11.1` packages require 6.
+Packages whose settings name accounts or units (field types `account`,
+`accounts`, `unit`, `units`) require 7.
 Bindings are the functions and values the Iris engine makes available to package
 expressions written in CEL. The engine is distributed separately; start with the
 [CLI installation guide](https://irisbooks.io/docs/en/getting-started/) and
@@ -28,8 +30,8 @@ iris overlay test --dir JP/jp-tax-classification
 Repeat for each changed package. No Book folder or engine source checkout is
 needed for `--dir` tests.
 
-[Iris v0.2.23](https://github.com/irisbooks/iris/releases/tag/v0.2.23) is the
-published signed baseline for this source checkout (bindings 6). All 160 catalog
+[Iris v0.3.52](https://github.com/irisbooks/iris/releases/tag/v0.3.52) is the
+published signed baseline for this source checkout (bindings 7). All 179 catalog
 goldens and 162 independent RSU rational comparisons pass locally with that
 binary; CI repeats the full checks with its signed Linux build. CI uses
 [`.github/engine.txt`](.github/engine.txt), so another engine release does not

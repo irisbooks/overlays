@@ -4,3 +4,63 @@ fields:
     description:
       en: Confirm ordinary listed shares, complete own-account scope, capitalized acquisition costs, account mappings and commodities.
       ja: 通常の上場株式であること、本人名義の対象口座をすべて含むこと、取得時費用を資産計上することを確認し、勘定科目と銘柄を指定します。
+  book.jp_securities_basis.scope_confirmed:
+    type: bool
+    when: has(book.jp_securities_basis) && type(book.jp_securities_basis) == map
+    required: true
+    description:
+      en: Confirmed that these are ordinary listed shares held in the owner's own name and that every such account is included.
+      ja: 本人名義の通常の上場株式であり、該当する口座をすべて含めたことを確認しました。
+  book.jp_securities_basis.account_regime:
+    type: string
+    when: has(book.jp_securities_basis) && type(book.jp_securities_basis) == map
+    required: true
+    description:
+      en: The kind of securities holding.
+      ja: 株式の保有形態です。
+    enum:
+      - {value: ordinary-listed-shares, label: {en: Ordinary listed shares, ja: 通常の上場株式}}
+  book.jp_securities_basis.acquisition_fees_capitalized:
+    type: bool
+    when: has(book.jp_securities_basis) && type(book.jp_securities_basis) == map
+    required: true
+    description:
+      en: Purchase fees are recorded as part of the share cost. The package supports only this treatment.
+      ja: 購入時の手数料を株式の取得価額に含めて記録しています。このパッケージはこの処理だけに対応しています。
+  book.jp_securities_basis.accounts:
+    type: accounts
+    account_types: [asset]
+    when: has(book.jp_securities_basis) && type(book.jp_securities_basis) == map
+    required: true
+    description:
+      en: Every account that holds the owner's shares.
+      ja: 本人名義の株式を保有する科目です。該当する科目をすべて指定します。
+  book.jp_securities_basis.commodities:
+    type: units
+    when: has(book.jp_securities_basis) && type(book.jp_securities_basis) == map
+    required: true
+    description:
+      en: The shares calculated, each declared as a whole-share unit (scale 0).
+      ja: 計算の対象とする銘柄です。それぞれ1株単位（scale 0）の単位として定義します。
+  book.jp_securities_basis.settlement_accounts:
+    type: accounts
+    when: has(book.jp_securities_basis) && type(book.jp_securities_basis) == map
+    required: true
+    description:
+      en: Accounts on the other side when shares are sold, such as the account that receives the proceeds.
+      ja: 株式を売却したときの相手科目です。売却代金を受け取る預金などの科目です。
+  book.jp_securities_basis.fee_accounts:
+    type: accounts
+    account_types: [expense]
+    when: has(book.jp_securities_basis) && type(book.jp_securities_basis) == map
+    description:
+      en: Accounts that hold sale fees. Leave empty when there are none.
+      ja: 売却時の手数料の科目です。なければ空のままにします。
+  book.jp_securities_basis.gain_account:
+    type: account
+    account_types: [income, expense]
+    when: has(book.jp_securities_basis) && type(book.jp_securities_basis) == map
+    required: true
+    description:
+      en: The account for gains and losses on share sales.
+      ja: 株式の売却損益を記録する科目です。

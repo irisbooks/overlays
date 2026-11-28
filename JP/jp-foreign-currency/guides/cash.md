@@ -71,7 +71,8 @@ transfer, and do not absorb a fee into a transfer whose quantities do not match.
 ## Name only confirmed fee accounts
 
 In `fee_accounts`, name only accounts confirmed to hold expenses directly
-attributable to the realizing transaction. The realized figure is net settlement
+attributable to the realizing transaction; omit it when there are none, and then
+a conversion or payment can't carry a fee line. The realized figure is net settlement
 minus the allocation cost of that USD.
 
 Separately recorded fees are deducted once. The gain credit already balances the
