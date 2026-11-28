@@ -58,7 +58,7 @@ iris overlay recipe jp-rsu.vesting-value --set scope_confirmed=true \
 
 ## 権利確定を仕訳に記録し、金額を補完する
 
-株式側の借方明細と給与側の貸方明細に、同じ権利確定の情報を記録します。金額の根拠として、計算に使った`valuation`の入力値をそのまま記録するか、確認済みの正の`gross_jpy`を記録してください。確認済みの円換算額だけを記録する従来の書き方も使えます。その場合は`valuation`を省略します。
+株式側の借方明細と給与側の貸方明細に、同じ権利確定の情報をそれぞれ省略せずに記録します（仕訳では YAML のアンカーとエイリアスは使えません）。金額の根拠として、計算に使った`valuation`の入力値をそのまま記録するか、確認済みの正の`gross_jpy`を記録してください。確認済みの円換算額だけを記録する従来の書き方も使えます。その場合は`valuation`を省略します。
 
 ```yaml
 lines:
@@ -66,7 +66,7 @@ lines:
     debit: null
     quantity: 100
     unit: AMZN
-    jp_rsu: &vesting
+    jp_rsu:
       event_id: amazon-2026-05
       grant_id: grant-1
       payer: Amazon.com Inc.
@@ -82,7 +82,20 @@ lines:
         rounding: truncate
   - account: Income:RSU
     credit: null
-    jp_rsu: *vesting
+    jp_rsu:
+      event_id: amazon-2026-05
+      grant_id: grant-1
+      payer: Amazon.com Inc.
+      recognition_date: '2026-05-01'
+      valuation_source: raw/vesting-2026-05.pdf
+      valuation:
+        quantity: 100
+        quantity_scale: 0
+        price_coefficient: 10025
+        price_scale: 2
+        fx_coefficient: 1501250
+        fx_scale: 4
+        rounding: truncate
 ```
 
 仕訳日は`recognition_date`と一致させます。`iris journal complete`を実行すると、両方の明細の金額をプレビューできます。内容を確認し、ほかの仕訳補完と同じように、返されたリビジョン（`revision`）を指定して適用してください。
